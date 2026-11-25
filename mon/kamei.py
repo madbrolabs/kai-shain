@@ -500,12 +500,15 @@ def daichou(who: str, heya_dai: str | None = None) -> list[dict]:
             continue
         e = str(x.get("e", "") or "").strip()
         host = re.sub(r"^https?://([^/:]+).*$", r"\1", x["link"]).lower()
+        naka = str(x.get("naka", "") or "")
+        naka = naka if re.fullmatch(r"[a-z0-9_-]+/", naka) else ""  # 専用アドレスの下の写し（例 kaisha/）。画面が BASE を前に付ける
         out.append({"id": x["id"], "dai": fuseru(x["dai"])[:80], "hitokoto": fuseru(x.get("hitokoto", ""))[:200],
                     "link": x["link"], "heya": x.get("heya", ""), "heya_id": hs.get(x.get("heya", ""), ""),
                     "busho": x.get("busho", ""), "dekita": str(x.get("dekita", ""))[:10], "naoshita": x.get("naoshita", ""),
                     "at": x.get("at", ""), "kakunin": bool(x.get("kakarichou_kakunin")),
                     "e": e if e.startswith(("https://", "http://")) else (f"api/e/{x['id']}" if e else ""),
-                    "shachou_dake": who != "shachou" and host.endswith("claude.ai") and not x.get("dare_demo")})
+                    "naka": naka,
+                    "shachou_dake": who != "shachou" and not naka and host.endswith("claude.ai") and not x.get("dare_demo")})
     return out
 
 
@@ -529,7 +532,7 @@ def zentai_matome(zentai: list[dict], fuda: list[dict], hs: list[dict]) -> list[
     out, mita = [], set()
     for x in fuda:
         out.append({"shurui": "出来た物", "namae": x["dai"], "at": x.get("naoshita") or x.get("at") or x.get("dekita", ""),
-                    "url": x["link"], "heya": x.get("heya_id", ""), "heya_na": na.get(x.get("heya", "")) or x.get("busho") or re.sub(r"^【[^】]*】", "", x.get("heya", ""))})
+                    "url": x["link"], "naka": x.get("naka", ""), "heya": x.get("heya_id", ""), "heya_na": na.get(x.get("heya", "")) or x.get("busho") or re.sub(r"^【[^】]*】", "", x.get("heya", ""))})
         mita.add(x["link"].rstrip("/"))
     for x in zentai:
         u = (x.get("url") or "").rstrip("/")

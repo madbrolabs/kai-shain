@@ -4,6 +4,7 @@
   at（足した時刻）heya（部屋の題）busho（任意）dai（題）hitokoto（一言）link（押せば開くURL）
   e（見本の絵の URL か PC の中の絵の場所・空でよい）dekita（出来た日）kakarichou_kakunin（係長確認済みか）
   dare_demo（任意・claude.ai の物を「リンクを知っていれば誰でも」に公開した時だけ true。無ければ亀井さんの札に「社長のスマホで開けます」）
+  naka（任意・社長／副社長の専用アドレスの下の道 例 "kaisha/"。あれば札はそちらを開く。鍵は台帳に書かない）
 同じ link の行が後から来たら同じ札の「直した日」が新しくなって上へ上がる（2枚にしない）＝ matomeru()。
 使い方：python seika.py tasu --heya "【主任】超議事録" --dai "…" --hitokoto "…" --link "https://…" [--e 絵] [--kakunin]
 罠メモ：読む側は壊れた行を飛ばすだけ（台帳1行の書き損じでページ全体を止めない）。足す側は形を検査して弾く。
@@ -15,6 +16,7 @@ import datetime as dt
 import hashlib
 import json
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -90,6 +92,8 @@ def kensa(x: dict) -> list[str]:
         dame.append("一言（hitokoto）が長すぎます（200字まで）")
     if not url_ka(x.get("link", "")):
         dame.append("リンク（link）が https://… の形の URL ではありません")
+    if x.get("naka") and not re.fullmatch(r"[a-z0-9_-]+/", str(x["naka"])):
+        dame.append("専用アドレスの下の道（naka）は kaisha/ のような英小文字と斜線の形にしてください")
     e = str(x.get("e", "") or "").strip()
     if e and not url_ka(e):
         p = Path(e)
@@ -193,13 +197,15 @@ def e_tsukuru(link: str) -> str:
 
 
 def tasu(heya: str, dai: str, hitokoto: str, link: str, e: str = "", busho: str = "", dekita: str = "",
-         kakunin: bool = False, e_jidou: bool = True, dare_demo: bool = False) -> tuple[bool, dict | list[str]]:
+         kakunin: bool = False, e_jidou: bool = True, dare_demo: bool = False, naka: str = "") -> tuple[bool, dict | list[str]]:
     link = link.strip()
     x = {"at": ima().isoformat(timespec="seconds"), "heya": heya.strip(), "busho": busho.strip(), "dai": dai.strip(),
          "hitokoto": hitokoto.strip(), "link": link, "e": e.strip(), "dekita": (dekita or ima().date().isoformat()).strip(),
          "kakarichou_kakunin": bool(kakunin)}
     if dare_demo:
         x["dare_demo"] = True  # claude.ai の物でも「リンクを知っていれば誰でも開ける」設定にしてある
+    if naka.strip():
+        x["naka"] = naka.strip()  # 専用アドレスの下の写し（例 kaisha/）を開く。鍵は書かない
     dame = kensa(x)
     if dame:
         return False, dame
@@ -229,11 +235,12 @@ def main() -> None:
     t.add_argument("--kakunin", action="store_true", help="係長が確かめた物")
     t.add_argument("--e-nashi", action="store_true", help="絵を自動で撮らない")
     t.add_argument("--dare-demo", action="store_true", help="claude.ai の物を「リンクを知っていれば誰でも」に公開してある時")
+    t.add_argument("--naka", default="", help="社長／副社長の専用アドレスの下で開く道（例 kaisha/）。あれば札はそちらを開く")
     sub.add_parser("kensa", help="台帳の全部の行を検査する")
     sub.add_parser("ichiran", help="ページに出る順で一覧を見る")
     a = ap.parse_args()
     if a.cmd == "tasu":
-        ok, v = tasu(a.heya, a.dai, a.hitokoto, a.link, a.e, a.busho, a.dekita, a.kakunin, not a.e_nashi, a.dare_demo)
+        ok, v = tasu(a.heya, a.dai, a.hitokoto, a.link, a.e, a.busho, a.dekita, a.kakunin, not a.e_nashi, a.dare_demo, a.naka)
         if not ok:
             print("足せませんでした。直してからもう一度どうぞ：")
             for d in v:

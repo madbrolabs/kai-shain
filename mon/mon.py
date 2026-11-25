@@ -534,6 +534,11 @@ def main() -> None:
         hajimete.tsukeru(app)
     except Exception as e:
         log(f"はじめての人の入口を付けられませんでした {e!r}")
+    try:  # アドオン：会社紹介ページ（kaisha.py・中身＝内緒の場所/kaisha_shoukai・入/切＝内緒の場所/kaisha.json）。亀井ページより先に付ける
+        import kaisha
+        kaisha.tsukeru(app)
+    except Exception as e:
+        log(f"会社紹介ページを付けられませんでした {e!r}")
     try:  # アドオン：亀井ページ（kamei.py・設定 内緒の場所/kamei/settei.json の iri＝入/切）。無くても門番は動く
         import kamei
         kamei.tsukeru(app)

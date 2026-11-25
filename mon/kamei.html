@@ -68,7 +68,14 @@ a.mazu[hidden]{display:none}
 .m .b p{margin:0 0 .5em}.m .b p:last-child{margin-bottom:0}
 .m .b ul,.m .b ol{margin:.2em 0 .5em;padding-left:1.3em}
 .m .b code{background:rgba(127,127,127,.15);border-radius:4px;padding:0 4px;font-size:.9em}
-.m .b h3,.m .b h4{font-size:1em;margin:.4em 0 .2em}
+.m .b h2,.m .b h3{font-size:1.18em;font-weight:700;margin:.5em 0 .25em}
+.m .b h4,.m .b h5{font-size:1.08em;font-weight:700;margin:.45em 0 .2em}
+.m .b h2:first-child,.m .b h3:first-child,.m .b h4:first-child,.m .b h5:first-child{margin-top:0}
+.m .b blockquote,.yomu article blockquote{margin:.35em 0 .55em;padding:.35em .8em;border-left:4px solid var(--acc);background:rgba(127,127,127,.08);border-radius:0 8px 8px 0}
+.m .b blockquote p:last-child,.yomu article blockquote p:last-child{margin-bottom:0}
+.m .b hr,.yomu article hr{border:0;border-top:1px solid var(--line);margin:.6em 0}
+.m .b li{margin:.12em 0}
+.m .b pre{white-space:pre-wrap;background:rgba(127,127,127,.12);border-radius:8px;padding:6px 9px;font-size:.9em;margin:.3em 0}
 .m .b table{border-collapse:collapse;font-size:.92em;display:block;overflow-x:auto}
 .m .b td,.m .b th{border:1px solid var(--line);padding:2px 6px}
 .sagyou{color:var(--sub);font-size:14px;margin:4px 8px}
@@ -217,33 +224,60 @@ function hi(at){ if(!at) return ""; var d = new Date(at); if(isNaN(d)) return ""
   return (d.toDateString() === n.toDateString()) ? hm : (d.getMonth()+1)+"/"+d.getDate()+" "+hm; }
 function api(p, opt){ return fetch(BASE + "api/" + p, Object.assign({cache:"no-store"}, opt||{})).then(function(r){ return r.json().then(function(j){ j._status = r.status; return j; }); }); }
 
-// やさしい書式（文字をすべて消毒してから、太字・リンク・箇条書きだけ戻す）
+// やさしい書式（字はかならず先に消毒してから、印を見た目に直す。書かれた中身が画面の仕掛けとして動かないように）
 function inline(s){
+  var hozon = [];
+  function azuke(h){ hozon.push(h); return "\u0000" + (hozon.length - 1) + "\u0000"; }
+  s = String(s == null ? "" : s);
+  s = s.replace(/(`+)([\s\S]+?)\1/g, function(m, q, c){ return azuke("<code>" + esc(c.trim()) + "</code>"); });
+  s = s.replace(/\\([\\`*_~#>\[\]()|-])/g, function(m, c){ return azuke(esc(c)); });            // \* などは印にしない（コードの中の \ はそのまま＝コードを先に預ける）
   s = esc(s);
-  s = s.replace(/`([^`]+)`/g, "<code>$1</code>");
-  s = s.replace(/\*\*([^*]+)\*\*/g, "<b>$1</b>");
-  s = s.replace(/\[([^\]]+)\]\((https?:\/\/[^)\s]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>');
-  s = s.replace(/(^|[\s（(「])(https?:\/\/[^\s<）)」]+)/g, '$1<a href="$2" target="_blank" rel="noopener noreferrer">$2</a>');
-  return s;
+  s = s.replace(/\[([^\]]+)\]\((https?:\/\/[^)\s]+)\)/g, function(m, t, u){ return azuke('<a href="' + u + '" target="_blank" rel="noopener noreferrer">' + t + '</a>'); });
+  s = s.replace(/(^|[\s（(「：:])(https?:\/\/[^\s<）)」]+)/g, function(m, a, u){ return a + azuke('<a href="' + u + '" target="_blank" rel="noopener noreferrer">' + u + '</a>'); });
+  s = s.replace(/\*\*\*(?=\S)([\s\S]+?)\*\*\*/g, "<b><i>$1</i></b>");
+  s = s.replace(/\*\*(?=\S)([\s\S]+?)\*\*/g, "<b>$1</b>");
+  s = s.replace(/(^|[^\w])__(?=\S)([\s\S]+?)__(?!\w)/g, "$1<b>$2</b>");
+  s = s.replace(/~~(?=\S)([\s\S]+?)~~/g, "<s>$1</s>");
+  s = s.replace(/(^|[^*\w])\*(?=[^\s*])([^*]+?)\*(?![*\w])/g, "$1<i>$2</i>");
+  s = s.replace(/\*\*+|~~|`/g, "");                                                                // 閉じていない太字・打ち消し・コードの印は消す
+  return s.replace(/\u0000(\d+)\u0000/g, function(m, i){ return hozon[+i]; });
 }
 function md(t){
-  var L = String(t||"").replace(/\r/g,"").split("\n"), out = [], li = null, tb = null, pre = null;
-  function owari(){ if(li){ out.push("</"+li+">"); li = null; } if(tb){ out.push("</table>"); tb = null; } }
+  var L = String(t||"").replace(/\r/g,"").split("\n"), out = [], tb = null, pre = null, q = null, li = [];
+  function listOwari(n){ while(li.length > n){ out.push("</li></" + li.pop().k + ">"); } }
+  function owari(){ listOwari(0); if(tb){ out.push("</table>"); tb = null; } }
+  function inyouOwari(){ if(q){ var naka = q; q = null; owari(); out.push("<blockquote>" + md(naka.join("\n")) + "</blockquote>"); } }
   L.forEach(function(l){
-    if(/^```/.test(l)){ if(pre === null){ owari(); pre = []; } else { out.push("<pre>"+esc(pre.join("\n"))+"</pre>"); pre = null; } return; }
-    if(pre !== null){ pre.push(l); return; }
-    var m;
+    if(pre !== null){ if(/^\s*(```|~~~)/.test(l)){ out.push("<pre>" + esc(pre.join("\n")) + "</pre>"); pre = null; } else pre.push(l); return; }
+    var m = l.match(/^\s{0,3}>\s?(.*)$/);
+    if(m){ if(!q){ owari(); q = []; } q.push(m[1]); return; }
+    if(q){ if(l.trim() && !/^\s*([-*+・]|\d+[.)]|#{1,6})\s/.test(l) && !/^\s*(```|~~~|\|)/.test(l)){ q.push(l); return; } inyouOwari(); }
+    if(/^\s*(```|~~~)/.test(l)){ owari(); pre = []; return; }
     if(/^\s*\|.*\|\s*$/.test(l)){
       if(/^\s*\|[\s:\-|]+\|\s*$/.test(l)) return;
       if(!tb){ owari(); out.push("<table>"); tb = 1; }
-      out.push("<tr>"+l.trim().replace(/^\||\|$/g,"").split("|").map(function(c){ return "<td>"+inline(c.trim())+"</td>"; }).join("")+"</tr>"); return;
+      out.push("<tr>" + l.trim().replace(/^\||\|$/g,"").split("|").map(function(c){ return "<td>" + inline(c.trim()) + "</td>"; }).join("") + "</tr>"); return;
     }
-    if((m = l.match(/^(#{1,4})\s+(.*)/))){ owari(); var n = Math.min(4, m[1].length + 1); out.push("<h"+n+">"+inline(m[2])+"</h"+n+">"); return; }
-    if((m = l.match(/^\s*(?:[-*・]|\d+[.)])\s+(.*)/))){ var k = /^\s*\d/.test(l) ? "ol" : "ul"; if(li !== k){ owari(); out.push("<"+k+">"); li = k; } out.push("<li>"+inline(m[1])+"</li>"); return; }
-    if(!l.trim()){ owari(); return; }
-    owari(); out.push("<p>"+inline(l)+"</p>");
+    if(tb){ out.push("</table>"); tb = null; }
+    if(/^\s{0,3}([-*_])(\s*\1){2,}\s*$/.test(l)){ owari(); out.push("<hr>"); return; }
+    if((m = l.match(/^\s{0,3}(#{1,6})\s+(.*?)\s*#*\s*$/))){ owari(); var n = Math.min(5, m[1].length + 1); out.push("<h" + n + ">" + inline(m[2]) + "</h" + n + ">"); return; }
+    if((m = l.match(/^(\s*)([-*+・•]|(\d+)[.)])\s+(.*)$/))){
+      var fukasa = m[1].replace(/\t/g, "  ").length, k = m[3] ? "ol" : "ul", naiyou = m[4];
+      while(li.length && fukasa < li[li.length-1].f) listOwari(li.length - 1);
+      var ue = li[li.length-1];
+      if(ue && fukasa > ue.f + 1){ li.push({k:k, f:fukasa}); out.push("<" + k + (k === "ol" && +m[3] > 1 ? " start='" + (+m[3]) + "'" : "") + "><li>"); }
+      else if(ue && ue.k === k){ out.push("</li><li>"); }
+      else { if(ue) listOwari(li.length - 1); li.push({k:k, f:fukasa}); out.push("<" + k + (k === "ol" && +m[3] > 1 ? " start='" + (+m[3]) + "'" : "") + "><li>"); }
+      var c = naiyou.match(/^\[([ xX])\]\s+(.*)$/);
+      out.push(c ? (c[1] === " " ? "☐ " : "☑ ") + inline(c[2]) : inline(naiyou));
+      return;
+    }
+    if(!l.trim()){ if(!li.length) owari(); return; }
+    if(li.length && /^\s+\S/.test(l)){ out.push("<br>" + inline(l.trim())); return; }
+    owari(); out.push("<p>" + inline(l) + "</p>");
   });
-  if(pre !== null) out.push("<pre>"+esc(pre.join("\n"))+"</pre>");
+  inyouOwari();
+  if(pre !== null) out.push("<pre>" + esc(pre.join("\n")) + "</pre>");
   owari();
   return out.join("");
 }
@@ -288,9 +322,9 @@ function seikaHyou(ul, list, heyaMo){
     keys[key] = 1;
     var li = ul.querySelector('[data-key="'+CSS.escape(key)+'"]');
     if(!li){ li = document.createElement("li"); li.dataset.key = key; }
-    var href = x.fid ? "#/h/"+x.heya+"/f/"+encodeURIComponent(x.fid) : (x.url || "");
+    var href = x.fid ? "#/h/"+x.heya+"/f/"+encodeURIComponent(x.fid) : x.naka ? BASE + x.naka : (x.url || "");
     var inner = "<span class='fuda"+(x.tsukutta?" k":"")+"'>"+esc(x.shurui)+"</span><span class='t'>"+esc(x.namae)+(heyaMo?" <span style='color:var(--sub);font-size:13.5px'>（"+esc(x.heya_na)+"）</span>":"")+(x.joutai?" <span style='color:var(--sub);font-size:13.5px'>・"+esc(x.joutai)+"</span>":"")+"</span><span class='h'>"+esc(hi(x.at))+"</span>";
-    var html = href ? "<a href='"+esc(href)+"'"+(x.url?" target='_blank' rel='noopener noreferrer'":"")+">"+inner+"</a>" : "<span class='na'>"+inner+"</span>";
+    var html = href ? "<a href='"+esc(href)+"'"+(x.url && !x.naka?" target='_blank' rel='noopener noreferrer'":"")+">"+inner+"</a>" : "<span class='na'>"+inner+"</span>";
     if(li.innerHTML !== html) li.innerHTML = html;
     if(ul.children[i] !== li) ul.insertBefore(li, ul.children[i] || null);
   });
@@ -308,8 +342,10 @@ function fudaHyou(box, list, heyaMo){
   list.forEach(function(x, i){
     keys[x.id] = 1;
     var a = box.querySelector('[data-key="'+x.id+'"]');
-    if(!a){ a = document.createElement("a"); a.className = "sf"; a.dataset.key = x.id; a.target = "_blank"; a.rel = "noopener noreferrer"; }
-    if(a.getAttribute("href") !== x.link) a.setAttribute("href", x.link);
+    if(!a){ a = document.createElement("a"); a.className = "sf"; a.dataset.key = x.id; a.rel = "noopener noreferrer"; }
+    var href = x.naka ? BASE + x.naka : x.link;  // naka＝この専用アドレスの下の写し（同じ画面で開き、戻るで帰れる）
+    if(a.getAttribute("href") !== href) a.setAttribute("href", href);
+    if(x.naka) a.removeAttribute("target"); else a.target = "_blank";
     var e = x.e ? (/^https?:/.test(x.e) ? x.e : BASE + x.e) : "";
     var html = "<div class='mi'>" + (e ? "<img loading='lazy' alt='' src='"+esc(e)+"'>" : "<div class='iro' style='background:"+iro(x.heya)+"'><b>"+esc(x.dai)+"</b><span>"+esc(heyaNa(x.heya))+"</span></div>") + "</div>"
       + "<div class='ue'><div class='dai2'>"+esc(x.dai)+"</div>"
