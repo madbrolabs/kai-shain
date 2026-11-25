@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<meta name="referrer" content="no-referrer">
+<title>はじめての人の入口</title>
+<style>
+:root{--bg:#f6f4ef;--card:#fff;--ink:#1d1f24;--sub:#6a6f78;--line:#e3dfd6;--acc:#1f6f5c;--acc2:#e8f2ee;--mj:#e6f4ec;--mjl:#1f8c5a}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#15171b;--card:#1e2127;--ink:#e9eaec;--sub:#9aa0aa;--line:#30343c;--acc:#5cc3a6;--acc2:#1d322c;--mj:#1b2e25;--mjl:#5cc3a6}}
+:root[data-theme="dark"]{--bg:#15171b;--card:#1e2127;--ink:#e9eaec;--sub:#9aa0aa;--line:#30343c;--acc:#5cc3a6;--acc2:#1d322c;--mj:#1b2e25;--mjl:#5cc3a6}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font:18px/1.8 system-ui,-apple-system,"Hiragino Sans","Yu Gothic UI",sans-serif;-webkit-text-size-adjust:100%}
+body{overflow-x:hidden;overflow-wrap:anywhere}
+a{color:var(--acc)}
+.wrap{max-width:820px;margin:0 auto;padding:0 16px}
+header{background:var(--card);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:5}
+header .wrap{display:flex;align-items:center;gap:10px;min-height:56px}
+.logo{display:inline-flex;align-items:center;justify-content:center;border:2.5px solid var(--acc);border-radius:50%;width:58px;height:30px;font-weight:800;letter-spacing:.08em;color:var(--acc);font-size:14px;flex:none}
+header b{flex:1;min-width:0;font-size:18px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.modoru{border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:999px;padding:4px 14px;font-size:15px;text-decoration:none;flex:none}
+.md{padding:8px 0 40px;min-width:0}
+.md h1{font-size:24px;line-height:1.4;margin:18px 0 10px}
+.md h2{font-size:21px;margin:30px 0 10px;padding:8px 12px;background:var(--card);border:1px solid var(--line);border-radius:12px}
+.md h3{font-size:18px;margin:20px 0 6px}
+.md img{max-width:100%;height:auto;border-radius:12px;border:1px solid var(--line);display:block;margin:8px 0}
+.md table{border-collapse:collapse;width:100%;font-size:16px}
+.md th,.md td{border:1px solid var(--line);padding:6px 8px;text-align:left;vertical-align:top;background:var(--card)}
+.md li{margin:4px 0}
+.md ol,.md ul{padding-left:1.4em}
+.md hr{border:0;border-top:1px dashed var(--line);margin:26px 0}
+.md blockquote{margin:12px 0;padding:6px 14px;border-left:4px solid var(--acc);color:var(--sub)}
+.md blockquote.mejirushi{color:inherit;background:var(--mj);border-left-color:var(--mjl);border-radius:0 12px 12px 0;padding:10px 14px}
+.md code{background:rgba(127,127,127,.15);border-radius:4px;padding:0 4px}
+.kopi-blk{position:relative;margin:10px 0}
+.kopi-blk pre{white-space:pre-wrap;word-break:break-word;background:rgba(127,127,127,.12);border:1px solid rgba(127,127,127,.3);border-radius:10px;padding:52px 12px 12px;font-size:15px;line-height:1.7;margin:0;font-family:inherit}
+.kopi-b{position:absolute;top:8px;left:8px;padding:8px 18px;border-radius:8px;border:0;background:#2563eb;color:#fff;font-weight:bold;font-size:16px;cursor:pointer}
+.kopi-k{position:absolute;top:14px;left:110px;font-size:14px;color:var(--sub)}
+.shirase{color:var(--sub);padding:30px 0}
+</style>
+</head>
+<body>
+<header><div class="wrap"><span class="logo">KAI</span><b>はじめての人の入口</b><a class="modoru" href="../">← 部屋の一覧</a></div></header>
+<main class="wrap"><div class="md" id="md"><p class="shirase">読み込んでいます…</p></div></main>
+<script>
+"use strict";
+function esc(s){return String(s).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]})}
+// 社員ページ（docs/shain/index.html の md()）と同じ書き方を読む。絵は ./img/ の物だけ
+function il(s){return esc(s).replace(/!\[([^\]]*)\]\(([^)\s]+)\)/g,function(m,a,u){return /^(\.\/img\/[a-z0-9_]+\.(jpg|png)|https:)/.test(u)?'<img src="'+u+'" alt="'+a+'" loading="lazy">':""})
+  .replace(/\[([^\]]+)\]\((https:[^)\s]+)\)/g,'<a href="$2" target="_blank" rel="noopener">$1</a>').replace(/\*\*(.+?)\*\*/g,"<b>$1</b>").replace(/`([^`]+)`/g,"<code>$1</code>")}
+function md(t){
+  var L=t.replace(/\r/g,"").split("\n"),o=[],i=0;
+  while(i<L.length){
+    var l=L[i],b,n;
+    if(/^```/.test(l)){b=[];i++;while(i<L.length&&!/^```/.test(L[i]))b.push(L[i++]);i++;
+      o.push('<div class="kopi-blk"><button class="kopi-b">コピー</button><span class="kopi-k"></span><pre>'+esc(b.join("\n"))+'</pre></div>');continue}
+    if(/^#{1,4} /.test(l)){n=l.match(/^#+/)[0].length;o.push("<h"+n+">"+il(l.slice(n+1))+"</h"+n+">");i++;continue}
+    if(/^\|/.test(l)){var rs=[];while(i<L.length&&/^\|/.test(L[i]))rs.push(L[i++]);
+      var c=function(r){return r.replace(/^\||\|$/g,"").split("|").map(function(x){return x.trim()})};
+      o.push("<table>"+rs.filter(function(r){return !/^\|[\s:|-]+\|$/.test(r)}).map(function(r,k){return "<tr>"+c(r).map(function(x){return k?"<td>"+il(x)+"</td>":"<th>"+il(x)+"</th>"}).join("")+"</tr>"}).join("")+"</table>");continue}
+    if(/^\s*([-*]|\d+\.) /.test(l)){var ol=/^\s*\d+\./.test(l),it=[];
+      while(i<L.length&&(/^\s*([-*]|\d+\.) /.test(L[i])||(/^\s{2,}\S/.test(L[i])&&it.length))){
+        if(/^\s*([-*]|\d+\.) /.test(L[i])&&!/^\s{2,}/.test(L[i]))it.push([L[i].replace(/^\s*([-*]|\d+\.) /,""),[]]);
+        else it[it.length-1][1].push(L[i].replace(/^\s*([-*]|\d+\.) /,"").trim());
+        i++}
+      o.push("<"+(ol?"ol":"ul")+">"+it.map(function(x){return "<li>"+il(x[0])+(x[1].length?"<ul>"+x[1].map(function(y){return "<li>"+il(y)+"</li>"}).join("")+"</ul>":"")+"</li>"}).join("")+"</"+(ol?"ol":"ul")+">");continue}
+    if(/^> ?/.test(l)){b=[];while(i<L.length&&/^> ?/.test(L[i]))b.push(L[i++].replace(/^> ?/,""));
+      o.push("<blockquote"+(/^✅/.test(b[0])?' class="mejirushi"':"")+">"+b.map(il).join("<br>")+"</blockquote>");continue}
+    if(/^---+$/.test(l)){o.push("<hr>");i++;continue}
+    if(!l.trim()){i++;continue}
+    var p=[];while(i<L.length&&L[i].trim()&&!/^(```|#{1,4} |\||\s*([-*]|\d+\.) |> ?|---+$)/.test(L[i]))p.push(L[i++]);
+    o.push("<p>"+p.map(il).join("<br>")+"</p>");
+  }
+  return o.join("");
+}
+function kopii(t,k){
+  function dekita(){k.textContent="コピーしました"}
+  function dame(){k.textContent="長押しで選んでコピーしてください"}
+  if(navigator.clipboard&&window.isSecureContext){navigator.clipboard.writeText(t).then(dekita,function(){furui(t)?dekita():dame()})}else{furui(t)?dekita():dame()}
+}
+function furui(t){try{var a=document.createElement("textarea");a.value=t;a.style.position="fixed";a.style.opacity="0";document.body.appendChild(a);a.select();var r=document.execCommand("copy");a.remove();return r}catch(e){return false}}
+fetch("./md",{cache:"no-store"}).then(function(r){if(!r.ok)throw 0;return r.json()}).then(function(j){
+  var w=document.getElementById("md");w.innerHTML=md(j.md);
+  w.querySelectorAll(".kopi-blk").forEach(function(b){b.querySelector(".kopi-b").onclick=function(){kopii(b.querySelector("pre").textContent,b.querySelector(".kopi-k"))}});
+}).catch(function(){document.getElementById("md").innerHTML='<p class="shirase">いまは読めません。少したってから、もう一度開いてください。</p>'});
+</script>
+</body>
+</html>

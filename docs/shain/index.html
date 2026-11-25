@@ -102,6 +102,7 @@ a.bt.s,button.bt.s{background:var(--card);color:var(--acc)}
 .md th,.md td{border:1px solid var(--line);padding:6px 8px;text-align:left;vertical-align:top}
 .md code{background:var(--bg);border-radius:4px;padding:0 4px;font-size:.92em;word-break:break-all}
 .md blockquote{margin:8px 0;padding:4px 12px;border-left:4px solid var(--acc);color:var(--sub)}
+.md blockquote.mejirushi{color:inherit;background:rgba(31,140,90,.10);border-left-color:#1f8c5a;border-radius:0 10px 10px 0;padding:8px 14px;font-size:1.02em}
 .md h1{font-size:22px}.md h2{font-size:18px;margin-top:22px}.md h3{font-size:16px}
 .shorui-tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
 @media (prefers-color-scheme:dark){header .lg{filter:invert(1) hue-rotate(180deg) brightness(1.6)}}
@@ -398,7 +399,7 @@ function md(t){
       o.push("<table>"+rs.filter(r=>!/^\|[\s:|-]+\|$/.test(r)).map((r,k)=>"<tr>"+c(r).map(x=>k?`<td>${il(x)}</td>`:`<th>${il(x)}</th>`).join("")+"</tr>").join("")+"</table>");continue}
     if(/^\s*([-*]|\d+\.) /.test(l)){const ol=/^\s*\d+\./.test(l), it=[];while(i<L.length&&/^\s*([-*]|\d+\.) /.test(L[i]))it.push(L[i++].replace(/^\s*([-*]|\d+\.) /,""));
       o.push(`<${ol?"ol":"ul"}>${it.map(x=>`<li>${il(x)}</li>`).join("")}</${ol?"ol":"ul"}>`);continue}
-    if(/^> ?/.test(l)){const b=[];while(i<L.length&&/^> ?/.test(L[i]))b.push(L[i++].replace(/^> ?/,""));o.push(`<blockquote>${b.map(il).join("<br>")}</blockquote>`);continue}
+    if(/^> ?/.test(l)){const b=[];while(i<L.length&&/^> ?/.test(L[i]))b.push(L[i++].replace(/^> ?/,""));o.push(`<blockquote${/^✅/.test(b[0])?' class="mejirushi"':""}>${b.map(il).join("<br>")}</blockquote>`);continue}
     if(/^---+$/.test(l)){o.push("<hr>");i++;continue}
     if(!l.trim()){i++;continue}
     const p=[];while(i<L.length&&L[i].trim()&&!/^(```|#{1,4} |\||\s*([-*]|\d+\.) |> ?|---+$)/.test(L[i]))p.push(L[i++]);
