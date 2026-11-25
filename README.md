@@ -1,0 +1,6 @@
+# KAI Lab サイト
+
+- `docs/` … 公開のサイト（GitHub Pages）。`docs/index.html` が会社紹介、`docs/shain/` が社員ページの入口。
+- 社員ページの中身は `docs/shain/data.enc.json` に暗号（AES-GCM）で入っていて、合言葉を持つ人の画面の中でだけ開きます。合言葉と元の中身はこの倉庫に入れません。
+- `atsume/atsume.py` … 毎日の開発の記録から社員ページの中身を集める係。
+- `atsume/fuu.mjs` … 集めた中身に錠をかける係（合言葉ごとに PBKDF2-SHA256 25万回で鍵を包む）。

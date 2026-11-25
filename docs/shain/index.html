@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>KAI Lab 社員ページ</title>
+<style>
+:root{--bg:#f6f4ef;--card:#fff;--ink:#1d1f24;--sub:#6a6f78;--line:#e3dfd6;--acc:#1f6f5c;--acc2:#e8f2ee;--warn:#9a4b16;--warn2:#fbefe5}
+@media (prefers-color-scheme:dark){:root{--bg:#15171b;--card:#1e2127;--ink:#e9eaec;--sub:#9aa0aa;--line:#30343c;--acc:#5cc3a6;--acc2:#1d322c;--warn:#f0a66c;--warn2:#3a281b}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.7 "Hiragino Sans","Yu Gothic UI","Meiryo",system-ui,sans-serif}
+header{position:sticky;top:0;z-index:5;background:var(--bg);border-bottom:1px solid var(--line);padding:10px 16px;display:flex;align-items:center;gap:12px}
+header b{font-size:17px;letter-spacing:.04em}
+header .sp{flex:1}
+button{font:inherit;cursor:pointer;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:10px;padding:6px 12px}
+button.on{background:var(--acc);color:#fff;border-color:var(--acc)}
+main{max-width:900px;margin:0 auto;padding:16px}
+.mon{max-width:380px;margin:12vh auto;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:28px}
+.mon h1{font-size:20px;margin:0 0 6px}
+.mon p{color:var(--sub);margin:0 0 16px;font-size:14px}
+.mon input{width:100%;font:inherit;padding:10px 12px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--ink)}
+.mon button{width:100%;margin-top:12px;background:var(--acc);color:#fff;border-color:var(--acc);padding:10px}
+.err{color:var(--warn);font-size:14px;min-height:1.5em;margin-top:8px}
+.heya{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;cursor:pointer;transition:transform .1s}
+.card:hover{transform:translateY(-2px)}
+.card h2{font-size:18px;margin:0 0 4px}
+.card .hk{color:var(--sub);font-size:14px;margin:0 0 10px}
+.card .kazu{display:flex;flex-wrap:wrap;gap:6px;font-size:12px}
+.card .kazu span{background:var(--acc2);color:var(--acc);border-radius:99px;padding:1px 9px}
+.card .ima{font-size:13px;margin-top:10px;border-top:1px dashed var(--line);padding-top:8px;color:var(--sub)}
+.tabs{display:flex;gap:6px;overflow-x:auto;padding:4px 0 10px;scrollbar-width:thin}
+.tabs button{white-space:nowrap;font-size:14px}
+.ichi{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin:8px 0}
+.ichi .hi{font-size:12px;color:var(--sub)}
+.ichi .moto{font-size:11px;color:var(--sub);float:right}
+.ichi.dame{border-left:4px solid var(--warn)}
+.ichi.dame .naze{background:var(--warn2);border-radius:8px;padding:6px 10px;margin-top:6px;font-size:14px}
+.ichi h3{font-size:15px;margin:2px 0}
+.mi{display:flex;gap:8px;align-items:center;margin:4px 0 6px}
+.mi h1{font-size:22px;margin:0}
+.mi .hk{color:var(--sub);font-size:14px}
+input.sagasu{width:100%;font:inherit;padding:8px 12px;border-radius:10px;border:1px solid var(--line);background:var(--card);color:var(--ink);margin-bottom:6px}
+.kara{color:var(--sub);padding:20px;text-align:center}
+.shita{color:var(--sub);font-size:12px;text-align:center;margin:24px 0}
+.mae{font-size:14px;margin-bottom:8px}
+</style>
+</head>
+<body>
+<header><b>KAI Lab 社員ページ</b><span class="sp"></span><span id="who" style="font-size:13px;color:var(--sub)"></span><button id="deru" hidden>出る</button></header>
+<main id="m"><div class="kara">ひらいています…</div></main>
+<script>
+"use strict";
+const $=s=>document.querySelector(s), M=$("#m");
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const ub=b=>Uint8Array.from(atob(b),c=>c.charCodeAt(0));
+const LS="kai_shain_aikotoba";
+const get=k=>{try{return localStorage.getItem(k)}catch(e){return null}};
+const put=(k,v)=>{try{v==null?localStorage.removeItem(k):localStorage.setItem(k,v)}catch(e){}};
+let D=null;
+
+async function hiraku(aik){
+  const r=await fetch("data.enc.json?t="+Date.now(),{cache:"no-store"});
+  const box=await r.json();
+  const base=await crypto.subtle.importKey("raw",new TextEncoder().encode(aik.normalize("NFKC").trim()),"PBKDF2",false,["deriveKey"]);
+  for(const w of box.wraps){
+    try{
+      const W=await crypto.subtle.deriveKey({name:"PBKDF2",salt:ub(w.salt),iterations:box.iter,hash:"SHA-256"},base,{name:"AES-GCM",length:256},false,["decrypt"]);
+      const raw=await crypto.subtle.decrypt({name:"AES-GCM",iv:ub(w.iv)},W,ub(w.k));
+      const K=await crypto.subtle.importKey("raw",raw,"AES-GCM",false,["decrypt"]);
+      const pt=await crypto.subtle.decrypt({name:"AES-GCM",iv:ub(box.iv)},K,ub(box.ct));
+      return JSON.parse(new TextDecoder().decode(pt));
+    }catch(e){}
+  }
+  return null;
+}
+
+function mon(msg){
+  $("#deru").hidden=true;
+  M.innerHTML=`<div class="mon"><h1>社員の入口</h1><p>KAI Lab の社員だけが読めるページです。配られた合言葉を入れてください。この機械では次から入れなくて済みます。</p>
+  <input id="aik" autocomplete="current-password" type="password" placeholder="合言葉"><button id="go">入る</button><div class="err">${esc(msg||"")}</div></div>`;
+  const go=async()=>{const v=$("#aik").value;if(!v)return;$("#go").textContent="ひらいています…";await hairu(v)};
+  $("#go").onclick=go;$("#aik").onkeydown=e=>{if(e.key==="Enter")go()};$("#aik").focus();
+}
+
+async function hairu(aik){
+  let d=null;
+  try{d=await hiraku(aik)}catch(e){return mon("ページを読めませんでした。電波を確かめて、もう一度どうぞ。")}
+  if(!d){put(LS,null);return mon("合言葉が違うようです。")}
+  put(LS,aik);D=d;$("#deru").hidden=false;ichiran();
+}
+
+const KIND=[["susumi","進み"],["houkoku","出来た事"],["dameshi","ダメ出しと学び"],["kobanashi","開発の小話"],["kimatta","決まった事"],["fusaiyou","採らなかった案"],["omoi","創始者の思い"],["commit","工事日誌"]];
+
+function ichiran(){
+  window.scrollTo(0,0);
+  const rooms=D.soft.map((h,i)=>{
+    const ima=(h.susumi[0]||h.houkoku[0]||{});
+    return `<div class="card" data-i="${i}"><h2>${esc(h.namae)}</h2><p class="hk">${esc(h.hitokoto)}</p>
+    <div class="kazu">${KIND.filter(([k])=>h[k].length).map(([k,n])=>`<span>${n} ${h[k].length}</span>`).join("")}</div>
+    ${ima.text||ima.daimei?`<div class="ima">いま：${(()=>{const t=ima.text||ima.daimei;return esc((t.startsWith(ima.hi)?t:ima.hi+" "+t).slice(0,80))})()}…</div>`:""}</div>`}).join("");
+  M.innerHTML=`<p style="color:var(--sub);margin-top:0">ソフトごとの開発部屋です。進み・出来た事・ハイロ様のダメ出しと学んだ事・小話が、毎日の仕事から自動でたまっていきます。</p>
+  <div class="heya">${rooms}<div class="card" data-i="lab"><h2>ラボ全体の心得</h2><p class="hk">どのソフトにも通じる、ダメ出しから学んだ決まり</p><div class="kazu"><span>心得 ${D.lab_dameshi.length}</span></div></div></div>
+  <div class="shita">最後に集めた時刻：${esc(D.tsukutta.replace("T"," "))}</div>`;
+  M.querySelectorAll(".card").forEach(c=>c.onclick=()=>heya(c.dataset.i));
+}
+
+function ichi(k,x){
+  if(k==="dameshi")return `<div class="ichi dame"><span class="hi">${esc(x.hi)}</span><h3>${esc(x.setsumei)}</h3><div>${esc(x.honbun)}</div>${x.naze?`<div class="naze">なぜ：${esc(x.naze)}</div>`:""}</div>`;
+  if(k==="houkoku")return `<div class="ichi"><span class="hi">${esc(x.hi)}</span><h3>${esc(x.daimei)}</h3><div>${esc(x.naiyou)}</div></div>`;
+  if(k==="commit")return `<div class="ichi"><span class="moto">${esc(x.repo)}</span><span class="hi">${esc(x.hi)}</span><div>${esc(x.text)}</div></div>`;
+  return `<div class="ichi"><span class="moto">${esc(x.moto)}</span><span class="hi">${esc(x.hi)}</span><div>${esc(x.text)}</div></div>`;
+}
+
+function heya(i){
+  window.scrollTo(0,0);
+  const lab=i==="lab";
+  const h=lab?{namae:"ラボ全体の心得",hitokoto:"どのソフトにも通じる、ダメ出しから学んだ決まり",dameshi:D.lab_dameshi}:D.soft[+i];
+  const kinds=lab?[["dameshi","心得"]]:KIND.filter(([k])=>h[k].length);
+  let tab=kinds[0]?.[0], q="";
+  M.innerHTML=`<div class="mae"><button id="modoru">← 部屋の一覧</button></div>
+  <div class="mi"><h1>${esc(h.namae)}</h1></div><div class="hk" style="color:var(--sub);margin-bottom:8px">${esc(h.hitokoto)}</div>
+  <div class="tabs">${kinds.map(([k,n])=>`<button data-k="${k}">${n} ${h[k].length}</button>`).join("")}</div>
+  <input class="sagasu" placeholder="この部屋の中をさがす"><div id="list"></div>`;
+  $("#modoru").onclick=ichiran;
+  const draw=()=>{
+    M.querySelectorAll(".tabs button").forEach(b=>b.classList.toggle("on",b.dataset.k===tab));
+    const xs=(h[tab]||[]).filter(x=>!q||JSON.stringify(x).toLowerCase().includes(q));
+    $("#list").innerHTML=xs.length?xs.map(x=>ichi(tab,x)).join(""):`<div class="kara">まだありません</div>`;
+  };
+  M.querySelectorAll(".tabs button").forEach(b=>b.onclick=()=>{tab=b.dataset.k;draw()});
+  let t;$(".sagasu").oninput=e=>{clearTimeout(t);t=setTimeout(()=>{q=e.target.value.trim().toLowerCase();draw()},200)};
+  draw();
+}
+
+$("#deru").onclick=()=>{put(LS,null);D=null;mon("出ました。")};
+function hashKara(){const m=location.hash.match(/k=([^&]+)/);if(!m)return false;const k=decodeURIComponent(m[1]);history.replaceState(null,"",location.pathname);hairu(k);return true}
+addEventListener("hashchange",hashKara);
+if(!hashKara()){const s=get(LS); s?hairu(s):mon();}
+</script>
+</body>
+</html>

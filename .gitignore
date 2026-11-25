@@ -1,0 +1,7 @@
+# 内緒の物は別の場所（kai_shain_private）に置く。念のため弾く
+*.bak_*
+_bak/
+aikotoba*.json
+settei*.json
+data.json
+.claude/
