@@ -62,6 +62,23 @@ def find_claude() -> str | None:
     return best
 
 
+NAISHO = Path(sys.argv[1]) if len(sys.argv) > 1 else Path(r"C:\cl\kai_shain_private")
+
+
+def kiku(exe: str | None, prompt: str, shurui: str, naiyou: str) -> str:
+    """AI に1回頼む。L9 の頭えらび（atama_tsunagi.py・入/切つき）が無ければ今までどおり opus medium。"""
+    try:
+        sys.path.insert(0, str(Path(__file__).resolve().parent)) if str(Path(__file__).resolve().parent) not in sys.path else None  # 罠：-I と埋め込み python では自分の場所が sys.path に無い
+        import atama_tsunagi
+        return atama_tsunagi.kiku(NAISHO, exe, prompt, shurui, naiyou)
+    except ImportError:
+        r = subprocess.run([exe, "-p", "--model", "opus", "--effort", "medium", "--tools", "",
+                            "--output-format", "text", "--no-session-persistence"],
+                           input=prompt, capture_output=True, text=True, encoding="utf-8", errors="replace",
+                           timeout=900, creationflags=NO_WINDOW, cwd=os.environ.get("TEMP", "."))
+        return r.stdout or ""
+
+
 def yubi(s: str) -> str:
     return hashlib.sha1(s.encode("utf-8")).hexdigest()[:16]
 
@@ -70,13 +87,10 @@ def tanomu(exe: str, bun: dict[str, str]) -> dict[str, str]:
     prompt = TANOMI + json.dumps(bun, ensure_ascii=False, indent=0)
     for _ in range(3):
         try:
-            r = subprocess.run([exe, "-p", "--model", "opus", "--effort", "medium", "--tools", "",
-                                "--output-format", "text", "--no-session-persistence"],
-                               input=prompt, capture_output=True, text=True, encoding="utf-8", errors="replace",
-                               timeout=900, creationflags=NO_WINDOW, cwd=os.environ.get("TEMP", "."))
-            i = r.stdout.find("{")  # 罠：{.*} で取ると塊が2つの時に読めない→最初の塊だけ読む
+            o = kiku(exe, prompt, "karui", "言い直し")  # L9：短い言い換え＝軽い頭
+            i = o.find("{")  # 罠：{.*} で取ると塊が2つの時に読めない→最初の塊だけ読む
             if i >= 0:
-                d, _ = json.JSONDecoder().raw_decode(r.stdout[i:])
+                d, _ = json.JSONDecoder().raw_decode(o[i:])
                 return {k: re.sub(r"ハイロ(様|さん|さま)?", "社長", str(v).strip()) for k, v in d.items() if k in bun and str(v).strip()}
         except Exception as e:  # noqa: BLE001
             print("やり直し:", e, file=sys.stderr)
@@ -87,13 +101,10 @@ def matome_tanomu(exe: str, namae: str, bun: list[str]) -> dict | None:
     prompt = MATOME.format(namae=namae) + "\n".join("・" + b for b in bun)
     for _ in range(3):
         try:
-            r = subprocess.run([exe, "-p", "--model", "opus", "--effort", "medium", "--tools", "",
-                                "--output-format", "text", "--no-session-persistence"],
-                               input=prompt, capture_output=True, text=True, encoding="utf-8", errors="replace",
-                               timeout=900, creationflags=NO_WINDOW, cwd=os.environ.get("TEMP", "."))
-            i = r.stdout.find("{")  # 罠：{.*} で取ると塊が2つの時に読めない→最初の塊だけ読む
+            o = kiku(exe, prompt, "futsuu", "1日のまとめ")  # L9：まとめ＝ふつうの頭
+            i = o.find("{")  # 罠：{.*} で取ると塊が2つの時に読めない→最初の塊だけ読む
             if i >= 0:
-                d, _ = json.JSONDecoder().raw_decode(r.stdout[i:])
+                d, _ = json.JSONDecoder().raw_decode(o[i:])
                 fix = lambda v: re.sub(r"ハイロ(様|さん|さま)?", "社長", str(v).strip())
                 ten = [fix(t) for t in d.get("ten", []) if str(t).strip()][:3]
                 if d.get("midashi") and ten:
@@ -187,6 +198,11 @@ def main() -> int:
         f.write_text(json.dumps(d, ensure_ascii=False, indent=1), encoding="utf-8")
     nokori = sum(1 for d in datas for x, rans in koumoku(d) for r in rans if x.get(r) and len(x[r]) >= 4 and yubi(x[r]) not in cache)
     print(f"まだ直せていない文 {nokori} 件")
+    try:
+        import atama_tsunagi
+        print(f"ゲージを送った行 {atama_tsunagi.gauge_okuru(NAISHO)} 件")
+    except Exception as e:  # noqa: BLE001
+        print("ゲージを送れず:", type(e).__name__, file=sys.stderr)
     return 0
 
 
