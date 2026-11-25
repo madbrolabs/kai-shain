@@ -86,6 +86,7 @@ a.bt.s,button.bt.s{background:var(--card);color:var(--acc)}
 .md h1{font-size:22px}.md h2{font-size:18px;margin-top:22px}.md h3{font-size:16px}
 .shorui-tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
 @media (prefers-color-scheme:dark){header .lg{filter:invert(1) hue-rotate(180deg) brightness(1.6)}}
+.tsutsumi-b{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:14px}.tsutsumi-b button{padding:10px 14px;border-radius:8px;border:1px solid var(--line,#ccc);background:transparent;color:inherit;font-size:15px}.tsutsumi-b .shu{background:#2563eb;color:#fff;border-color:#2563eb;font-weight:bold}#kopi-k{color:var(--sub);font-size:14px}
 </style>
 </head>
 <body>
@@ -139,7 +140,7 @@ const KIND=[["susumi","進み"],["houkoku","出来た事"],["dameshi","ダメ出
 
 // 画面の移り変わりを履歴に積む＝マウスやブラウザの「戻る」で前の画面へ
 function iku(st,push){const u=location.pathname+(st.v==="heya"?`#h=${st.i}&t=${st.t||""}`:st.v!=="ichiran"?`#v=${st.v}${st.i?"&i="+encodeURIComponent(st.i):""}`:"");push?history.pushState(st,"",u):history.replaceState(st,"",u)}
-function miseru(st){if(!D)return;const v=st&&st.v;v==="heya"?heya(st.i,st.t,0):v==="kousin"?kousin(0):v==="yomu"?yomu(st.i,0):v==="shorui"?shorui(st.i,0):ichiran(0)}
+function miseru(st){if(!D)return;const v=st&&st.v;v==="heya"?heya(st.i,st.t,0):v==="kousin"?kousin(0):v==="yomu"?yomu(st.i,0):v==="tsutsumi"?tsutsumi(0):v==="shorui"?shorui(st.i,0):ichiran(0)}
 addEventListener("popstate",e=>miseru(e.state));
 function ichiran(push=1){
   iku({v:"ichiran"},push);
@@ -160,7 +161,7 @@ function ichiran(push=1){
   <div class="shita">最後に集めた時刻：${esc(D.tsukutta.replace("T"," "))}</div>`;
   M.querySelectorAll(".card").forEach(c=>c.onclick=()=>heya(c.dataset.i,null,1));
   M.querySelectorAll("[data-y]").forEach(a=>a.onclick=e=>{e.preventDefault();const y=a.dataset.y;
-    y==="tsutsumi"?tsutsumi():y==="kousin"?kousin(1):y==="shorui"?shorui("",1):yomu(y.slice(5),1)});
+    y==="tsutsumi"?tsutsumi(1):y==="kousin"?kousin(1):y==="shorui"?shorui("",1):yomu(y.slice(5),1)});
 }
 
 // 読みやすく直した文（yasashi）を先に出す。原文は「原文」ボタンで同じ札の中に開く（行を増やさない）
@@ -286,10 +287,22 @@ async function kousin(push=1){
     catch(x){c.querySelector(".err").textContent="出来ませんでした："+x.message;c.querySelectorAll("button").forEach(x=>x.disabled=false)}
   });
 }
-function tsutsumi(){
-  const t=D.hoka.tsutsumi, a=document.createElement("a");
-  a.href=URL.createObjectURL(new Blob([t.md],{type:"text/markdown;charset=utf-8"}));a.download=t.namae;a.click();
-  setTimeout(()=>URL.revokeObjectURL(a.href),4000);
+// スマホのブラウザはファイルの保存が出来ない事がある（2026-11-25 社長）→ 画面で開いて「全部コピー」を主にする
+function tsutsumi(push=1){
+  const t=D.hoka.tsutsumi;if(!t)return ichiran(0);
+  iku({v:"tsutsumi"},push);window.scrollTo(0,0);
+  M.innerHTML=`<div class="mae"><button id="modoru">← 部屋の一覧</button></div><div class="mi"><h1>AI に渡す包み</h1></div>
+  <p style="color:var(--sub);margin:0 0 10px">「全部コピー」を押して、自分の AI（Claude・Gemini・Grok など）の入力欄に貼り付けてください。会社のしくみが AI に伝わります。（版 ${esc(t.ban)}）</p>
+  <div class="tsutsumi-b"><button id="kopi" class="shu">全部コピー</button><button id="hozon">ファイルで保存（パソコン向け）</button><span id="kopi-k"></span></div>
+  <div class="md">${md(t.md)}</div>`;
+  $("#modoru").onclick=()=>ichiran(1);
+  $("#kopi").onclick=async()=>{const k=$("#kopi-k");
+    try{await navigator.clipboard.writeText(t.md);k.textContent="コピーしました。AI に貼り付けてください。"}
+    catch(e){const ta=document.createElement("textarea");ta.value=t.md;ta.style.cssText="position:fixed;top:0;left:0;opacity:0";document.body.appendChild(ta);ta.select();
+      try{document.execCommand("copy");k.textContent="コピーしました。AI に貼り付けてください。"}catch(e2){k.textContent="コピー出来ませんでした。下の文を長押しで選んでコピーしてください。"}ta.remove()}};
+  $("#hozon").onclick=()=>{const a=document.createElement("a");
+    a.href=URL.createObjectURL(new Blob([t.md],{type:"text/markdown;charset=utf-8"}));a.download=t.namae;a.click();
+    setTimeout(()=>URL.revokeObjectURL(a.href),4000)};
 }
 // ---------- 読み物（手引き・紹介・会社設立の書類） ----------
 function md(t){
