@@ -1,0 +1,9 @@
+{
+  "name": "入口アプリ",
+  "short_name": "入口",
+  "description": "会社のソフトを、押すだけで入れる入口です。",
+  "display": "standalone",
+  "background_color": "#f6f7f9",
+  "theme_color": "#3b6ea5",
+  "lang": "ja"
+}

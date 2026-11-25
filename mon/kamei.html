@@ -53,6 +53,11 @@ a.mazu b{display:block;font-size:23px;line-height:1.4}
 a.mazu span{display:block;font-size:15.5px;line-height:1.55;margin-top:2px}
 a.mazu:hover,a.mazu:focus{border-color:#b37f00}
 a.mazu[hidden]{display:none}
+.soft-ireru{margin:0 0 12px;padding:12px 16px 14px;border-radius:16px;background:#eef3fb;border:2px solid #3b6ea5}
+.soft-ireru h2{margin:0 0 8px;font-size:20px}
+.soft-ireru a.ireru{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:4px 8px;min-height:60px;padding:10px 14px;border-radius:14px;text-decoration:none;font-size:20px;font-weight:800;color:#fff;background:#3b6ea5;box-shadow:0 3px 10px rgba(0,0,0,.12)}
+.soft-ireru a.ireru span{font-size:15px;font-weight:600;opacity:.95}
+.soft-ireru p{margin:8px 0 0;font-size:15.5px;line-height:1.6}
 /* 部屋の中 */
 .tabs{display:none}
 .naka{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr);gap:16px;padding-top:14px;padding-bottom:16px}
@@ -162,6 +167,12 @@ details.shirase div{white-space:pre-wrap;overflow-wrap:anywhere;margin-top:6px}
     <a class="kou" href="https://madbrolabs.github.io/kai-shain/" target="_blank" rel="noopener">公式ページ<span>を開く</span></a>
   </nav>
   <a class="mazu" id="mazu" href="./hajimete/" hidden><b>👉 まずここを見てください</b><span>はじめての人の入口：AI を入れて、会社の部屋に参加するまでの5つの段</span></a>
+  <section class="soft-ireru" aria-label="会社のソフトを入れる">
+    <h2>🔧 会社のソフトを入れる</h2>
+    <!-- 行き先は今は招待なし。招待リンク（#i=…）は会社のつなぎ先が入るので、ここ（倉庫）には書かない。差し込みは門番が内緒の場所から読む形で後から -->
+    <a class="ireru" id="iriguchi-link" href="https://madbrolabs.github.io/kai-shain/iriguchi/" target="_blank" rel="noopener">入口アプリを入れる<span>（スマホ・パソコン）</span></a>
+    <p>押すと、この電話に合った入れ方が出ます。入口アプリを1回入れれば、あとは使いたいソフトを押すだけです。</p>
+  </section>
   <div class="chuui" id="chuui">このページは<b id="dareno">副社長（亀井さん）</b>専用です。アドレスは他の人に渡さないでください。</div>
   <section id="tsukutta-waku" hidden>
     <h2>副社長からの案（入れるか待ち）</h2>

@@ -1,0 +1,165 @@
+{
+ "katachi": "madbro.iriguchi.ichiran.v1",
+ "setsumei": "入口アプリの一覧表（ここ1か所だけ）。1行＝1ソフト。windows／android／iphone に入れ方を書く。無い機械は書かない（＝その機械では出ない）。jumbi が true の行は「準備中」で押せない。{u} などの波かっこは招待の中の値で埋まる（{kaisha}・{namae} は全ソフト共通）。url は一覧表の置き場からの相対でもよい。sha256・size は tsukuru.py が配り物から計って書く。",
+ "soft": [
+  {
+   "id": "iriguchi",
+   "namae": "入口アプリ",
+   "hitokoto": "会社のソフトを、押すだけで入れます",
+   "fuda": "入",
+   "iro": "#3b6ea5",
+   "jibun": true,
+   "windows": {
+    "kata": "jibun",
+    "url": "iriguchi.exe",
+    "sha256": "acd91218fba8b7f8c66f1956e01c6c5fdc8d83b49cce55283bae5cc58a46881a",
+    "size": 29696,
+    "tsuuban": 1,
+    "ban": "0.1.0"
+   },
+   "android": {
+    "kata": "apk",
+    "package": "jp.madbrolab.iriguchi",
+    "url": "iriguchi.apk",
+    "sha256": "81c57ac46bf48df6c5b420721ef28a0debbe20144dcc643aaf65aac0617ca98b",
+    "size": 45459,
+    "tsuuban": 1,
+    "ban": "0.1.0"
+   },
+   "iphone": {
+    "kata": "web",
+    "url": "./"
+   }
+  },
+  {
+   "id": "gijiroku",
+   "namae": "超議事録",
+   "hitokoto": "話すだけで、会議の記録が残ります",
+   "fuda": "議",
+   "iro": "#c0392b",
+   "settei": [
+    "u",
+    "k",
+    "d"
+   ],
+   "windows": {
+    "kata": "web",
+    "url": "{u}?p=rokuon&k={k}"
+   },
+   "android": {
+    "kata": "apk",
+    "package": "jp.madbro.rokuon",
+    "url": "soft/rokuon.apk",
+    "settei_link": "rokuon://setup?u={u}&k={k}&d={d}",
+    "sha256": "c35ed8dedd4befc65c534845683bd1277dbe7f224f481c7ed6c2bdb54d37e0ed",
+    "size": 981090,
+    "tsuuban": 20,
+    "ban": "0.18.0"
+   },
+   "iphone": {
+    "kata": "web",
+    "url": "{u}?p=rokuon&k={k}"
+   }
+  },
+  {
+   "id": "tsuuyaku",
+   "namae": "同時通訳",
+   "hitokoto": "外国のお客様と、その場で話せます",
+   "fuda": "訳",
+   "iro": "#16a085",
+   "settei": [
+    "url"
+   ],
+   "windows": {
+    "kata": "web",
+    "url": "{url}"
+   },
+   "android": {
+    "kata": "web",
+    "url": "{url}"
+   },
+   "iphone": {
+    "kata": "web",
+    "url": "{url}"
+   }
+  },
+  {
+   "id": "enything",
+   "namae": "縁ything",
+   "hitokoto": "お客様との連絡を、言葉の壁なく",
+   "fuda": "縁",
+   "iro": "#d35400",
+   "settei": [
+    "url"
+   ],
+   "windows": {
+    "kata": "web",
+    "url": "{url}"
+   },
+   "android": {
+    "kata": "web",
+    "url": "{url}"
+   },
+   "iphone": {
+    "kata": "web",
+    "url": "{url}"
+   }
+  },
+  {
+   "id": "kai_shain",
+   "namae": "社員ページ",
+   "hitokoto": "会社のお知らせと、届いた更新",
+   "fuda": "社",
+   "iro": "#7f8c8d",
+   "settei": [
+    "k"
+   ],
+   "windows": {
+    "kata": "web",
+    "url": "https://madbrolabs.github.io/kai-shain/shain/#k={k}"
+   },
+   "android": {
+    "kata": "web",
+    "url": "https://madbrolabs.github.io/kai-shain/shain/#k={k}"
+   },
+   "iphone": {
+    "kata": "web",
+    "url": "https://madbrolabs.github.io/kai-shain/shain/#k={k}"
+   }
+  },
+  {
+   "id": "hivot",
+   "namae": "HIVOT",
+   "hitokoto": "声で話しかける、AIの相棒",
+   "fuda": "H",
+   "iro": "#8e44ad",
+   "jumbi": true,
+   "jumbi_wake": "配る置き場（GitHub）が今は開けないため",
+   "windows": {
+    "kata": "exe",
+    "url": "",
+    "args": [
+     "/install-quiet"
+    ]
+   },
+   "android": {
+    "kata": "apk",
+    "package": "dev.madbrolabs.hivot",
+    "url": ""
+   }
+  },
+  {
+   "id": "ai_norikae",
+   "namae": "AI乗り換え",
+   "hitokoto": "社内のAIを、別のAIへ取り替えます",
+   "fuda": "替",
+   "iro": "#2c3e50",
+   "jumbi": true,
+   "jumbi_wake": "まだ入れる形がありません",
+   "windows": {
+    "kata": "web",
+    "url": ""
+   }
+  }
+ ]
+}
