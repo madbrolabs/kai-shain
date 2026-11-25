@@ -1330,6 +1330,7 @@ def main() -> None:
     t.add_argument("--tanomi", default="")
     t.add_argument("--uketsuke", default="")
     t.add_argument("--kyaku", default="", help="誰の頼みか（受付番号から分かる時は要らない）")
+    t.add_argument("--joutai", default="試し中", help="社長の【決】で既に本番に出ている物は「入れた」（入れるか待ちに載せない）")
     j = sub.add_parser("joutai", help="一覧の状態を変える（試し中／入れた／見送り）")
     j.add_argument("i", type=int)
     j.add_argument("joutai")
@@ -1342,7 +1343,7 @@ def main() -> None:
     kb.add_argument("--kyaku", default="kamei", help="誰の部屋か（例 iwata＝【岩田部屋】・岩田部屋名簿）")
     a = ap.parse_args()
     if a.cmd == "tsuika":
-        print(json.dumps(tsuika(a.heya, a.nani, a.oki, a.kekka, a.tanomi, a.uketsuke, kyaku_na=a.kyaku), ensure_ascii=False))
+        print(json.dumps(tsuika(a.heya, a.nani, a.oki, a.kekka, a.tanomi, a.uketsuke, joutai=a.joutai, kyaku_na=a.kyaku), ensure_ascii=False))
     elif a.cmd == "joutai":
         p = D() / "tsukutta.jsonl"
         ls = p.read_text(encoding="utf-8-sig").splitlines()
