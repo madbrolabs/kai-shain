@@ -2,7 +2,7 @@
 
 入口＝/kamei/<長い鍵>/（合言葉なし。鍵は 内緒の場所/secret/kamei.json の kamei・shachou。違えば 404）。
 設定＝内緒の場所/kamei/settei.json（iri＝入/切、nozoku＝出さない部屋、renda＝連打よけ）。
-書き込み＝内緒の場所/kamei/ukebako/<受付番号>.json に置き → 配達係（窓なしの claude -p を1回）が SendMessage でその部屋へ届ける。
+書き込み＝内緒の場所/kamei/ukebako/<受付番号>.json に置き → すぐにプログラムだけで部屋の受け口へ書く（heya_pipe.py・AI は使わない・数十ミリ秒）。
   届いたかは、その部屋の会話の記録（jsonl）に受付番号が出たかで確かめる。届かない時は見張りフック kamei_mihari.py が次の一言で差し込む。
 部屋＝係長相談室＋亀部屋名簿（【亀部屋】）＋主任名簿（【主任】）。名簿が増えれば一覧も増える。
 新しく出来た物＝成果物台帳（seika.py・内緒の場所/seikabutsu/daichou.jsonl）を読んで大きな札で出す。権利まもりは亀井さんには出さない。
@@ -20,7 +20,6 @@ import json
 import os
 import re
 import secrets
-import subprocess
 import sys
 import time
 from pathlib import Path
@@ -211,7 +210,19 @@ def kiroku_basho(sid: str) -> Path | None:
 
 # ---------- 会話の読み取り（足された分だけ）----------
 SR = re.compile(r"<system-reminder>.*?</system-reminder>", re.S)
-CSM = re.compile(r'<cross-session-message[^>]*?from-name="([^"]*)"[^>]*>(.*?)(?:</cross-session-message>|$)', re.S)
+CSM_RE = re.compile(r'<cross-session-message([^>]*)>(.*?)(?:</cross-session-message>|$)', re.S)
+CSM_NA = re.compile(r'(?<![\w-])from-name="([^"]*)"')
+CSM_KARA = re.compile(r'(?<![\w-])from="([^"]*)"')
+
+
+class CSM:  # 送り主の名前＝from-name、無ければ from（社員ページの配達口は from-name を持たない）
+    @staticmethod
+    def findall(s: str) -> list[tuple[str, str]]:
+        out = []
+        for at, body in CSM_RE.findall(s):
+            m = CSM_NA.search(at) or CSM_KARA.search(at)
+            out.append((m.group(1) if m else "", body))
+        return out
 KYOU = {}  # sid → {"path","pos","items","n","links","rest"}
 PUB = re.compile(r"https://madbrolabs\.github\.io/[^\s)\]」>\"'`]+")
 SAGYOU_NA = {"Bash": "PCで作業", "PowerShell": "PCで作業", "Read": "資料を読む", "Grep": "資料を探す", "Glob": "資料を探す",
@@ -254,7 +265,7 @@ def _gyou(st: dict, d: dict) -> None:
         for s in texts:
             if "<cross-session-message" in s:
                 for kara, body in CSM.findall(s):
-                    if kara == HAITATSU_NA:
+                    if kara == HAITATSU_NA or SR.sub("", body).strip().startswith(ATAMA_ZEN):
                         continue  # 亀井さんの書き込みは受け箱から出す（二重にしない）
                     _tasu(st, {"dare": "shirase", "kara": fuseru(kara)[:40], "text": fuseru(SR.sub("", body).strip())[:3000], "at": at})
                 continue
@@ -594,58 +605,33 @@ def kiroku_ni_aru(sid: str, uid: str, kara: int = 0) -> bool:
         return False
 
 
-def find_claude() -> str | None:
-    """版ごとにフォルダが変わる＝毎回いちばん新しい claude.exe を探す（メイド長と同じ道）。"""
-    root = Path(os.environ.get("LOCALAPPDATA", r"C:\Users\hiroy\AppData\Local")) / "Claude-Data"
-    best, key = None, None
-    for p in glob.glob(str(root / "*" / "claude-code" / "*" / "*" / "claude.exe")):
-        k = tuple(int(v) if v.isdigit() else 0 for v in re.split(r"[.\-]", Path(p).parent.parent.name))
-        if key is None or k > key:
-            best, key = p, k
-    return best
+def _pipe():
+    if str(HERE) not in sys.path:  # python -I は自分のフォルダを sys.path に入れない
+        sys.path.insert(0, str(HERE))
+    import heya_pipe
+    return heya_pipe
 
 
 def haitatsu_1(x: dict) -> str:
-    """窓なしの claude -p を1回起こし、SendMessage でその部屋へ本文を届けさせる。戻り＝todoita／nemuri／dame"""
-    exe = find_claude()
-    if not exe:
-        return "dame"
-    p = kiroku_basho(x["sid"])
-    kara = p.stat().st_size if p else 0
-    honbun = todokeru_bun(x)
-    tanomi = (f"あなたは「{HAITATSU_NA}」です。次の手順だけをして、ほかの事は一切しないでください。\n"
-              f"1. ToolSearch で query=\"select:ListAgents,SendMessage\" を読み込む。\n"
-              f"2. ListAgents で、名前が「{x['dai']}」の部屋があるか見る。\n"
-              f"3. あれば SendMessage で to=その名前、message=下の【本文】の中身を一字も変えず、足さず、そのまま送る。\n"
-              f"4. 送れたら「送りました」、部屋が一覧に無ければ「ありません」とだけ答えて終わる。\n"
-              f"【本文】\n{honbun}\n【本文ここまで】")
-    cmd = [exe, "-p", "--output-format", "json", "--model", "opus", "--effort", "low",
-           "--permission-mode", "auto", "--permission-prompts", "none", "-n", HAITATSU_NA,
-           "--tools", "ToolSearch,ListAgents,SendMessage"]
+    """AI を使わず、プログラムだけでその部屋の受け口へ本文を書く（数十ミリ秒）。戻り＝todoita／nemuri／dame"""
     try:
-        r = subprocess.run(cmd, input=tanomi, capture_output=True, text=True, encoding="utf-8", errors="replace",
-                           cwd=str(D()), timeout=240, creationflags=NO_WINDOW,
-                           env=dict(os.environ, CLAUDE_CODE_ENTRYPOINT=os.environ.get("CLAUDE_CODE_ENTRYPOINT", "sdk-cli")))
-        kotae = ""
-        try:
-            kotae = json.loads(r.stdout or "{}").get("result", "")
-        except Exception:
-            kotae = (r.stdout or "")[-300:]
-        log(f'配達 {x["id"]} rc={r.returncode} 答え={kotae[:80]!r}')
+        kekka, hito = _pipe().todokeru(x["sid"], todokeru_bun(x))
     except Exception as e:
-        log(f'配達 {x["id"]} つまずき {e!r}')
-        return "dame"
-    if "送りました" in kotae:  # 部屋の受け箱に入った。部屋のAIが読むのは次の番（読んだかは yonda で後から見る）
-        return "todoita"
-    for _ in range(10):  # 答えが崩れていても、部屋の記録に受付番号が出ていれば届いている
-        if kiroku_ni_aru(x["sid"], x["id"], kara):
-            return "todoita"
-        time.sleep(3)
-    return "nemuri" if "ありません" in kotae else "dame"
+        kekka, hito = "dame", repr(e)[:80]
+    log(f'配達 {x["id"]} → {kekka}（{hito}・{time.time() - x.get("t", time.time()):.1f}秒）')
+    return kekka
+
+
+HAITATSU_JOU = __import__("threading").Lock()
 
 
 def haitatsu_mawari() -> None:
     """届けていない書き込みを古い順に1件ずつ届ける。"""
+    with HAITATSU_JOU:
+        _haitatsu_mawari()
+
+
+def _haitatsu_mawari() -> None:
     for x0 in okutta():
         f = ukebako() / f'{x0["id"]}.json'
         x = rj(f, None)  # 並べた後に取り消された物を届けないよう、1件ごとに読み直す
@@ -659,7 +645,8 @@ def haitatsu_mawari() -> None:
         if x.get("tsugi", 0) > time.time():
             continue
         if kiroku_ni_aru(x["sid"], x["id"]):  # 見張りフックが先に届けていた
-            x.update(joutai="todoita", todoita_at=ima(), michi=x.get("michi") or "hook", yonda_at=ima())
+            x.update(joutai="todoita", todoita_at=ima(), michi=x.get("michi") or "hook", yonda_at=ima(),
+                     byou=round(time.time() - x.get("t", time.time()), 1))
             wj(f, x)
             continue
         p0 = kiroku_basho(x["sid"])
@@ -670,10 +657,10 @@ def haitatsu_mawari() -> None:
             continue
         x["tamesi"] = x.get("tamesi", 0) + 1
         if kekka == "todoita":
-            x.update(joutai="todoita", todoita_at=ima(), michi="SendMessage", kara=kara)
+            x.update(joutai="todoita", todoita_at=ima(), michi="pipe", kara=kara, byou=round(time.time() - x.get("t", time.time()), 1))
         else:
             x["nemuri"] = kekka == "nemuri"
-            x["tsugi"] = time.time() + min(1800, 60 * 2 ** x["tamesi"])
+            x["tsugi"] = time.time() + min(300, 5 * 2 ** x["tamesi"])  # 部屋が開けばすぐ届くよう短めにやり直す
         wj(f, x)
         log(f'{x["id"]} → {x["joutai"]}（{kekka}・{x["tamesi"]}回目）')
 
@@ -798,8 +785,11 @@ def tsukeru(app) -> None:
             out = [x for x in its if x["n"] > after]
             if its and its[-1]["dare"] == "sagyou" and its[-1]["n"] <= after:
                 out = [its[-1]] + out  # 作業中の札は数が増えるので毎回送る（画面は data-key で差し替え）
+        ai_at = [x["at"] for x in its if x["dare"] == "ai" and x.get("at")]
         ok = [{"id": x["id"], "at": x["at"], "text": fuseru(x["text"]), "joutai": x["joutai"],
-               "nemuri": x.get("nemuri", False), "dare": x["dare"], "yonda": bool(x.get("yonda_at"))}
+               "nemuri": x.get("nemuri", False), "dare": x["dare"], "yonda": bool(x.get("yonda_at")),
+               "byou": x.get("byou"),
+               "henji": bool(x.get("todoita_at")) and any(a >= x["todoita_at"] for a in ai_at[-50:])}
               for x in okutta(h["id"]) if x.get("shurui") == "kamei"]
         ugoki = st.get("ugoki", "")
         return jr({"items": out, "okutta": ok, "ugoki": ugoki, "saisho": its[0]["n"] if its else 0,
@@ -847,7 +837,12 @@ def tsukeru(app) -> None:
         except Exception:
             return jr({"ok": False, "err": "形が違います"}, 400)
         ok, v = await asyncio.to_thread(uketsukeru, h["id"], d.get("text", ""), who)
-        return jr({"ok": ok, "id": v} if ok else {"ok": False, "err": v}, 200 if ok else 400)
+        if not ok:
+            return jr({"ok": False, "err": v}, 400)
+        if os.environ.get("KAI_KAMEI_HAITATSU", "1") == "1":  # 5秒おきの見回りを待たず、すぐ届ける
+            await asyncio.to_thread(haitatsu_mawari)
+        x = rj(ukebako() / f"{v}.json", {})
+        return jr({"ok": True, "id": v, "at": x.get("at"), "joutai": x.get("joutai"), "byou": x.get("byou"), "nemuri": x.get("nemuri", False)})
 
     async def tsukutta_api(req):
         if mon(req) != "shachou" or not iri():

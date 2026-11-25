@@ -46,7 +46,7 @@ h2{font-size:19px;margin:22px 0 10px}
 .tabs{display:none}
 .naka{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr);gap:16px;padding-top:14px;padding-bottom:16px}
 .kaiwa-waku{display:flex;flex-direction:column;background:var(--card);border:1px solid var(--line);border-radius:16px;height:calc(100vh - 100px);height:calc(100dvh - 100px);min-height:420px}
-.kaiwa{flex:1;overflow-y:auto;padding:12px 12px 4px;overscroll-behavior:contain}
+.kaiwa{flex:1;overflow-y:auto;overflow-x:hidden;padding:12px 12px 4px;overscroll-behavior:contain}
 .mae{display:block;margin:4px auto 10px;border:1px solid var(--line);background:var(--bg);color:var(--sub);border-radius:999px;padding:3px 14px;font-size:14px}
 .m{margin:8px 0;display:flex;flex-direction:column}
 .m .w{font-size:13px;color:var(--sub);margin:0 6px 2px}
@@ -64,7 +64,7 @@ h2{font-size:19px;margin:22px 0 10px}
 details.shirase{margin:6px 0;font-size:15px;background:var(--bg);border:1px dashed var(--line);border-radius:12px;padding:6px 12px}
 details.shirase summary{cursor:pointer;color:var(--sub)}
 details.shirase div{white-space:pre-wrap;overflow-wrap:anywhere;margin-top:6px}
-.joutai{font-size:13px;color:var(--sub);margin:2px 6px 0}
+.joutai{font-size:13px;color:var(--sub);margin:2px 6px 0;max-width:100%;text-align:right;overflow-wrap:anywhere}
 .shita{position:relative}
 .atarashii{position:absolute;left:50%;transform:translateX(-50%);bottom:8px;border:0;background:var(--acc);color:#fff;border-radius:999px;padding:4px 16px;font-size:15px;display:none;box-shadow:0 3px 10px rgba(0,0,0,.2)}
 .kaku{border-top:1px solid var(--line);padding:10px;display:flex;gap:8px;align-items:flex-end}
@@ -364,10 +364,22 @@ function itemNode(x){
   return d;
 }
 
+// 届け先の部屋の書き手の呼び名（係長相談室＝係長、【主任】○○＝○○の主任）
+var UGOKU = false;
+function kakiteNa(){
+  var d = NAMAE[HEYA] || "";
+  if(/^【係長】/.test(d)) return "係長";
+  if(/^【主任】/.test(d)) return d.replace(/^【主任】/, "") + "の主任";
+  return (d.replace(/^【[^】]*】/, "") || "部屋") + "の係";
+}
+function byouMoji(b){ return b < 0.1 ? "0.1秒以内" : b + "秒"; }
 function okuttaNode(x){
   var key = "k" + x.id, d = $("kaiwa").querySelector('[data-key="'+key+'"]'), nw = !d;
   if(!d){ d = document.createElement("div"); d.className = "m kamei"; d.dataset.key = key; d.dataset.at = x.at; }
-  var j = x.joutai === "todoita" ? (x.yonda ? "✓✓ 部屋のAIが読みました" : "✓ 部屋に届きました（AIが読むのを待っています）") : (x.nemuri ? "部屋が休んでいます。部屋が動いた時に届けます" : "届けています…");
+  var dare = kakiteNa(), b = (x.byou != null) ? "（" + byouMoji(x.byou) + "）" : "";
+  var j = x.joutai === "todoita"
+    ? (x.henji ? "✓✓ " + dare + "から返事が来ました" : "✓ 届きました" + b + "　" + (UGOKU ? dare + "が書いています…" : dare + "が読むのを待っています"))
+    : (x.nemuri ? "部屋がいま開いていません。開いた時にすぐ届けます" : "届けています…");
   var html = "<div class='w'>" + (x.dare === "shachou" ? "社長" : "副社長") + " ・ " + esc(hi(x.at)) + "</div><div class='b'>" + md(x.text) + "</div><div class='joutai'>" + j + "</div>";
   if(d.innerHTML !== html) d.innerHTML = html;
   return nw ? d : null;
@@ -393,10 +405,11 @@ function chat(hajime){
       ireru(itemNode(x)); atara++;
       if(x.n > SAIGO) SAIGO = x.n;
     });
+    var ima = j.ugoki && (Date.now() - new Date(j.ugoki)) < 90000;
+    UGOKU = !!ima;
     j.okutta.forEach(function(x){ var n = okuttaNode(x); if(n){ ireru(n); atara++; } });
     if(hajime && j.items.length) SAISHO = j.items[0].n;
     $("mae").hidden = !(SAISHO > j.saisho);
-    var ima = j.ugoki && (Date.now() - new Date(j.ugoki)) < 90000;
     $("ugoki").textContent = ima ? "● いま作業中です" : (j.ugoki ? "最後に動いた " + hi(j.ugoki) : "");
     if(hajime || shita) shitaHe(); else if(atara) $("atarashii").style.display = "block";
   });
@@ -425,12 +438,25 @@ ta.addEventListener("input", function(){ ta.style.height = "52px"; ta.style.heig
 $("okuru").addEventListener("click", function(){
   var t = ta.value.trim(); if(!t || !HEYA) return;
   var b = $("okuru"); b.disabled = true;
+  // 押した瞬間に吹き出しを出す（返事を待たない）
+  var kari = okuttaNode({id: "kari" + Date.now(), at: new Date().toISOString(), text: t, joutai: "machi", dare: DARE});
+  if(kari){ kari.dataset.at = "9"; ireru(kari); shitaHe(); }  // 返事が来るまで一番下に置く
+  $("kaku-note").textContent = "届けています…";
   api("heya/" + HEYA + "/kaku", {method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({text: t})})
     .then(function(j){
       b.disabled = false;
-      if(j.ok){ ta.value = ""; ta.style.height = "52px"; $("kaku-note").textContent = "送りました。部屋に届くまで1分ほどかかります。"; chat(false); setTimeout(shitaHe, 400); }
-      else { $("kaku-note").textContent = "送れませんでした：" + (j.err || ""); }
-    }).catch(function(){ b.disabled = false; $("kaku-note").textContent = "送れませんでした。電波の良い所でもう一度どうぞ。"; });
+      if(j.ok){
+        ta.value = ""; ta.style.height = "52px";
+        if(kari){ kari.dataset.key = "k" + j.id; kari.dataset.at = j.at || ""; }
+        var x = {id: j.id, at: j.at || "", text: t, joutai: j.joutai, byou: j.byou, nemuri: j.nemuri, dare: DARE};
+        okuttaNode(x);
+        $("kaku-note").textContent = j.joutai === "todoita" ? "届きました（" + byouMoji(j.byou) + "）。" + kakiteNa() + "の返事はこの下に出ます。" : (j.nemuri ? "部屋がいま開いていません。開いた時にすぐ届けます。" : "届けています…");
+        chat(false); setTimeout(shitaHe, 300);
+      } else {
+        if(kari && kari.parentNode) kari.parentNode.removeChild(kari);
+        $("kaku-note").textContent = "送れませんでした：" + (j.err || "");
+      }
+    }).catch(function(){ b.disabled = false; if(kari && kari.parentNode) kari.parentNode.removeChild(kari); $("kaku-note").textContent = "送れませんでした。電波の良い所でもう一度どうぞ。"; });
 });
 
 // タブ（狭い画面）
