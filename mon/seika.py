@@ -3,8 +3,8 @@
 台帳＝内緒の場所/seikabutsu/daichou.jsonl（1行1件 JSON）。亀井ページ・社長ページ（kamei.py）はここを読むだけ。
   at（足した時刻）heya（部屋の題）busho（任意）dai（題）hitokoto（一言）link（押せば開くURL）
   e（見本の絵の URL か PC の中の絵の場所・空でよい）dekita（出来た日）kakarichou_kakunin（係長確認済みか）
-  dare_demo（任意・claude.ai の物を「リンクを知っていれば誰でも」に公開した時だけ true。無ければ社長の札だけに「社長のスマホで開けます」。副社長には一切出さない）
-  naka（任意・社長／副社長の専用アドレスの下の道 例 "kaisha/"。あれば札はそちらを開く。鍵は台帳に書かない）
+  dare_demo（任意・claude.ai の物を「リンクを知っていれば誰でも」に公開した時だけ true。無ければ社長の札だけに「社長のスマホで開けます」。亀井さんには一切出さない）
+  naka（任意・社長／亀井さんの専用アドレスの下の道 例 "kaisha/"。あれば札はそちらを開く。鍵は台帳に書かない）
 同じ link の行が後から来たら同じ札の「直した日」が新しくなって上へ上がる（2枚にしない）＝ matomeru()。
 使い方：python seika.py tasu --heya "【主任】超議事録" --dai "…" --hitokoto "…" --link "https://…" [--e 絵] [--kakunin]
 罠メモ：読む側は壊れた行を飛ばすだけ（台帳1行の書き損じでページ全体を止めない）。足す側は形を検査して弾く。
@@ -235,7 +235,7 @@ def main() -> None:
     t.add_argument("--kakunin", action="store_true", help="係長が確かめた物")
     t.add_argument("--e-nashi", action="store_true", help="絵を自動で撮らない")
     t.add_argument("--dare-demo", action="store_true", help="claude.ai の物を「リンクを知っていれば誰でも」に公開してある時")
-    t.add_argument("--naka", default="", help="社長／副社長の専用アドレスの下で開く道（例 kaisha/）。あれば札はそちらを開く")
+    t.add_argument("--naka", default="", help="社長／亀井さんの専用アドレスの下で開く道（例 kaisha/）。あれば札はそちらを開く")
     sub.add_parser("kensa", help="台帳の全部の行を検査する")
     sub.add_parser("ichiran", help="ページに出る順で一覧を見る")
     a = ap.parse_args()

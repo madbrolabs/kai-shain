@@ -32,19 +32,49 @@ KAMEBEYA = Path(os.environ.get("KAI_KAMEBEYA", r"C:\Users\hiroy\Claude\亀部屋
 PROJECTS = Path.home() / ".claude" / "projects"
 NAISHO = Path(os.environ.get("KAI_NAISHO", r"C:\cl\kai_shain_private"))
 HAITATSU_NA = "亀井ページの配達係"
-ATAMA = "【副社長（亀井さん）から（社員ページ経由）】"  # 通達 T1795585075：亀井さん＝「副社長」
+JIREI = NAISHO / "kamei_jirei.json"  # 辞令の合図（係長が辞令を出した後に置く）。無い間は「辞令前」＝役職で呼ばない（社長のダメ出し 2026-11-25）
 ATAMA_SHACHOU_KAKI = "【社長から（社員ページ経由）】"  # 社長が自分のページから書いた物
 ATAMA_SHACHOU = "【社長の決め（亀井ページ経由）】"
-ATAMA_MAE = ("【亀井さんから（社員ページ経由）】",)  # 前の頭書き（記録に残っている物も二重に出さない）
-ATAMA_ZEN = (ATAMA, ATAMA_SHACHOU_KAKI, ATAMA_SHACHOU) + ATAMA_MAE
-AISATSU = {"kamei": "副社長、お越しいただきありがとうございます", "shachou": "社長、お越しいただきありがとうございます"}
-KIMARI = ("――\n（この頼みの決まり）副社長（亀井さん）の頼みは、そのまま進めてよい（考える・作る・試すまでやってよい）。"
+ATAMA_ZEN = ("【亀井さんから（社員ページ経由）】", "【副社長（亀井さん）から（社員ページ経由）】",
+             ATAMA_SHACHOU_KAKI, ATAMA_SHACHOU)  # 今と前の頭書き（記録に残っている物も二重に出さない）
+KIMARI = ("――\n（この頼みの決まり）{tanomi}は、そのまま進めてよい（考える・作る・試すまでやってよい）。"
           "ただし本番には入れない＝作った物は別の枝（kari/kamei-<短い名前> など試しの版）に置き、本番のシステム・指示書の【決】・設定はそのまま。"
           "GitHub の倉庫がある部屋は kari/ の枝でプルリクエストを出し、札「亀井さんの頼み」を付ける。"
-          "済んだら『副社長（亀井さん）の頼みで作った物』の一覧に1行足す（何を・どこに作ったか・試した結果）：\n"
+          "済んだら『{tanomi}で作った物』の一覧に1行足す（何を・どこに作ったか・試した結果）：\n"
           "{tsuika}\n"
-          "副社長への返事は『承りました。作って社長に見てもらいます』の形で、この部屋のチャットにそのまま書く（副社長の画面にそのまま出る。配達係へ返さなくてよい）。"
+          "{henji}は『承りました。作って社長に見てもらいます』の形で、この部屋のチャットにそのまま書く（{yobi}の画面にそのまま出る。配達係へ返さなくてよい）。"
+          "{yakushoku_nashi}"
           "お金・法律に当たる物は今までどおり社長に確かめる。")
+
+
+def jirei() -> str:
+    """辞令の役職（例「副社長」）。合図のファイルが無い・役職が空なら ""＝辞令前。"""
+    try:
+        return str(json.loads(JIREI.read_text(encoding="utf-8-sig")).get("yakushoku") or "").strip()[:20]
+    except Exception:
+        return ""
+
+
+def atama_zen() -> tuple:
+    return ATAMA_ZEN + (kotoba()["atama"],)
+
+
+def yobi() -> str:
+    """亀井さんの呼び方。辞令前は「亀井さん」、辞令の後は役職。"""
+    return jirei() or "亀井さん"
+
+
+def kotoba() -> dict:
+    """亀井さんに見える所・部屋のAIに渡す言葉。辞令前は役職を一切出さない。"""
+    y = jirei()
+    if not y:
+        return {"yobi": "亀井さん", "atama": "【亀井さんから（社員ページ経由）】", "tanomi": "亀井さんの頼み",
+                "henji": "亀井さんへの返事", "aisatsu": "亀井さん、お越しいただきありがとうございます",
+                "yakushoku_nashi": "亀井さんを役職で呼ばない（「亀井さん」と呼ぶ。役職は係長が辞令で決める）。"}
+    return {"yobi": y, "atama": f"【{y}（亀井さん）から（社員ページ経由）】", "tanomi": f"{y}（亀井さん）の頼み",
+            "henji": f"{y}への返事", "aisatsu": f"{y}、お越しいただきありがとうございます", "yakushoku_nashi": ""}
+
+
 PY = r"C:\Users\hiroy\AppData\Roaming\uv\python\cpython-3.11-windows-x86_64-none\python.exe"
 
 
@@ -267,14 +297,14 @@ def _gyou(st: dict, d: dict) -> None:
         for s in texts:
             if "<cross-session-message" in s:
                 for kara, body in CSM.findall(s):
-                    if kara == HAITATSU_NA or SR.sub("", body).strip().startswith(ATAMA_ZEN):
+                    if kara == HAITATSU_NA or SR.sub("", body).strip().startswith(atama_zen()):
                         continue  # 亀井さんの書き込みは受け箱から出す（二重にしない）
                     _tasu(st, {"dare": "shirase", "kara": fuseru(kara)[:40], "text": fuseru(SR.sub("", body).strip())[:3000], "at": at})
                 continue
             if d.get("isMeta"):
                 continue
             h = _hito_text(s)
-            if h is None or h.startswith(ATAMA_ZEN):
+            if h is None or h.startswith(atama_zen()):
                 continue
             _tasu(st, {"dare": "hito", "text": fuseru(h)[:6000], "at": at})
         return
@@ -559,13 +589,15 @@ def okutta(hid: str | None = None) -> list[dict]:
 def todokeru_bun(x: dict) -> str:
     if x.get("shurui") == "shachou":
         return f'{ATAMA_SHACHOU}受付 {x["id"]}\n{x["text"]}'
-    rei = (f'\n（この部屋への初めての書き込みです。最初の返事は「{AISATSU.get(x.get("dare"), AISATSU["kamei"])}」から始めてください。'
+    w = kotoba()
+    aisatsu = "社長、お越しいただきありがとうございます" if x.get("dare") == "shachou" else w["aisatsu"]
+    rei = (f'\n（この部屋への初めての書き込みです。最初の返事は「{aisatsu}」から始めてください。'
            f'言うのは最初の一言だけで、毎回くり返さなくてよい）') if x.get("hajimete") else ""
-    if x.get("dare") == "shachou":  # 社長が自分のページから書いた物＝社長の言葉（副社長の頼みの決まりは付けない）
+    if x.get("dare") == "shachou":  # 社長が自分のページから書いた物＝社長の言葉（亀井さんの頼みの決まりは付けない）
         return f'{ATAMA_SHACHOU_KAKI}受付 {x["id"]}\n{x["text"]}{rei}'
     tsuika = (f'`{PY} -I -X utf8 {HERE / "kamei.py"} tsuika --heya "{x["dai"]}" --uketsuke {x["id"]} '
               f'--nani "何を作ったか" --oki "置き場（枝・フォルダ）" --kekka "試した結果"`')
-    return f'{ATAMA}受付 {x["id"]}\n{x["text"]}{rei}\n{KIMARI.format(tsuika=tsuika)}'
+    return f'{w["atama"]}受付 {x["id"]}\n{x["text"]}{rei}\n{KIMARI.format(tsuika=tsuika, **w)}'
 
 
 def uketsukeru(hid: str, text: str, who: str = "kamei", shurui: str = "kamei") -> tuple[bool, str]:
@@ -585,14 +617,17 @@ def uketsukeru(hid: str, text: str, who: str = "kamei", shurui: str = "kamei") -
             return False, f'少し間をあけてください（{S["renda_byou"]}秒に{S["renda_kazu"]}件まで）'
         if sum(1 for x in mae if x.get("heya_id") == hid and x.get("joutai") == "machi") >= int(S["machi_saidai"]):
             return False, "まだ届けていない書き込みがたまっています。少し待ってください"
-    # その部屋で、この人の（副社長と呼ぶ決まりの後の）初めての書き込みだけ、最初のお礼を頼む
+    # その部屋で、この人の（今の呼び方での）初めての書き込みだけ、最初のお礼を頼む（辞令で呼び方が変われば、もう一度）
+    yb = yobi() if who != "shachou" else "社長"
     hajimete = shurui == "kamei" and not any(o.get("sid") == h["sid"] and o.get("dare") == who and "hajimete" in o
+                                            and o.get("yobi", "副社長" if o.get("dare") != "shachou" else "社長") == yb
                                             for o in okutta())
     x = {"id": "K" + dt.datetime.now(JST).strftime("%Y%m%d%H%M%S") + secrets.token_hex(2), "at": ima(), "t": time.time(),
          "heya_id": hid, "sid": h["sid"], "dai": h["dai"], "dare": who, "shurui": shurui, "text": text,
          "joutai": "machi", "tamesi": 0}
     if shurui == "kamei":
         x["hajimete"] = hajimete
+        x["yobi"] = yb
     wj(ukebako() / f'{x["id"]}.json', x)
     log(f'受け付け {x["id"]} → {h["dai"]}（{len(text)}字・{shurui}）')
     return True, x["id"]
@@ -718,10 +753,11 @@ def kettei(i: int, k: str) -> tuple[bool, str]:
     kt[str(i)] = {"kettei": k, "at": ima()}
     wj(D() / "kettei.json", kt)
     if x.get("heya_id"):
-        bun = (f'社長が「入れて」と決めました：副社長（亀井さん）の頼みで作った物「{x["nani"]}」（置き場 {x["oki"]}）。'
+        tn = kotoba()["tanomi"]
+        bun = (f'社長が「入れて」と決めました：{tn}で作った物「{x["nani"]}」（置き場 {x["oki"]}）。'
                f'主任が本番に入れてください（kari/ の枝ならマージ、ほかは主任の手で入れる）。入れたら一覧の状態を「入れた」にしてください：'
                f'`{PY} -I -X utf8 {HERE / "kamei.py"} joutai {i} 入れた`') if k == "irete" else \
-              f'社長が「見送り」にしました：副社長（亀井さん）の頼みで作った物「{x["nani"]}」。本番には入れません。試しの版はそのまま残してかまいません。'
+              f'社長が「見送り」にしました：{tn}で作った物「{x["nani"]}」。本番には入れません。試しの版はそのまま残してかまいません。'
         uketsukeru(x["heya_id"], bun, who="shachou", shurui="shachou")
     log(f"作った物 {i} → {k}")
     return True, ""
@@ -1067,7 +1103,7 @@ def kamebeya_toroku(anken: str, sid: str, dai: str = "") -> dict:
 def main() -> None:
     ap = argparse.ArgumentParser(description="亀井ページの道具")
     sub = ap.add_subparsers(dest="cmd", required=True)
-    t = sub.add_parser("tsuika", help="副社長（亀井さん）の頼みで作った物を一覧に1行足す")
+    t = sub.add_parser("tsuika", help="亀井さんの頼みで作った物を一覧に1行足す")
     t.add_argument("--heya", required=True)
     t.add_argument("--nani", required=True)
     t.add_argument("--oki", default="")
