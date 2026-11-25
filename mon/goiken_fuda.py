@@ -15,7 +15,7 @@ import os
 import re
 from pathlib import Path
 
-SOFT_NA = {"gijiroku": "超議事録", "tsuuyaku": "同時通訳", "enything": "縁ything", "kai_shain": "KAI社員ページ", "iriguchi": "入口アプリ"}
+SOFT_NA = {"gijiroku": "超議事録", "tsuuyaku": "リバベル", "enything": "縁ything", "kai_shain": "KAI社員ページ", "iriguchi": "入口アプリ"}
 JOUTAI = ("uketsuke", "naoshichuu", "naotta", "miokuri")  # 受付・直し中・直った・見送り
 MAI = 300  # 何秒おきに読むか
 
