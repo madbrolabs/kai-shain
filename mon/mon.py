@@ -549,6 +549,11 @@ def main() -> None:
         eigyou.tsukeru(app, dare, jres, cors)
     except Exception as e:
         log(f"営業用資料の口を付けられませんでした {e!r}")
+    try:  # アドオン：録音君の案内（rokuon_annai.py・中身＝内緒の場所/rokuon_annai・入/切＝内緒の場所/rokuon_annai.json）。亀井ページより先に付ける
+        import rokuon_annai
+        rokuon_annai.tsukeru(app, dare)
+    except Exception as e:
+        log(f"録音君の案内を付けられませんでした {e!r}")
     try:  # アドオン：亀井ページ（kamei.py・設定 内緒の場所/kamei/settei.json の iri＝入/切）。無くても門番は動く
         import kamei
         kamei.tsukeru(app)

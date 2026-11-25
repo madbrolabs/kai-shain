@@ -198,7 +198,8 @@ function ichiran(push=1){
     H.mon?["kousin","届いた更新",H.mon.dare==="shachou"?"仮の更新と参加の希望。採用・見送りはここで":"みんなが出した仮の更新の一覧"]:null,
     ["eigyou","営業用資料","お客様に見せる紹介・プレゼン（開く・保存）"],
     (H.shorui||[]).length?["shorui",H.shorui_midashi||"会社設立へ向けて","いまの準備の書類"]:null].filter(Boolean);
-  M.innerHTML=`${hj?`<a class="mazu" href="#" data-y="yomu:${esc(HJ)}"><b>👉 まずここを見てください</b><span>はじめての人の入口：AI を入れて、会社の部屋に参加するまでの5つの段</span></a>`:""}<div class="yaru">${yaru.map(([k,n,t])=>`<a href="#" data-y="${esc(k)}"><b>${esc(n)}</b><span>${esc(t)}</span></a>`).join("")}</div>
+  const ra=H.mon?`<a class="mazu" href="${esc(H.mon.url+"/kai_mon/rokuon_annai/"+encodeURIComponent(H.mon.kagi)+"/")}" target="_blank" rel="noopener"><b>👉 まずはここから：録音君を入れよう</b><span>打ち合わせの声をスマホで録って、会社へ自動で送るアプリです。入れ方と使い方を、本物の画面で順番に</span></a>`:"";
+  M.innerHTML=`${ra}${hj?`<a class="mazu" href="#" data-y="yomu:${esc(HJ)}"><b>👉 まずここを見てください</b><span>はじめての人の入口：AI を入れて、会社の部屋に参加するまでの5つの段</span></a>`:""}<div class="yaru">${yaru.map(([k,n,t])=>`<a href="#" data-y="${esc(k)}"><b>${esc(n)}</b><span>${esc(t)}</span></a>`).join("")}</div>
   <p style="color:var(--sub);margin-top:0">ソフトごとの開発部屋です。進み・出来た事・工事日誌が、毎日の仕事から自動でたまっていきます。どの部屋からも「試す」「開発に参加したい」ができます。</p>
   <div class="heya">${rooms}${D.lab_dameshi.length?`<div class="card" data-i="lab"><h2>ラボ全体の心得</h2><p class="hk">どのソフトにも通じる、ダメ出しから学んだ決まり</p><div class="kazu"><span>心得 ${D.lab_dameshi.length}</span></div></div>`:""}</div>
   <div class="shita">最後に集めた時刻：${esc(D.tsukutta.replace("T"," "))}</div>`;
