@@ -56,7 +56,8 @@ def seiri(x) -> dict | None:
             "shurui": "bug" if x.get("shurui") == "bug" or x.get("fuda") == "bug" else "goiken",
             "dai": kirei(x.get("dai"), 30), "joutai": j, "hi": kirei(x.get("hi"), 16),
             "naotta_hi": kirei(x.get("naotta_hi"), 16), "henji": kirei(x.get("henji"), 120),
-            "moto": mijikaku(x.get("moto"))}
+            "ban": kirei(x.get("ban"), 20) if j == "naotta" else "",  # 直った版（受け口の決め 2026-11-25）
+            "moto": mijikaku(x.get("na") or x.get("moto"))}  # 本文ファイルの名前は受け口では "na"
 
 
 def mijikaku(moto) -> str:

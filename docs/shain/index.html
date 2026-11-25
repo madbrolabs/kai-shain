@@ -354,7 +354,7 @@ async function goikenFuda(){
   const f=j.fuda||[], naotta=f.filter(x=>x.joutai==="naotta"), nokori=f.filter(x=>x.joutai!=="naotta");
   const ichi=x=>`<div class="sumi1 gf"><span class="fuda ${GJ[x.joutai][1]}">${GJ[x.joutai][0]}</span><b>${esc(x.fudaban)}</b>
     <span class="fuda">${x.shurui==="bug"?"バグ報告":"改善要望"}</span>${esc(x.soft_na)}：${esc(x.dai||"（題なし）")}
-    ${x.henji?`<div class="yoi">返事：${esc(x.henji)}</div>`:""}<span class="hi">（${esc(x.naotta_hi||x.hi)}${x.moto?"・"+esc(x.moto):""}）</span></div>`;
+    ${x.henji?`<div class="yoi">返事：${esc(x.henji)}</div>`:""}<span class="hi">（${esc(x.naotta_hi||x.hi)}${x.ban?"・版 "+esc(x.ban):""}${x.moto?"・"+esc(x.moto):""}）</span></div>`;
   box.innerHTML=`<h2 class="kou-h">ご意見の札</h2><div class="kou-s">ソフトの「改善要望」「バグ報告」で届いた声です。札の番号で、今どうなっているかが分かります。直ったら、お世話係の子が言ってくれた人に知らせます。</div>`+
     (f.length?(naotta.length?`<div class="ichi"><b>直りました</b>${naotta.map(ichi).join("")}</div>`:"")+(nokori.length?`<div class="ichi">${nokori.map(ichi).join("")}</div>`:"")
       :`<div class="kara">まだ札はありません。各ソフトの「改善要望」「バグ報告」から送ると、ここに札が並びます。</div>`);
