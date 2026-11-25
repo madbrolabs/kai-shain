@@ -64,6 +64,10 @@ KYAKU = {
               "meibo": Path(os.environ.get("KAI_IWABEYA", r"C:\Users\hiroy\Claude\岩田部屋名簿.json")), "meibo_key": "heya",
               "eda": "iwata", "fuda_pr": "岩田さんの頼み", "jirei": NAISHO / "iwata_jirei.json", "katagaki": (), "hoka": True,
               "page": "岩田さんのページ"},
+    "katsuyama": {"san": "勝山さん", "sei": "勝山", "fuda": "【勝山部屋】",
+                  "meibo": Path(os.environ.get("KAI_KATSUBEYA", r"C:\Users\hiroy\Claude\勝山部屋名簿.json")), "meibo_key": "heya",
+                  "eda": "katsuyama", "fuda_pr": "勝山さんの頼み", "jirei": NAISHO / "katsuyama_jirei.json", "katagaki": (),
+                  "hoka": True, "page": "勝山さんのページ"},
 }
 
 
