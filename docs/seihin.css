@@ -49,3 +49,6 @@ h2 small{display:block;font-size:12px;color:var(--acc);letter-spacing:.2em;font-
 .btn:hover{filter:brightness(1.08)}
 footer{color:var(--sub);font-size:13px;padding:36px 0;text-align:center}
 @media (max-width:700px){.dan{grid-template-columns:1fr;gap:16px}.dan.r>.e{order:0}h2{margin-top:52px}}
+/* 全部つながる（詳しいページの締め） */
+.tsunagaru .dan{margin:8px 0 22px}
+.tsunagaru .hito b{color:var(--acc)}
