@@ -5,7 +5,7 @@
   e（見本の絵の URL か PC の中の絵の場所・空でよい）dekita（出来た日）kakarichou_kakunin（係長確認済みか）
   dare_demo（任意・claude.ai の物を「リンクを知っていれば誰でも」に公開した時だけ true。無ければ社長の札だけに「社長のスマホで開けます」。亀井さんには一切出さない）
   naka（任意・社長／亀井さんの専用アドレスの下の道 例 "kaisha/"。あれば札はそちらを開く。鍵は台帳に書かない）
-  moto・moto_karui（任意・busho「営業用資料」の時の元ファイル＝PC の中の PDF か HTML。棚の係 atsume/eigyou.py が写しを公式ページ・社員ページへ置く。moto_karui は軽い版の PDF）
+  moto・moto_karui（任意・busho「営業用資料」の時の元ファイル＝PC の中の PDF・HTML・動画（mp4/webm）・絵（png/jpg）。棚の係 atsume/eigyou.py が写しを公式ページ・社員ページへ置く。moto_karui は軽い版の PDF）
   shain_dake（任意・営業用資料を検めに関わらず公式ページに出さず社員ページ等だけにする時 true。false の行で公式へ戻す）
 同じ link の行が後から来たら同じ札の「直した日」が新しくなって上へ上がる（2枚にしない）＝ matomeru()。
 使い方：python seika.py tasu --heya "【主任】超議事録" --dai "…" --hitokoto "…" --link "https://…" [--e 絵] [--kakunin]
@@ -29,7 +29,7 @@ from urllib.parse import urlparse
 JST = dt.timezone(dt.timedelta(hours=9))
 NO_WINDOW = 0x08000000 if sys.platform == "win32" else 0
 E_KAKUCHOU = (".png", ".jpg", ".jpeg", ".webp", ".gif")
-MOTO_KAKUCHOU = (".pdf", ".html", ".htm")
+MOTO_KAKUCHOU = (".pdf", ".html", ".htm", ".mp4", ".webm", ".png", ".jpg", ".jpeg")  # 動画・絵は atsume/eigyou.py がそのまま写す
 EIGYOU = "営業用資料"  # この部署で足した物は、営業用資料の棚（公式ページ・社員ページ）にも出る
 CHROME = [r"C:\Program Files\Google\Chrome\Application\chrome.exe",
           r"C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe"]
@@ -111,7 +111,7 @@ def kensa(x: dict) -> list[str]:
             continue
         p = Path(m)
         if not p.is_absolute() or p.suffix.lower() not in MOTO_KAKUCHOU or (kk == "moto_karui" and p.suffix.lower() != ".pdf"):
-            dame.append(f"元ファイル（{kk}）は PC の中の PDF か HTML の場所（C:\…）にしてください（軽い版は PDF だけ）")
+            dame.append(f"元ファイル（{kk}）は PC の中の PDF・HTML・動画（mp4/webm）・絵（png/jpg）の場所（C:\…）にしてください（軽い版は PDF だけ）")
         elif not p.is_file():
             dame.append(f"元ファイル（{kk}）の場所にファイルがありません：{m}")
     if str(x.get("moto_karui", "") or "").strip() and not str(x.get("moto", "") or "").strip():
@@ -262,7 +262,7 @@ def main() -> None:
     t.add_argument("--e-nashi", action="store_true", help="絵を自動で撮らない")
     t.add_argument("--dare-demo", action="store_true", help="claude.ai の物を「リンクを知っていれば誰でも」に公開してある時")
     t.add_argument("--naka", default="", help="社長／亀井さんの専用アドレスの下で開く道（例 kaisha/）。あれば札はそちらを開く")
-    t.add_argument("--moto", default="", help="営業用資料の元ファイル（PC の中の PDF か HTML）。--busho 営業用資料 と一緒に")
+    t.add_argument("--moto", default="", help="営業用資料の元ファイル（PC の中の PDF・HTML・動画・絵）。--busho 営業用資料 と一緒に")
     t.add_argument("--moto-karui", default="", help="営業用資料の軽い版の PDF（あれば棚で先に開く）")
     t.add_argument("--shain-dake", action="store_const", const=True, default=None, help="営業用資料を公式ページに出さず、社員ページ・社長ページ等だけにする")
     t.add_argument("--koushiki-ok", dest="shain_dake", action="store_const", const=False, help="--shain-dake を外す（検めを通れば公式ページにも出す）")

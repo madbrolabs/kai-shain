@@ -222,7 +222,9 @@ def settei() -> dict:
          "seika_dasanai_shurui": ["報告書", "日報"],
          "seika_dasanai": [r"業務を停止しました", r"残タスクがなくなりました", r"^\s*⚠", r"一段落しませんでした", r"異常",
                            r"の報告書", r"出来上がりの報告", r"^\s*📣", r"報告（チーム", r"報告書$", r"日報"],
-         "seika_dasanai_tasu": []}
+         "seika_dasanai_tasu": [],
+         # kyaku_nozoku＝お客（亀井・岩田・勝山…）のページに出さない物。成果物の札・報告の題・リンクに当たれば出さない（社長には出す）
+         "kyaku_nozoku": ["HIVOT"]}
     s.update(rj(D() / "settei.json", {}))
     return s
 
@@ -584,13 +586,15 @@ def seika(h: dict, ooku: int = 30, who: str | None = None) -> list[dict]:
             na = midashi(f)
             if not seika_dasu(shu, na):
                 continue
+            if kyaku_dasanai(who, na, f.name):
+                continue
             out.append({"shurui": shu, "namae": na,
                         "at": dt.datetime.fromtimestamp(f.stat().st_mtime, JST).isoformat(timespec="seconds"),
                         "fid": f"{d.name}/{f.name}", "heya": h["id"], "heya_na": h["namae"]})
     st = KYOU.get(h["sid"]) or {}
     for u, at in list((st.get("links") or {}).items())[-12:]:
         na = u.replace("https://madbrolabs.github.io/", "")
-        if "●" not in u and "#" not in u and seika_dasu("公開ページ", na):  # 鍵入りの入口（伏せた物）は成果物ではない
+        if "●" not in u and "#" not in u and seika_dasu("公開ページ", na) and not kyaku_dasanai(who, u):  # 鍵入りの入口（伏せた物）は成果物ではない
             out.append({"shurui": "公開ページ", "namae": na, "at": at, "url": u, "heya": h["id"], "heya_na": h["namae"]})
     for x in tsukutta():
         g = x.get("kyaku") or "kamei"
@@ -626,6 +630,14 @@ def _seika():
     return seika
 
 
+def kyaku_dasanai(who: str | None, *s) -> bool:
+    """お客のページに出さない物か（settei の kyaku_nozoku。大文字小文字は見ない）。"""
+    if who not in KYAKU:
+        return False
+    kan = " ".join(str(x or "") for x in s).lower()
+    return any(str(n).lower() in kan for n in settei().get("kyaku_nozoku", []) if str(n))
+
+
 def daichou(who: str, heya_dai: str | None = None) -> list[dict]:
     """台帳の札（同じリンクは1枚・新しい順）。亀井さんには nozoku（権利まもり）の物を出さない。"""
     try:
@@ -646,6 +658,8 @@ def daichou(who: str, heya_dai: str | None = None) -> list[dict]:
         if heya_dai is not None and x.get("heya") != heya_dai:
             continue
         if not seika_dasu("台帳", str(x.get("dai", ""))):
+            continue
+        if kyaku_dasanai(who, kan, x.get("hitokoto", ""), x.get("moto", ""), eigyou_moji(x["id"])[:2000]):
             continue
         if str(x.get("busho", "")).strip() == "営業用資料":  # 営業用資料の棚（atsume/eigyou.py が写しを作る）。写しの無い物・同じ中身の2枚目は出さない
             t = tana.get(x["id"])

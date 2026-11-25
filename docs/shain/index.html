@@ -476,7 +476,7 @@ async function eigyou(push=1){
   xs.sort((a,b)=>String(b.at||"").localeCompare(String(a.at||"")));
   const bt=(h,t,c,dl)=>`<a class="${c||""}" href="${esc(h)}"${dl?` download="${esc(dl)}"`:` target="_blank" rel="noopener"`}>${esc(t)}</a>`;
   T.innerHTML=xs.length?xs.map(x=>`<div class="sr"><div class="e">${x.e?`<img loading="lazy" alt="" src="${esc(x.ue+"e.jpg")}">`:""}</div><div class="ui">
-    <div class="fu">${x.shain?"<b>社員だけ</b>":"<b>公式ページにも掲載</b>"}${esc(x.shurui==="PDF"?(x.zentai?"PDF・軽い版あり":"PDF"):"ページ")}</div>
+    <div class="fu">${x.shain?"<b>社員だけ</b>":"<b>公式ページにも掲載</b>"}${esc(x.shurui==="PDF"?(x.zentai?"PDF・軽い版あり":"PDF"):(x.shurui==="動画"||x.shurui==="絵"?x.shurui:"ページ"))}</div>
     <h3>${esc(x.dai)}</h3>${x.hitokoto?`<p>${esc(x.hitokoto)}</p>`:""}
     <div class="bt">${x.soto?bt(x.soto,"開く","hi"):bt(x.ue+x.hiraku,"開く","hi")+bt(x.ue+x.hiraku+(x.shain?"?dl=1":""),"保存","",x.shain?"":x.dl_na)+(x.zentai?bt(x.ue+x.zentai,"ちゃんとした版（"+x.ookisa_zentai+"）",""):"")}</div>
     ${x.ookisa?`<div class="fu">${x.zentai?"軽い版 ":""}${esc(x.ookisa)}</div>`:""}</div></div>`).join(""):`<div class="shita">まだありません。</div>`;

@@ -77,7 +77,6 @@ footer{color:var(--sub);font-size:13px;padding:28px 0 36px;text-align:center}
 <main class="w">
 <h2><small>PRODUCTS</small>つくっている物</h2>
 <div class="g">
-<a class="c ln" href="hivot.html"><span class="tag">社内で試用中</span><h3>HIVOT</h3><p>しゃべるだけで動く AI の秘書。声で頼めば、調べ物も段取りも引き受けます。</p><span class="more">くわしく見る →</span></a>
 <a class="c ln" href="gijiroku.html"><span class="tag">現場で試験中</span><h3>会議の全文記録</h3><p>会議を録るだけで、ひと言も漏らさない文字起こしと議事録に。「先週言ったじゃないですか」を無くします。</p><span class="more">くわしく見る →</span></a>
 <a class="c ln" href="tsuuyaku.html"><span class="tag">開発中</span><h3>その場の同時通訳</h3><p>目の前の外国のお客様と、言葉の壁を感じずに話せる通訳ソフト。</p><span class="more">くわしく見る →</span></a>
 </div>
@@ -98,7 +97,7 @@ footer{color:var(--sub);font-size:13px;padding:28px 0 36px;text-align:center}
       var ue = "eigyou/" + x.id + "/", c = el("div", "c sr"), mi = el("div", "mi"), ui = el("div", "ui"), b = el("div", "bt");
       if(x.e){ var im = el("img"); im.src = ue + "e.jpg"; im.alt = ""; im.loading = "lazy"; mi.appendChild(im); }
       c.appendChild(mi);
-      ui.appendChild(el("span", "tag", x.shurui === "PDF" ? (x.zentai ? "PDF・軽い版あり" : "PDF") : "ページ"));
+      ui.appendChild(el("span", "tag", x.shurui === "PDF" ? (x.zentai ? "PDF・軽い版あり" : "PDF") : (x.shurui === "動画" || x.shurui === "絵" ? x.shurui : "ページ")));
       ui.appendChild(el("h3", "", x.dai));
       if(x.hitokoto) ui.appendChild(el("p", "", x.hitokoto));
       if(x.soto){ b.appendChild(bt(x.soto, "開く", "hi")); }

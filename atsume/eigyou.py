@@ -1,4 +1,4 @@
-"""営業用資料の棚の係：成果物台帳の busho「営業用資料」の行から、写し（PDF・HTML）と表紙の小さな絵を作って棚に並べる。
+"""営業用資料の棚の係：成果物台帳の busho「営業用資料」の行から、写し（PDF・HTML・動画・絵）と表紙の小さな絵を作って棚に並べる。
 
 使い方: python -I -X utf8 eigyou.py <内緒の場所> [--push]   （定時の仕事 KAISHAIN_eigyou が30分おきに --push で呼ぶ）
 - 台帳の行に moto（元ファイル＝PC の中の PDF か HTML）が要る。moto_karui（軽い版の PDF）があれば棚はそれを先に開く。
@@ -41,6 +41,8 @@ KAGI = re.compile(
     re.I,
 )
 E_HABA = 480
+DOUGA = {".mp4", ".webm"}  # 動画・絵は写しをそのまま開く（本文は題と一言だけで検める）
+ZOU = {".png", ".jpg", ".jpeg"}
 
 
 def log(naisho: Path, msg: str) -> None:
@@ -121,6 +123,26 @@ def e_pdf(p: Path, out: Path) -> bool:
         pix = pg.get_pixmap(matrix=pymupdf.Matrix(z, z))
         tmp = out.with_suffix(".png")
         pix.save(tmp)
+    try:
+        return e_jpg(tmp, out)
+    finally:
+        tmp.unlink(missing_ok=True)
+
+
+def e_douga(p: Path, out: Path) -> bool:
+    """動画の3分の1あたりの1こまを表紙にする。"""
+    import cv2
+    v = cv2.VideoCapture(str(p))
+    try:
+        n = int(v.get(cv2.CAP_PROP_FRAME_COUNT) or 0)
+        v.set(cv2.CAP_PROP_POS_FRAMES, max(0, n // 3))
+        ok, f = v.read()
+    finally:
+        v.release()
+    if not ok:
+        return False
+    tmp = out.with_suffix(".png")
+    cv2.imencode(".png", f)[1].tofile(str(tmp))
     try:
         return e_jpg(tmp, out)
     finally:
@@ -209,8 +231,11 @@ def tsukuru(naisho: Path) -> tuple[list[dict], bool]:
         if not moto.is_file() or (karui and not karui.is_file()):
             log(naisho, f"{fid} 元ファイルが見つからないので飛ばした")
             continue
-        pdf = moto.suffix.lower() == ".pdf"
-        fz = [] if pdf else fuzoku(moto)
+        suf = moto.suffix.lower()
+        pdf = suf == ".pdf"
+        douga, zou = suf in DOUGA, suf in ZOU
+        media = douga or zou
+        fz = [] if (pdf or media) else fuzoku(moto)
         files = [moto] + ([karui] if karui else []) + [moto.parent / f for f in fz]
         sm = shimon(files)
         if sm in mita_shimon:
@@ -218,7 +243,7 @@ def tsukuru(naisho: Path) -> tuple[list[dict], bool]:
             continue
         mita_shimon.add(sm)
         try:
-            honbun = moji(moto)
+            honbun = "" if media else moji(moto)
         except Exception as e:
             log(naisho, f"{fid} 本文を読めませんでした {type(e).__name__}")
             continue
@@ -226,31 +251,36 @@ def tsukuru(naisho: Path) -> tuple[list[dict], bool]:
         atari = sum(1 for w in ng if w in kensa_moji) + len(KAGI.findall(kensa_moji))
         kouhou = atari == 0 and not x.get("shain_dake")  # shain_dake＝作った部屋が「公式には出さない」と決めた物
         dst = (PUB if kouhou else priv / "kakushi") / fid
-        hiraku = "karui.pdf" if karui else ("shiryou.pdf" if pdf else "index.html")
-        zentai = ("shiryou.pdf" if pdf else "index.html") if karui else ""
+        hon = "shiryou.pdf" if pdf else ("douga" + suf if douga else ("zou" + suf if zou else "index.html"))
+        hiraku = "karui.pdf" if karui else hon
+        zentai = hon if karui else ""
         m = mae.get(fid)
         if not (m and m.get("shimon") == sm and m.get("kouhou") == kouhou and (dst / hiraku).is_file() and (dst / "e.jpg").is_file()):
             shutil.rmtree(dst, ignore_errors=True)
             dst.mkdir(parents=True)
-            shutil.copy2(moto, dst / ("shiryou.pdf" if pdf else "index.html"))
+            shutil.copy2(moto, dst / hon)
             if karui:
                 shutil.copy2(karui, dst / "karui.pdf")
             for f in fz:
                 (dst / f).parent.mkdir(parents=True, exist_ok=True)
                 shutil.copy2(moto.parent / f, dst / f)
-            ok = e_pdf(karui or moto, dst / "e.jpg") if (pdf or karui) else e_html(moto, dst / "e.jpg")
+            try:
+                ok = (e_pdf(karui or moto, dst / "e.jpg") if (pdf or karui) else e_douga(moto, dst / "e.jpg") if douga
+                      else e_jpg(moto, dst / "e.jpg") if zou else e_html(moto, dst / "e.jpg"))
+            except Exception:
+                ok = False
             if not ok:
                 log(naisho, f"{fid} 表紙の絵を作れませんでした（絵なしの札）")
             kawatta = True
             log(naisho, f"{fid} 写しを作り直した（{'公式にも出す' if kouhou else (f'検めに{atari}か所当たったので社員だけ' if atari else '台帳で社員だけと決まっている')}）")
         (priv / "moji" / f"{fid}.txt").write_text(kensa_moji, encoding="utf-8")
-        mono = "PDF" if pdf else "ページ"
+        mono = "PDF" if pdf else ("動画" if douga else ("絵" if zou else "ページ"))
         tana.append({
             "id": fid, "dai": x["dai"], "hitokoto": x.get("hitokoto", ""), "dekita": str(x.get("dekita", ""))[:10],
             "naoshita": x.get("naoshita", ""), "at": x.get("at", ""), "heya": x.get("heya", ""),
             "shurui": mono, "hiraku": hiraku, "zentai": zentai,
             "ookisa": ookisa((dst / hiraku).stat().st_size), "ookisa_zentai": ookisa((dst / zentai).stat().st_size) if zentai else "",
-            "dl_na": kirei_na(x["dai"]) + (".pdf" if (pdf or karui) else ".html"),
+            "dl_na": kirei_na(x["dai"]) + (".pdf" if (pdf or karui) else (suf if media else ".html")),
             "dl_na_zentai": kirei_na(x["dai"]) + ".pdf" if zentai else "",
             "e": (dst / "e.jpg").is_file(), "kouhou": kouhou, "atari": atari, "shimon": sm, "link": x["link"],
         })
