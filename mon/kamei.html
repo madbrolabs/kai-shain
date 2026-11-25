@@ -376,8 +376,8 @@ function seikaHyou(ul, list, heyaMo){
   var kara = ul.querySelector(".kara"); if(kara) kara.parentNode.removeChild(kara);
   var keys = {};
   list.forEach(function(x, i){
-    var key = x.fid ? x.heya+"|"+x.fid : x.eigyou && x.id ? "e"+x.id : (x.url || ("t"+x.tsukutta));
-    var ki = x.eigyou && x.hiraku ? (x.kiso || BASE + x.naka) : "";  // 営業用資料＝幅でスマホ用/パソコン用を開き分ける（新しく出来た物の札と同じ）
+    var key = x.fid ? x.heya+"|"+x.fid : x.hiraku && x.id ? "e"+x.id : (x.url || ("t"+x.tsukutta));
+    var ki = x.hiraku ? (x.kiso || BASE + x.naka) : "";  // 営業用資料＝幅でスマホ用/パソコン用を開き分ける（新しく出来た物の札と同じ）
     keys[key] = 1;
     var li = ul.querySelector('[data-key="'+CSS.escape(key)+'"]');
     if(!li){ li = document.createElement("li"); li.dataset.key = key; }
@@ -403,7 +403,7 @@ function fudaHyou(box, list, heyaMo){
     var a = box.querySelector('[data-key="'+x.id+'"]');
     if(!a){ a = document.createElement("a"); a.className = "sf"; a.dataset.key = x.id; a.rel = "noopener noreferrer"; }
     var href = x.naka ? BASE + x.naka : x.link;  // naka＝この専用アドレスの下の写し（同じ画面で開き、戻るで帰れる）
-    var ki = x.eigyou && x.hiraku ? (x.kiso || BASE + x.naka) : "";  // 営業用資料＝スマホ用/パソコン用の2つ1組（スマホ用が無い物は同じ物）
+    var ki = x.hiraku ? (x.kiso || BASE + x.naka) : "";  // 営業用資料・社内向け＝スマホ用/パソコン用の2つ1組（スマホ用が無い物は同じ物）
     if(ki){ a.dataset.pc = ki + x.hiraku; a.dataset.sp = ki + (x.sumaho || x.hiraku); href = SEMAI() ? a.dataset.sp : a.dataset.pc; }
     if(a.getAttribute("href") !== href) a.setAttribute("href", href);
     if(x.naka) a.removeAttribute("target"); else a.target = "_blank";

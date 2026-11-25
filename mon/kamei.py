@@ -687,6 +687,20 @@ def daichou(who: str, heya_dai: str | None = None) -> list[dict]:
                     "e": e if e.startswith(("https://", "http://")) else (f"api/e/{x['id']}" if e else ""),
                     "naka": naka,
                     "shachou_dake": who == "shachou" and not naka and host.endswith("claude.ai") and not x.get("dare_demo")})
+    if heya_dai is None:  # 社内向けの資料（shanai.py・内緒の場所/shanai/shanai.json の dare にある人だけ）。幅でスマホ用/パソコン用を開き分ける
+        try:
+            import shanai
+            for s in shanai.miseru(who):
+                at = str(s.get("at") or s.get("dekita") or "")
+                i = next((n for n, y in enumerate(out) if str(y.get("at") or "") < at), len(out))  # 台帳の並び（新しい順）は崩さず、時刻の所へ差し込む
+                out.insert(i, {"id": "shanai_" + s["id"], "dai": fuseru(str(s.get("dai", "")))[:80],
+                            "hitokoto": fuseru(str(s["dare"].get(who) or ""))[:200], "link": "", "heya": s.get("heya", ""),
+                            "heya_id": hs.get(s.get("heya", ""), ""), "busho": "社内向け", "dekita": str(s.get("dekita", ""))[:10],
+                            "naoshita": s.get("naoshita", ""), "at": s.get("at", ""), "kakunin": False,
+                            "e": f"shanai/{s['id']}/{s['e']}" if s.get("e") else "", "naka": f"shanai/{s['id']}/",
+                            "shachou_dake": False, "kiso": "", "hiraku": s.get("hiraku") or "index.html", "sumaho": s.get("sumaho", "")})
+        except Exception as e:
+            log(f"社内向けの資料を読めませんでした {e!r}")
     return out
 
 
@@ -731,7 +745,7 @@ def zentai_matome(zentai: list[dict], fuda: list[dict], hs: list[dict]) -> list[
     for x in fuda:
         out.append({"shurui": "出来た物", "namae": x["dai"], "at": x.get("naoshita") or x.get("at") or x.get("dekita", ""),
                     "url": x["link"], "naka": x.get("naka", ""), "heya": x.get("heya_id", ""), "heya_na": na.get(x.get("heya", "")) or x.get("busho") or re.sub(r"^【[^】]*】", "", x.get("heya", "")),
-                    **({"id": x["id"], "eigyou": True, "kiso": x.get("kiso", ""), "hiraku": x.get("hiraku", ""), "sumaho": x.get("sumaho", "")} if x.get("eigyou") else {})})  # 営業用資料はこの一覧でもスマホ用/パソコン用を開き分ける
+                    **({"id": x["id"], "eigyou": bool(x.get("eigyou")), "kiso": x.get("kiso", ""), "hiraku": x.get("hiraku", ""), "sumaho": x.get("sumaho", "")} if x.get("hiraku") else {})})  # 営業用資料はこの一覧でもスマホ用/パソコン用を開き分ける
         mita.add(x["link"].rstrip("/"))
     for x in zentai:
         u = (x.get("url") or "").rstrip("/")

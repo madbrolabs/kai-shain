@@ -554,6 +554,11 @@ def main() -> None:
         rokuon_annai.tsukeru(app, dare)
     except Exception as e:
         log(f"録音君の案内を付けられませんでした {e!r}")
+    try:  # アドオン：社内向けの資料（shanai.py・中身＝内緒の場所/shanai・決めた人の専用ページだけ）。亀井ページより先に付ける
+        import shanai
+        shanai.tsukeru(app)
+    except Exception as e:
+        log(f"社内向けの資料を付けられませんでした {e!r}")
     try:  # アドオン：亀井ページ（kamei.py・設定 内緒の場所/kamei/settei.json の iri＝入/切）。無くても門番は動く
         import kamei
         kamei.tsukeru(app)
