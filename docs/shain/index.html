@@ -49,6 +49,33 @@ input.sagasu{width:100%;font:inherit;padding:8px 12px;border-radius:10px;border:
 .kara{color:var(--sub);padding:20px;text-align:center}
 .shita{color:var(--sub);font-size:12px;text-align:center;margin:24px 0}
 .mae{font-size:14px;margin-bottom:8px}
+.yaru{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px;margin:0 0 18px}
+.yaru a{display:block;text-decoration:none;color:inherit;background:linear-gradient(135deg,var(--acc2),var(--card));border:1px solid var(--line);border-radius:14px;padding:14px 16px;transition:transform .1s}
+.yaru a:hover{transform:translateY(-2px)}
+.yaru b{display:block;font-size:16px;color:var(--acc)}
+.yaru span{font-size:13px;color:var(--sub)}
+.dekiru{display:flex;flex-wrap:wrap;gap:8px;align-items:center;background:var(--acc2);border-radius:12px;padding:10px 12px;margin:0 0 12px}
+.dekiru .s{font-size:13px;color:var(--sub);flex:1 1 220px}
+a.bt,button.bt{display:inline-block;text-decoration:none;background:var(--acc);color:#fff;border:1px solid var(--acc);border-radius:10px;padding:6px 14px;font-size:14px}
+a.bt.s,button.bt.s{background:var(--card);color:var(--acc)}
+.bt[disabled]{opacity:.55;cursor:default}
+.fuda{display:inline-block;font-size:12px;border-radius:99px;padding:0 9px;margin-right:6px;border:1px solid var(--line)}
+.fuda.kari{background:var(--warn2);color:var(--warn);border-color:var(--warn)}
+.fuda.saiyou{background:var(--acc2);color:var(--acc);border-color:var(--acc)}
+.fuda.miokuri{color:var(--sub)}
+.fuda.kenpin{background:var(--acc);color:#fff;border-color:var(--acc)}
+.kou{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.form label{display:block;font-size:14px;margin:10px 0 4px}
+.form input,.form textarea{width:100%;font:inherit;padding:8px 10px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--ink)}
+.form textarea{min-height:90px}
+.md{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:6px 20px 16px}
+.md img{max-width:100%;border-radius:12px;display:block;margin:6px 0}
+.md table{border-collapse:collapse;width:100%;font-size:14px;display:block;overflow-x:auto}
+.md th,.md td{border:1px solid var(--line);padding:6px 8px;text-align:left;vertical-align:top}
+.md code{background:var(--bg);border-radius:4px;padding:0 4px;font-size:.92em;word-break:break-all}
+.md blockquote{margin:8px 0;padding:4px 12px;border-left:4px solid var(--acc);color:var(--sub)}
+.md h1{font-size:22px}.md h2{font-size:18px;margin-top:22px}.md h3{font-size:16px}
+.shorui-tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
 @media (prefers-color-scheme:dark){header .lg{filter:invert(1) hue-rotate(180deg) brightness(1.6)}}
 </style>
 </head>
@@ -95,14 +122,15 @@ async function hairu(aik){
   try{d=await hiraku(aik)}catch(e){return mon("ページを読めませんでした。電波を確かめて、もう一度どうぞ。")}
   if(!d){put(LS,null);return mon("合言葉が違うようです。")}
   put(LS,aik);D=d;$("#deru").hidden=false;
-  const m=location.hash.match(/h=([^&]+)&t=([^&]*)/);m?heya(decodeURIComponent(m[1]),m[2],0):ichiran(0);
+  const m=location.hash.match(/h=([^&]+)&t=([^&]*)/), v=location.hash.match(/v=([^&]+)(?:&i=([^&]*))?/);
+  m?heya(decodeURIComponent(m[1]),m[2],0):v?miseru({v:v[1],i:decodeURIComponent(v[2]||"")}):ichiran(0);
 }
 
 const KIND=[["susumi","進み"],["houkoku","出来た事"],["dameshi","ダメ出しと学び"],["kobanashi","開発の小話"],["kimatta","決まった事"],["fusaiyou","採らなかった案"],["omoi","創始者の思い"],["commit","工事日誌"]];
 
 // 画面の移り変わりを履歴に積む＝マウスやブラウザの「戻る」で前の画面へ
-function iku(st,push){const u=location.pathname+(st.v==="heya"?`#h=${st.i}&t=${st.t||""}`:"");push?history.pushState(st,"",u):history.replaceState(st,"",u)}
-function miseru(st){if(!D)return;st&&st.v==="heya"?heya(st.i,st.t,0):ichiran(0)}
+function iku(st,push){const u=location.pathname+(st.v==="heya"?`#h=${st.i}&t=${st.t||""}`:st.v!=="ichiran"?`#v=${st.v}${st.i?"&i="+encodeURIComponent(st.i):""}`:"");push?history.pushState(st,"",u):history.replaceState(st,"",u)}
+function miseru(st){if(!D)return;const v=st&&st.v;v==="heya"?heya(st.i,st.t,0):v==="kousin"?kousin(0):v==="yomu"?yomu(st.i,0):v==="shorui"?shorui(st.i,0):ichiran(0)}
 addEventListener("popstate",e=>miseru(e.state));
 function ichiran(push=1){
   iku({v:"ichiran"},push);
@@ -112,10 +140,18 @@ function ichiran(push=1){
     return `<div class="card" data-i="${i}"><h2>${esc(h.namae)}</h2><p class="hk">${esc(h.hitokoto)}</p>
     <div class="kazu">${KIND.filter(([k])=>h[k].length).map(([k,n])=>`<span>${n} ${h[k].length}</span>`).join("")}</div>
     ${ima.text||ima.daimei?`<div class="ima">いま：${(()=>{const t=Y(ima,"text")||Y(ima,"daimei");return esc((t.startsWith(ima.hi)?t:ima.hi+" "+t).slice(0,80))})()}…</div>`:""}</div>`}).join("");
-  M.innerHTML=`<p style="color:var(--sub);margin-top:0">ソフトごとの開発部屋です。進み・出来た事・工事日誌が、毎日の仕事から自動でたまっていきます。</p>
+  const H=D.hoka||{}, tb=H.tebiki||[];
+  const yaru=[...tb.map(x=>[`yomu:${x.id}`,x.md.match(/^# (.+)/m)?.[1].split("：")[0]||x.id,(x.md.match(/^# .+：(.+)/m)||[])[1]||""]),
+    H.tsutsumi?["tsutsumi","AI に渡す包み",`自分の AI に読ませる1枚（版 ${H.tsutsumi.ban}）`]:null,
+    H.mon?["kousin","届いた更新",H.mon.dare==="shachou"?"仮の更新と参加の希望。採用・見送りはここで":"みんなが出した仮の更新の一覧"]:null,
+    (H.shorui||[]).length?["shorui",H.shorui_midashi||"会社設立へ向けて","いまの準備の書類"]:null].filter(Boolean);
+  M.innerHTML=`<div class="yaru">${yaru.map(([k,n,t])=>`<a href="#" data-y="${esc(k)}"><b>${esc(n)}</b><span>${esc(t)}</span></a>`).join("")}</div>
+  <p style="color:var(--sub);margin-top:0">ソフトごとの開発部屋です。進み・出来た事・工事日誌が、毎日の仕事から自動でたまっていきます。どの部屋からも「試す」「開発に参加したい」ができます。</p>
   <div class="heya">${rooms}${D.lab_dameshi.length?`<div class="card" data-i="lab"><h2>ラボ全体の心得</h2><p class="hk">どのソフトにも通じる、ダメ出しから学んだ決まり</p><div class="kazu"><span>心得 ${D.lab_dameshi.length}</span></div></div>`:""}</div>
   <div class="shita">最後に集めた時刻：${esc(D.tsukutta.replace("T"," "))}</div>`;
   M.querySelectorAll(".card").forEach(c=>c.onclick=()=>heya(c.dataset.i,null,1));
+  M.querySelectorAll("[data-y]").forEach(a=>a.onclick=e=>{e.preventDefault();const y=a.dataset.y;
+    y==="tsutsumi"?tsutsumi():y==="kousin"?kousin(1):y==="shorui"?shorui("",1):yomu(y.slice(5),1)});
 }
 
 // 読みやすく直した文（yasashi）を先に出す。原文は「原文」ボタンで同じ札の中に開く（行を増やさない）
@@ -140,9 +176,11 @@ function heya(i,t0,push){
   window.scrollTo(0,0);
   M.innerHTML=`<div class="mae"><button id="modoru">← 部屋の一覧</button></div>
   <div class="mi"><h1>${esc(h.namae)}</h1></div><div class="hk" style="color:var(--sub);margin-bottom:8px">${esc(h.hitokoto)}</div>
+  ${lab?"":dekiru(h.id)}
   <div class="tabs">${kinds.map(([k,n])=>`<button data-k="${k}">${n} ${h[k].length}</button>`).join("")}</div>
   <input class="sagasu" placeholder="この部屋の中をさがす"><div id="list"></div>`;
   $("#modoru").onclick=()=>ichiran(1);
+  const sb=$("#sanka");if(sb)sb.onclick=()=>sanka(h);
   const draw=()=>{
     M.querySelectorAll(".tabs button").forEach(b=>b.classList.toggle("on",b.dataset.k===tab));
     const xs=(h[tab]||[]).filter(x=>!q||JSON.stringify(x).toLowerCase().includes(q));
@@ -151,6 +189,125 @@ function heya(i,t0,push){
   M.querySelectorAll(".tabs button").forEach(b=>b.onclick=()=>{if(tab===b.dataset.k)return;tab=b.dataset.k;iku({v:"heya",i,t:tab},1);draw()});
   let t;$(".sagasu").oninput=e=>{clearTimeout(t);t=setTimeout(()=>{q=e.target.value.trim().toLowerCase();draw()},200)};
   draw();
+}
+
+// ---------- 試す・参加する・届いた更新（門番＝このPCの入口へ問い合わせる） ----------
+const KH=id=>((D.hoka||{}).kaihatsu||[]).find(x=>x.id===id);
+const MON=()=>(D.hoka||{}).mon;
+function tamesu(k,n){const m=MON();if(!m)return "#";return `${m.url}/t/${encodeURIComponent(k.id)}?k=${encodeURIComponent(m.kagi)}${n?"&n="+n:""}`}
+function dekiru(id){
+  const k=KH(id);if(!k)return "";
+  const t=k.tameshi==="apk"?`<a class="bt" href="${esc(k.apk)}" target="_blank" rel="noopener">スマホに入れて試す</a>`
+    :k.tameshi==="page"?`<a class="bt" href="${esc(k.page)}" target="_blank" rel="noopener">開いて試す</a>`
+    :k.tameshi==="pc"?`<a class="bt" href="${esc(tamesu(k))}" target="_blank" rel="noopener">試す</a>`
+    :`<button class="bt" disabled>試す（用意しています）</button>`;
+  return `<div class="dekiru">${t}${MON()?`<button class="bt s" id="sanka">開発に参加したい</button>`:""}<span class="s">${esc(k.setsumei||"")}</span></div>`;
+}
+async function monni(path,body){
+  const m=MON();if(!m)throw new Error("入口がありません");
+  const r=await fetch(m.url+"/kai_mon/"+path,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({k:m.kagi,...body})});
+  const j=await r.json().catch(()=>({ok:false,err:"返事を読めませんでした"}));
+  if(!j.ok)throw new Error(j.err||"うまくいきませんでした");return j;
+}
+function sanka(h){
+  const sb=$("#sanka"), box=document.createElement("div");
+  box.className="ichi form";
+  box.innerHTML=`<h3>「${esc(h.namae)}」の開発に参加したい</h3><p class="hi">送ると社長に届きます。社長が決めたら、会社の GitHub への招待が届きます。</p>
+  <label>お名前</label><input name="namae" maxlength="40">
+  <label>やってみたい事（ふつうの言葉でOK）</label><textarea name="nani" maxlength="600" placeholder="例：画面の文字を大きくしたい／お客様の言葉を増やしたい"></textarea>
+  <label>使っている AI（Claude・ChatGPT・Gemini など）</label><input name="ai" maxlength="80">
+  <label>GitHub の名前（あれば。招待が早くなります）</label><input name="github" maxlength="40">
+  <label>連絡先（あれば）</label><input name="renraku" maxlength="120">
+  <div class="kou"><button class="bt" data-o="1">送る</button><button class="bt s" data-o="0">やめる</button></div><div class="err"></div>`;
+  sb.closest(".dekiru").after(box);sb.disabled=true;
+  box.querySelector('[data-o="0"]').onclick=()=>{box.remove();sb.disabled=false};
+  box.querySelector('[data-o="1"]').onclick=async e=>{
+    const v=n=>box.querySelector(`[name=${n}]`).value.trim(), er=box.querySelector(".err");
+    if(!v("namae")||!v("nani")){er.textContent="お名前と、やってみたい事を書いてください。";return}
+    e.target.disabled=true;e.target.textContent="送っています…";
+    try{await monni("sanka",{soft:h.id,namae:v("namae"),nani:v("nani"),ai:v("ai"),github:v("github"),renraku:v("renraku")});
+      box.innerHTML=`<h3>届きました！</h3><div>社長に知らせました。決まったら連絡が届きます。待つ間に、部屋の「試す」や「はじめての方へ」をどうぞ。</div>`}
+    catch(x){er.textContent="送れませんでした："+x.message+"（このPCの入口が眠っているかもしれません。少しして、もう一度どうぞ）";e.target.disabled=false;e.target.textContent="送る"}
+  };
+}
+const JN={kari:"仮",saiyou:"採用済み",miokuri:"見送り"};
+async function kousin(push=1){
+  iku({v:"kousin"},push);window.scrollTo(0,0);
+  const sha=MON()&&MON().dare==="shachou";
+  M.innerHTML=`<div class="mae"><button id="modoru">← 部屋の一覧</button></div><div class="mi"><h1>届いた更新</h1></div>
+  <div class="hk" style="color:var(--sub);margin-bottom:8px">みんなが出した「仮の更新」です。${sha?"社長が「採用」を押すと本物に入ります。":"社長が採用すると本物に入ります。"}</div><div id="list"><div class="kara">読んでいます…</div></div>`;
+  $("#modoru").onclick=()=>ichiran(1);
+  let j;try{j=await monni("kousin",{})}catch(x){$("#list").innerHTML=`<div class="kara">一覧を読めませんでした（${esc(x.message)}）。少しして、もう一度どうぞ。</div>`;return}
+  const rows=[];
+  for(const s of j.soft)for(const p of s.prs)rows.push({...p,soft:s.id,namae:s.namae});
+  rows.sort((a,b)=>(a.joutai==="kari")-(b.joutai==="kari")||0).reverse();
+  rows.sort((a,b)=>(b.joutai==="kari")-(a.joutai==="kari")||String(b.hi).localeCompare(String(a.hi)));
+  const k=id=>KH(id)||{id};
+  let html=rows.length?rows.map(p=>`<div class="ichi" data-s="${esc(p.soft)}" data-n="${p.n}"><span class="hi">${esc(p.hi)}</span>
+    <div><span class="fuda ${p.joutai}">${JN[p.joutai]||p.joutai}</span>${p.kenpin?`<span class="fuda kenpin">主任の検品済み</span>`:""}<b>${esc(p.namae)}</b>：${esc(p.daimei)}<span class="hi">（${esc(p.dare)}さん）</span></div>
+    ${p.setsumei?`<div class="hi" style="font-size:13px">${esc(p.setsumei.split(/\n/).find(l=>l.trim()&&!l.startsWith("#"))||"")}</div>`:""}
+    <div class="kou">${k(p.soft).tameshi==="pc"&&p.joutai==="kari"?`<a class="bt s" href="${esc(tamesu(k(p.soft),p.n))}" target="_blank" rel="noopener">この更新を試す</a>`:""}<a class="bt s" href="${esc(p.url)}" target="_blank" rel="noopener">中身を見る</a>
+    ${sha&&p.joutai==="kari"?`<button class="bt" data-k="saiyou">採用</button><button class="bt s" data-k="miokuri">見送り</button>`:""}</div><div class="err"></div></div>`).join("")
+    :`<div class="kara">まだ届いていません。最初の1つを出してみませんか？「練習の倉庫」なら何を壊しても大丈夫です。</div>`;
+  if(sha){
+    const sk=j.sanka||[], JS={machi:"返事待ち",shoutai:"招待済み",miokuri:"見送り"};
+    html+=`<div class="mi" style="margin-top:22px"><h1 style="font-size:19px">参加の希望</h1></div>`+(sk.length?sk.map(x=>`<div class="ichi" data-id="${esc(x.id)}"><span class="hi">${esc(x.hi.replace("T"," "))}</span>
+    <div><span class="fuda ${x.joutai==="machi"?"kari":x.joutai==="shoutai"?"saiyou":"miokuri"}">${JS[x.joutai]||x.joutai}</span><b>${esc(x.namae)}</b>さん（${esc((KH(x.soft)||{}).namae||x.soft)}・AI：${esc(x.ai||"未記入")}${x.github?"・GitHub："+esc(x.github):""}）</div>
+    <div>${esc(x.nani)}</div>${x.renraku?`<div class="hi">連絡先：${esc(x.renraku)}</div>`:""}
+    ${x.joutai==="machi"?`<div class="kou"><button class="bt" data-k="saiyou">招待する</button><button class="bt s" data-k="miokuri">見送り</button></div>`:""}<div class="err"></div></div>`).join(""):`<div class="kara">まだありません</div>`);
+  }
+  $("#list").innerHTML=html;
+  $("#list").querySelectorAll("button[data-k]").forEach(b=>b.onclick=async()=>{
+    const c=b.closest(".ichi"), ki=b.dataset.k, sa=!!c.dataset.id;
+    const kak=sa?(ki==="saiyou"?"この人を招待しますか？":"この希望を見送りますか？"):(ki==="saiyou"?"この更新を採用して、本物に入れますか？":"この更新を見送りますか？");
+    if(!confirm(kak))return;
+    c.querySelectorAll("button").forEach(x=>x.disabled=true);
+    try{await monni("kettei",sa?{shurui:"sanka",id:c.dataset.id,kettei:ki}:{soft:c.dataset.s,n:+c.dataset.n,kettei:ki});kousin(0)}
+    catch(x){c.querySelector(".err").textContent="出来ませんでした："+x.message;c.querySelectorAll("button").forEach(x=>x.disabled=false)}
+  });
+}
+function tsutsumi(){
+  const t=D.hoka.tsutsumi, a=document.createElement("a");
+  a.href=URL.createObjectURL(new Blob([t.md],{type:"text/markdown;charset=utf-8"}));a.download=t.namae;a.click();
+  setTimeout(()=>URL.revokeObjectURL(a.href),4000);
+}
+// ---------- 読み物（手引き・紹介・会社設立の書類） ----------
+function md(t){
+  const il=s=>esc(s).replace(/!\[([^\]]*)\]\(([^)\s]+)\)/g,(m,a,u)=>/^(\.\.\/|https:)/.test(u)?`<img src="${u}" alt="${a}" loading="lazy">`:"")
+    .replace(/\*\*(.+?)\*\*/g,"<b>$1</b>").replace(/`([^`]+)`/g,"<code>$1</code>");
+  const L=t.replace(/\r/g,"").split("\n"), o=[];let i=0;
+  while(i<L.length){
+    const l=L[i];
+    if(/^#{1,4} /.test(l)){const n=l.match(/^#+/)[0].length;o.push(`<h${n}>${il(l.slice(n+1))}</h${n}>`);i++;continue}
+    if(/^\|/.test(l)){const rs=[];while(i<L.length&&/^\|/.test(L[i]))rs.push(L[i++]);
+      const c=r=>r.replace(/^\||\|$/g,"").split("|").map(x=>x.trim());
+      o.push("<table>"+rs.filter(r=>!/^\|[\s:|-]+\|$/.test(r)).map((r,k)=>"<tr>"+c(r).map(x=>k?`<td>${il(x)}</td>`:`<th>${il(x)}</th>`).join("")+"</tr>").join("")+"</table>");continue}
+    if(/^\s*([-*]|\d+\.) /.test(l)){const ol=/^\s*\d+\./.test(l), it=[];while(i<L.length&&/^\s*([-*]|\d+\.) /.test(L[i]))it.push(L[i++].replace(/^\s*([-*]|\d+\.) /,""));
+      o.push(`<${ol?"ol":"ul"}>${it.map(x=>`<li>${il(x)}</li>`).join("")}</${ol?"ol":"ul"}>`);continue}
+    if(/^> ?/.test(l)){const b=[];while(i<L.length&&/^> ?/.test(L[i]))b.push(L[i++].replace(/^> ?/,""));o.push(`<blockquote>${b.map(il).join("<br>")}</blockquote>`);continue}
+    if(/^---+$/.test(l)){o.push("<hr>");i++;continue}
+    if(!l.trim()){i++;continue}
+    const p=[];while(i<L.length&&L[i].trim()&&!/^(#{1,4} |\||\s*([-*]|\d+\.) |> ?|---+$)/.test(L[i]))p.push(L[i++]);
+    o.push(`<p>${p.map(il).join("<br>")}</p>`);
+  }
+  return o.join("");
+}
+function yomu(id,push=1){
+  const x=(D.hoka.tebiki||[]).find(t=>t.id===id);if(!x)return ichiran(0);
+  iku({v:"yomu",i:id},push);window.scrollTo(0,0);
+  M.innerHTML=`<div class="mae"><button id="modoru">← 部屋の一覧</button></div><div class="md">${md(x.md)}</div>`;
+  $("#modoru").onclick=()=>ichiran(1);
+}
+function shorui(id,push=1){
+  const H=D.hoka, xs=H.shorui||[];if(!xs.length)return ichiran(0);
+  const x=xs.find(t=>t.daimei===id)||xs[0];
+  iku({v:"shorui",i:x.daimei},push);window.scrollTo(0,0);
+  M.innerHTML=`<div class="mae"><button id="modoru">← 部屋の一覧</button></div><div class="mi"><h1>${esc(H.shorui_midashi||"会社設立へ向けて")}</h1></div>
+  <div class="hk" style="color:var(--sub);margin-bottom:8px">合同会社 KAI Lab をつくる準備の書類です。【社長記入】の所は、これから埋まります。</div>
+  <div class="shorui-tabs">${xs.map(t=>`<button data-d="${esc(t.daimei)}" class="${t===x?"on":""}">${esc(t.daimei)}</button>`).join("")}</div>
+  <div class="md">${md(x.md)}</div><div class="shita">この書類を直した時刻：${esc(x.hi)}</div>`;
+  $("#modoru").onclick=()=>ichiran(1);
+  M.querySelectorAll(".shorui-tabs button").forEach(b=>b.onclick=()=>shorui(b.dataset.d,1));
 }
 
 $("#deru").onclick=()=>{put(LS,null);D=null;mon("出ました。")};

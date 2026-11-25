@@ -174,6 +174,61 @@ def memo_kara(d: Path, nozoku: list[str]) -> list[dict]:
     return res
 
 
+# 書類の中で、埋まった住所・番号などは社員ページへ出さない（空欄の【社長記入】は残す）
+FUSE = [re.compile(r"〒?\d{3}-\d{4}"), re.compile(r"\d{2,4}-\d{2,4}-\d{3,4}"), re.compile(r"\d{7,}")]
+
+
+def fuseji(t: str, kakusu: list[str]) -> str:
+    out = []
+    for ln in t.splitlines():
+        if KAGI.search(ln):
+            continue
+        ln = YOBINA.sub("社長", ln)
+        for w in kakusu:
+            if w:
+                ln = ln.replace(w, "【社長記入】")
+        for r in FUSE:
+            ln = r.sub("【社長記入】", ln)
+        out.append(ln)
+    return "\n".join(out)
+
+
+def hoka_no_mono(settei: dict) -> dict:
+    """門番の行き先・開発の表・会社設立の書類・手引き・AIの包み（社長と社員の両方の箱へ）。鍵は箱ごとに別で入れる。"""
+    o: dict = {"kaihatsu": [], "shorui": [], "tebiki": [], "tsutsumi": None}
+    for s in settei["soft"]:
+        if s.get("kaihatsu"):
+            o["kaihatsu"].append(dict(s["kaihatsu"], id=s["id"], namae=s["namae"]))
+    o["kaihatsu"] += settei.get("kaihatsu_hoka", [])
+    st = settei.get("setsuritsu")
+    if st:
+        for f in st["files"]:
+            fp = Path(st["dir"]) / f
+            if fp.exists():
+                o["shorui"].append({"daimei": re.sub(r"^\d+_|\.md$", "", f).replace("_", "・"),
+                                    "hi": dt.datetime.fromtimestamp(fp.stat().st_mtime, JST).strftime("%Y-%m-%d %H:%M"),
+                                    "md": fuseji(fp.read_text(encoding="utf-8"), st.get("kakusu", []))})
+        o["shorui_midashi"] = st.get("midashi", "会社設立へ向けて")
+    tb = settei.get("tebiki_dir")
+    if tb:
+        for fp in sorted(Path(tb).glob("*.md")):
+            o["tebiki"].append({"id": fp.stem, "md": fuseji(fp.read_text(encoding="utf-8"), [])})
+    at = settei.get("ai_tsutsumi")
+    if at:
+        try:
+            ban = json.loads((Path(at["dir"]) / at["ban"]).read_text(encoding="utf-8"))
+            fp = Path(at["dir"]) / at["file"]
+            o["tsutsumi"] = {"namae": fp.name, "ban": ban.get("ban"), "koushin": ban.get("koushin"),
+                             "md": fuseji(fp.read_text(encoding="utf-8"), [])}
+        except Exception:
+            pass
+    mon = settei.get("mon")
+    if mon:
+        k = json.loads(Path(mon["kagi"]).read_text(encoding="utf-8"))
+        o["mon"] = {"url": mon["url"], "_shain": k["shain"], "_shachou": k["shachou"]}
+    return o
+
+
 def shain_ban(data: dict, p: Path) -> None:
     """社員の版：エピソード（小話・ダメ出しと学び・ラボの心得）と、思い・決まった事・採らなかった案は社長だけ（「〜_小話.md」の思い・小話は社員にも出す）。
     進み・出来た事・工事日誌だけを、内輪の言葉が混じる行を落として出す。"""
@@ -190,7 +245,10 @@ def shain_ban(data: dict, p: Path) -> None:
                      "susumi": [x for x in h["susumi"] if ok(x)],
                      "houkoku": [x for x in h["houkoku"] if ok(x)],
                      "commit": [x for x in h["commit"] if ok(x)]})
-    p.write_text(json.dumps({"tsukutta": data["tsukutta"], "soft": soft, "lab_dameshi": []},
+    hoka = {k: v for k, v in data.get("hoka", {}).items()}
+    if "mon" in hoka:
+        hoka["mon"] = {"url": hoka["mon"]["url"], "kagi": hoka["mon"]["_shain"], "dare": "shain"}
+    p.write_text(json.dumps({"tsukutta": data["tsukutta"], "soft": soft, "lab_dameshi": [], "hoka": hoka},
                             ensure_ascii=False, indent=1), encoding="utf-8")
 
 
@@ -229,9 +287,14 @@ def main() -> None:
         "tsukutta": dt.datetime.now(JST).isoformat(timespec="minutes"),
         "soft": soft_out,
         "lab_dameshi": lab,
+        "hoka": hoka_no_mono(settei),
     }
     out_path.parent.mkdir(parents=True, exist_ok=True)
-    out_path.write_text(json.dumps(data, ensure_ascii=False, indent=1), encoding="utf-8")
+    shachou = dict(data, hoka=dict(data["hoka"]))
+    if "mon" in shachou["hoka"]:
+        m = shachou["hoka"]["mon"]
+        shachou["hoka"]["mon"] = {"url": m["url"], "kagi": m["_shachou"], "dare": "shachou"}
+    out_path.write_text(json.dumps(shachou, ensure_ascii=False, indent=1), encoding="utf-8")
     shain_ban(data, out_path.with_name(out_path.stem + "_shain.json"))
     kazu = {h["namae"]: {k: len(h[k]) for k in ("omoi", "kimatta", "fusaiyou", "susumi", "kobanashi", "houkoku", "commit", "dameshi")} for h in soft_out}
     print(json.dumps({"lab_dameshi": len(lab), **kazu}, ensure_ascii=False))
