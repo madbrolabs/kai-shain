@@ -12,6 +12,9 @@
 :root[data-theme="dark"]{--bg:#15171b;--card:#1e2127;--ink:#e9eaec;--sub:#9aa0aa;--line:#30343c;--acc:#5cc3a6;--acc2:#1d322c;--warn:#f0a66c;--warn2:#3a281b;--ai:#252830;--me:#1f2b42;--me2:#8fb3ff}
 *{box-sizing:border-box}
 html,body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.75 system-ui,-apple-system,"Hiragino Sans","Yu Gothic UI",sans-serif;-webkit-text-size-adjust:100%}
+body{overflow-x:hidden;overflow-wrap:anywhere;word-break:normal}
+main,section,.wrap{min-width:0;max-width:100%}
+img{max-width:100%}
 a{color:var(--acc)}
 button{font:inherit;cursor:pointer}
 .wrap{max-width:1180px;margin:0 auto;padding:0 16px}
@@ -20,22 +23,23 @@ header.top .wrap{display:flex;align-items:center;gap:10px;min-height:56px}
 .logo{display:inline-flex;align-items:center;justify-content:center;border:2.5px solid var(--acc);border-radius:50%;width:58px;height:30px;font-weight:800;letter-spacing:.08em;color:var(--acc);font-size:14px;flex:none}
 header.top h1{font-size:18px;margin:0;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .modoru{border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:999px;padding:4px 14px;font-size:15px;flex:none}
-.chuui{background:var(--warn2);color:var(--warn);border-radius:12px;padding:10px 14px;margin:16px 0;font-size:15px}
+.chuui{background:var(--warn2);color:var(--warn);border-radius:12px;padding:10px 14px;margin:16px 0;font-size:15px;overflow-wrap:anywhere}
 h2{font-size:19px;margin:22px 0 10px}
-.heya-ichiran{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px}
-.heya{display:block;text-decoration:none;color:var(--ink);background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px 16px;transition:box-shadow .2s,border-color .2s}
+.heya-ichiran{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(260px,100%),1fr));gap:12px}
+.heya{display:block;min-width:0;overflow-wrap:anywhere;text-decoration:none;color:var(--ink);background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px 16px;transition:box-shadow .2s,border-color .2s}
 .heya:hover,.heya:focus{border-color:var(--acc);box-shadow:0 4px 18px rgba(31,111,92,.15)}
 .heya b{font-size:18px;display:block}
-.heya .s{color:var(--sub);font-size:14px;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.heya .s{color:var(--sub);font-size:14px;display:block;overflow-wrap:anywhere}
+.heya .s.hk{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;color:var(--ink);font-size:14.5px}
 .ima{display:inline-block;font-size:13px;color:#fff;background:var(--acc);border-radius:999px;padding:0 9px;margin-left:6px;vertical-align:2px}
 .seika{list-style:none;margin:0;padding:0;background:var(--card);border:1px solid var(--line);border-radius:16px;overflow:hidden}
 .seika li{border-top:1px solid var(--line)}
 .seika li:first-child{border-top:0}
-.seika a,.seika .na{display:flex;gap:10px;align-items:baseline;padding:11px 14px;text-decoration:none;color:var(--ink)}
+.seika a,.seika .na{display:flex;flex-wrap:wrap;gap:4px 10px;align-items:baseline;padding:11px 14px;text-decoration:none;color:var(--ink);min-width:0}
 .seika a:hover{background:var(--acc2)}
 .fuda{flex:none;font-size:12.5px;border-radius:6px;padding:0 7px;background:var(--acc2);color:var(--acc);white-space:nowrap}
 .fuda.k{background:var(--me);color:var(--me2)}
-.seika .t{flex:1;min-width:0;overflow-wrap:anywhere}
+.seika .t{flex:1 1 12em;min-width:0;overflow-wrap:anywhere}
 .seika .h{flex:none;color:var(--sub);font-size:13px;white-space:nowrap}
 .kara{color:var(--sub);font-size:14.5px;padding:14px}
 /* 部屋の中 */
@@ -82,15 +86,15 @@ details.shirase div{white-space:pre-wrap;overflow-wrap:anywhere;margin-top:6px}
 .yomu iframe{flex:1;border:0;width:100%;background:#fff}
 /* 社長の入口 */
 .tsukutta{display:grid;gap:10px}
-.tk{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px 14px;font-size:15.5px}
+.tk{min-width:0;overflow-wrap:anywhere;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px 14px;font-size:15.5px}
 .tk b{font-size:16.5px}
 .tk .r{color:var(--sub);font-size:14px}
 .tk .bt{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap}
 .tk .bt button{border:1px solid var(--acc);background:var(--acc);color:#fff;border-radius:10px;padding:6px 16px}
 .tk .bt button.mi{background:transparent;color:var(--acc)}
 /* 新しく出来た物（成果物台帳の大きな札） */
-.fudas{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px}
-.sf{display:flex;flex-direction:column;text-decoration:none;color:var(--ink);background:var(--card);border:1px solid var(--line);border-radius:18px;overflow:hidden;transition:box-shadow .2s,border-color .2s}
+.fudas{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(300px,100%),1fr));gap:14px}
+.sf{display:flex;min-width:0;overflow-wrap:anywhere;flex-direction:column;text-decoration:none;color:var(--ink);background:var(--card);border:1px solid var(--line);border-radius:18px;overflow:hidden;transition:box-shadow .2s,border-color .2s}
 .sf:hover,.sf:focus{border-color:var(--acc);box-shadow:0 6px 22px rgba(31,111,92,.18)}
 .sf .mi{aspect-ratio:16/9;background:var(--acc2);position:relative;overflow:hidden}
 .sf .mi img{width:100%;height:100%;object-fit:cover;object-position:top;display:block}
@@ -128,9 +132,9 @@ details.shirase div{white-space:pre-wrap;overflow-wrap:anywhere;margin-top:6px}
 </div></header>
 
 <main id="iriguchi" class="wrap" hidden>
-  <div class="chuui" id="chuui">このページは<b id="dareno">亀井さん</b>専用です。アドレスは他の人に渡さないでください。</div>
+  <div class="chuui" id="chuui">このページは<b id="dareno">副社長（亀井さん）</b>専用です。アドレスは他の人に渡さないでください。</div>
   <section id="tsukutta-waku" hidden>
-    <h2>亀井さんからの案（入れるか待ち）</h2>
+    <h2>副社長からの案（入れるか待ち）</h2>
     <p class="r" style="color:var(--sub);font-size:14.5px;margin:-4px 0 10px">「入れて」を押すと、その部屋の主任へ知らせが届き、主任が本番に入れます。</p>
     <div class="tsukutta" id="tsukutta"></div>
   </section>
@@ -228,8 +232,8 @@ function iriguchi(){
   api("ichiran").then(function(j){
     if(j._status !== 200) return;
     DARE = j.dare;
-    $("dareno").textContent = DARE === "shachou" ? "社長" : "亀井さん";
-    $("dai").textContent = DARE === "shachou" ? "KAI Lab 社長のページ" : "KAI Lab 亀井さんのページ";
+    $("dareno").textContent = DARE === "shachou" ? "社長" : "副社長（亀井さん）";
+    $("dai").textContent = DARE === "shachou" ? "KAI Lab 社長のページ" : "KAI Lab 副社長のページ";
     document.title = $("dai").textContent;
     var box = $("heya-ichiran");
     j.heya.forEach(function(h){
@@ -239,7 +243,7 @@ function iriguchi(){
       var ima = h.ugoki && (Date.now() - new Date(h.ugoki)) < 90000;
       var html = "<b>"+esc(h.dai.replace(/^【主任】/,""))+(h.kakari?"":"<span style='font-weight:400;font-size:14px;color:var(--sub)'> の部屋</span>")+(ima?"<span class='ima'>いま作業中</span>":"")+"</b>"
         + "<span class='s'>"+(h.ugoki ? "最後に動いた " + esc(hi(h.ugoki)) : "まだ記録がありません")+"</span>"
-        + "<span class='s'>"+esc(h.saigo || "")+"</span>"
+        + (h.saigo ? "<span class='s hk'>"+esc(h.saigo)+"</span>" : "")
         + (h.kakari ? "<span class='kakikomu'>係長に書き込む →</span>" : "");
       if(a.innerHTML !== html) a.innerHTML = html;
     });
@@ -299,13 +303,13 @@ function tsukuttaYomu(){
   api("tsukutta").then(function(j){
     if(j._status !== 200) return;
     var box = $("tsukutta");
-    if(!j.tsukutta.length){ box.innerHTML = "<div class='tk r'>まだありません。亀井さんが部屋に書き込んで、部屋の AI が作ると、ここに並びます。</div>"; return; }
+    if(!j.tsukutta.length){ box.innerHTML = "<div class='tk r'>まだありません。副社長が部屋に書き込んで、部屋の AI が作ると、ここに並びます。</div>"; return; }
     var kara = box.querySelector(".r.tk"); if(kara) box.removeChild(kara);
     j.tsukutta.forEach(function(x, i){
       var key = "i"+x.i, d = box.querySelector('[data-key="'+key+'"]');
       if(!d){ d = document.createElement("div"); d.className = "tk"; d.dataset.key = key; }
       var html = "<b>"+esc(x.nani)+"</b><div class='r'>"+esc(String(x.heya||"").replace(/^【主任】/,""))+" ・ "+esc(hi(x.at))+" ・ 状態："+esc(x.joutai||"試し中")+"</div>"
-        + (x.tanomi ? "<div>亀井さんの頼み：「"+esc(x.tanomi)+"」</div>" : "")
+        + (x.tanomi ? "<div>副社長の頼み：「"+esc(x.tanomi)+"」</div>" : "")
         + (x.oki ? "<div class='r'>置き場："+esc(x.oki)+"</div>" : "")
         + (x.kekka ? "<div class='r'>試した結果："+esc(x.kekka)+"</div>" : "")
         + ((x.joutai||"試し中") === "試し中" ? "<div class='bt'><button data-i='"+x.i+"' data-k='irete'>入れて</button><button class='mi' data-i='"+x.i+"' data-k='miokuri'>見送り</button></div>" : "");
@@ -364,7 +368,7 @@ function okuttaNode(x){
   var key = "k" + x.id, d = $("kaiwa").querySelector('[data-key="'+key+'"]'), nw = !d;
   if(!d){ d = document.createElement("div"); d.className = "m kamei"; d.dataset.key = key; d.dataset.at = x.at; }
   var j = x.joutai === "todoita" ? (x.yonda ? "✓✓ 部屋のAIが読みました" : "✓ 部屋に届きました（AIが読むのを待っています）") : (x.nemuri ? "部屋が休んでいます。部屋が動いた時に届けます" : "届けています…");
-  var html = "<div class='w'>" + (x.dare === "shachou" ? "社長" : "亀井さん") + " ・ " + esc(hi(x.at)) + "</div><div class='b'>" + md(x.text) + "</div><div class='joutai'>" + j + "</div>";
+  var html = "<div class='w'>" + (x.dare === "shachou" ? "社長" : "副社長") + " ・ " + esc(hi(x.at)) + "</div><div class='b'>" + md(x.text) + "</div><div class='joutai'>" + j + "</div>";
   if(d.innerHTML !== html) d.innerHTML = html;
   return nw ? d : null;
 }
