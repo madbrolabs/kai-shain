@@ -52,7 +52,7 @@ def main() -> int:
         log(naishō, "中身に変わりなし。今回は出さない")
         return 0
     enc = REPO / "docs" / "shain" / "data.enc.json"
-    r = hashiru([NODE, str(KOKO / "fuu.mjs"), str(out), str(naishō / "secret" / "aikotoba.json"), str(enc)])
+    r = hashiru([NODE, str(KOKO / "fuu.mjs"), str(out), str(out.with_name("data_shain.json")), str(naishō / "secret" / "aikotoba.json"), str(enc)])
     if r.returncode:
         log(naishō, "錠の係が失敗: " + r.stderr[-500:])
         return 1

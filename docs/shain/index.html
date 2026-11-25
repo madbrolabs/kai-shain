@@ -69,8 +69,9 @@ async function hiraku(aik){
       const W=await crypto.subtle.deriveKey({name:"PBKDF2",salt:ub(w.salt),iterations:box.iter,hash:"SHA-256"},base,{name:"AES-GCM",length:256},false,["decrypt"]);
       const raw=await crypto.subtle.decrypt({name:"AES-GCM",iv:ub(w.iv)},W,ub(w.k));
       const K=await crypto.subtle.importKey("raw",raw,"AES-GCM",false,["decrypt"]);
-      const pt=await crypto.subtle.decrypt({name:"AES-GCM",iv:ub(box.iv)},K,ub(box.ct));
-      return JSON.parse(new TextDecoder().decode(pt));
+      for(const h of (box.hako||[{iv:box.iv,ct:box.ct}])){
+        try{const pt=await crypto.subtle.decrypt({name:"AES-GCM",iv:ub(h.iv)},K,ub(h.ct));return JSON.parse(new TextDecoder().decode(pt))}catch(e){}
+      }
     }catch(e){}
   }
   return null;
@@ -100,8 +101,8 @@ function ichiran(){
     return `<div class="card" data-i="${i}"><h2>${esc(h.namae)}</h2><p class="hk">${esc(h.hitokoto)}</p>
     <div class="kazu">${KIND.filter(([k])=>h[k].length).map(([k,n])=>`<span>${n} ${h[k].length}</span>`).join("")}</div>
     ${ima.text||ima.daimei?`<div class="ima">いま：${(()=>{const t=ima.text||ima.daimei;return esc((t.startsWith(ima.hi)?t:ima.hi+" "+t).slice(0,80))})()}…</div>`:""}</div>`}).join("");
-  M.innerHTML=`<p style="color:var(--sub);margin-top:0">ソフトごとの開発部屋です。進み・出来た事・ハイロ様のダメ出しと学んだ事・小話が、毎日の仕事から自動でたまっていきます。</p>
-  <div class="heya">${rooms}<div class="card" data-i="lab"><h2>ラボ全体の心得</h2><p class="hk">どのソフトにも通じる、ダメ出しから学んだ決まり</p><div class="kazu"><span>心得 ${D.lab_dameshi.length}</span></div></div></div>
+  M.innerHTML=`<p style="color:var(--sub);margin-top:0">ソフトごとの開発部屋です。進み・出来た事・工事日誌が、毎日の仕事から自動でたまっていきます。</p>
+  <div class="heya">${rooms}${D.lab_dameshi.length?`<div class="card" data-i="lab"><h2>ラボ全体の心得</h2><p class="hk">どのソフトにも通じる、ダメ出しから学んだ決まり</p><div class="kazu"><span>心得 ${D.lab_dameshi.length}</span></div></div>`:""}</div>
   <div class="shita">最後に集めた時刻：${esc(D.tsukutta.replace("T"," "))}</div>`;
   M.querySelectorAll(".card").forEach(c=>c.onclick=()=>heya(c.dataset.i));
 }

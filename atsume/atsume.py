@@ -36,8 +36,16 @@ KOBANASHI = re.compile(r"いきさつ|事件|落とし穴|失敗|ハマ|踏ん�
 BASHO = re.compile(r"(?:[A-Za-z]:[\\/]|~/)[^\s　、。（）()「」]*?([^\\/\s　、。（）()「」]+)(?=[\s　、。（）()「」]|$)")
 
 
+# 家での呼び名は会社のページでは「社長」（2026-11-25 社長の指示）
+YOBINA = re.compile(r"ハイロ(様|さん|さま)?")
+
+# 社員（社長以外）の版に出さない内輪の話（2026-11-25 社長「変なことまで共有しなくていい」）
+NAIWA = re.compile(r"オフレコ|真実|不正|権限の段|グランドマスター|叱|ダメ出し|だめ出し|反省|scold|めんどく|お伺い|係長|主任|社長「|社長（|経由|給料|お金|体調|小話|いきさつ|事件")
+
+
 def kirei(s: str, n: int = 420) -> str:
     s = re.sub(r"\*\*|`|~~", "", s).strip()
+    s = YOBINA.sub("社長", s)
     s = BASHO.sub(r"\1", s)
     s = re.sub(r"^[-*・]\s*", "", s)
     s = re.sub(r"\s+", " ", s)
@@ -166,6 +174,22 @@ def memo_kara(d: Path, nozoku: list[str]) -> list[dict]:
     return res
 
 
+def shain_ban(data: dict, p: Path) -> None:
+    """社員の版：エピソード（小話・ダメ出しと学び・ラボの心得）と、思い・決まった事・採らなかった案は社長だけ。
+    進み・出来た事・工事日誌だけを、内輪の言葉が混じる行を落として出す。"""
+    def ok(x: dict) -> bool:
+        return not NAIWA.search(json.dumps(x, ensure_ascii=False))
+    soft = []
+    for h in data["soft"]:
+        soft.append({"id": h["id"], "namae": h["namae"], "hitokoto": h["hitokoto"],
+                     "omoi": [], "kimatta": [], "fusaiyou": [], "kobanashi": [], "dameshi": [],
+                     "susumi": [x for x in h["susumi"] if ok(x)],
+                     "houkoku": [x for x in h["houkoku"] if ok(x)],
+                     "commit": [x for x in h["commit"] if ok(x)]})
+    p.write_text(json.dumps({"tsukutta": data["tsukutta"], "soft": soft, "lab_dameshi": []},
+                            ensure_ascii=False, indent=1), encoding="utf-8")
+
+
 def main() -> None:
     settei = json.loads(Path(sys.argv[1]).read_text(encoding="utf-8"))
     out_path = Path(sys.argv[2])
@@ -204,6 +228,7 @@ def main() -> None:
     }
     out_path.parent.mkdir(parents=True, exist_ok=True)
     out_path.write_text(json.dumps(data, ensure_ascii=False, indent=1), encoding="utf-8")
+    shain_ban(data, out_path.with_name(out_path.stem + "_shain.json"))
     kazu = {h["namae"]: {k: len(h[k]) for k in ("omoi", "kimatta", "fusaiyou", "susumi", "kobanashi", "houkoku", "commit", "dameshi")} for h in soft_out}
     print(json.dumps({"lab_dameshi": len(lab), **kazu}, ensure_ascii=False))
 
