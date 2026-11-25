@@ -4,6 +4,8 @@
 設定＝内緒の場所/kamei/settei.json（iri＝入/切、nozoku＝出さない部屋、renda＝連打よけ）。
 書き込み＝内緒の場所/kamei/ukebako/<受付番号>.json に置き → 配達係（窓なしの claude -p を1回）が SendMessage でその部屋へ届ける。
   届いたかは、その部屋の会話の記録（jsonl）に受付番号が出たかで確かめる。届かない時は見張りフック kamei_mihari.py が次の一言で差し込む。
+部屋＝係長相談室＋亀部屋名簿（【亀部屋】）＋主任名簿（【主任】）。名簿が増えれば一覧も増える。
+新しく出来た物＝成果物台帳（seika.py・内緒の場所/seikabutsu/daichou.jsonl）を読んで大きな札で出す。権利まもりは亀井さんには出さない。
 作った物の一覧＝内緒の場所/kamei/tsukutta.jsonl（部屋の AI が `python kamei.py tsuika …` で1行足す）。社長の入口で見て「入れて／見送り」。
 罠メモ：部屋の記録は 30MB を超える＝読んだ所（pos）を覚えて足された分だけ読む。伏せはここで済ませてから外へ出す。
 """
@@ -27,6 +29,7 @@ HERE = Path(__file__).resolve().parent
 JST = dt.timezone(dt.timedelta(hours=9))
 NO_WINDOW = 0x08000000 if sys.platform == "win32" else 0
 MEIBO = Path(r"C:\Users\hiroy\Claude\主任名簿.json")
+KAMEBEYA = Path(os.environ.get("KAI_KAMEBEYA", r"C:\Users\hiroy\Claude\亀部屋名簿.json"))  # 亀井さんの仮の案件の部屋（係長が立てる）
 PROJECTS = Path.home() / ".claude" / "projects"
 NAISHO = Path(os.environ.get("KAI_NAISHO", r"C:\cl\kai_shain_private"))
 HAITATSU_NA = "亀井ページの配達係"
@@ -163,7 +166,7 @@ def fuseru(s: str) -> str:
 
 # ---------- 部屋 ----------
 def heya_ichiran() -> list[dict]:
-    """係長相談室＋【主任】の部屋全部（名簿から毎回作る＝増えれば増える）。nozoku に当たる部屋は出さない。"""
+    """係長相談室＋【亀部屋】＋【主任】の部屋全部（名簿から毎回作る＝増えれば増える）。nozoku に当たる部屋は出さない。"""
     m = rj(MEIBO, {})
     noz = [str(x) for x in settei().get("nozoku", [])]
     out = []
@@ -171,6 +174,12 @@ def heya_ichiran() -> list[dict]:
     if kk.get("session_id"):
         out.append({"id": kk["session_id"][:8], "sid": kk["session_id"], "dai": kk.get("dai") or "【係長】相談室",
                     "namae": "係長相談室", "basho": "", "kakari": True})
+    for s in rj(KAMEBEYA, {}).get("kamebeya", []):
+        sid = s.get("session_id") or ""
+        if not sid or any(n and n.lower() in str(s.get("anken", "")).lower() for n in noz):
+            continue
+        out.append({"id": sid[:8], "sid": sid, "dai": s.get("dai") or f'【亀部屋】{s.get("anken", "")}',
+                    "namae": s.get("anken", ""), "basho": "", "kakari": False, "kame": True})
     for s in m.get("shunin", []):
         sid = s.get("session_id") or ""
         kan = [s.get("anken", ""), s.get("kyuu_mei", ""), s.get("dai", ""), s.get("basho", ""), sid]
@@ -364,6 +373,57 @@ def seika_file(h: dict, fid: str) -> tuple[str, str] | None:
             f = d / fn
             if f.is_file() and f.suffix in (".md", ".html") and f.resolve().parent == d.resolve():
                 return f.suffix[1:], fuseru(f.read_text(encoding="utf-8", errors="replace"))
+    return None
+
+
+# ---------- 新しく出来た物（成果物台帳を読むだけ）----------
+def _seika():
+    if str(HERE) not in sys.path:
+        sys.path.insert(0, str(HERE))  # -I で起こすと自分の場所が探す道に入らない
+    os.environ.setdefault("KAI_NAISHO", str(NAISHO))
+    import seika
+    return seika
+
+
+def daichou(who: str, heya_dai: str | None = None) -> list[dict]:
+    """台帳の札（同じリンクは1枚・新しい順）。亀井さんには nozoku（権利まもり）の物を出さない。"""
+    try:
+        _s = _seika()
+        rows = _s.matomeru()
+    except Exception as e:
+        log(f"台帳を読めませんでした {e!r}")
+        return []
+    noz = [str(x).lower() for x in settei().get("nozoku", []) if str(x)]
+    hs = {h["dai"]: h["id"] for h in heya_ichiran()}
+    out = []
+    for x in rows:
+        kan = " ".join(str(x.get(k, "")) for k in ("heya", "busho", "dai", "link", "e")).lower()
+        if who != "shachou" and any(n in kan for n in noz):
+            continue
+        if heya_dai is not None and x.get("heya") != heya_dai:
+            continue
+        e = str(x.get("e", "") or "").strip()
+        host = re.sub(r"^https?://([^/:]+).*$", r"\1", x["link"]).lower()
+        out.append({"id": x["id"], "dai": fuseru(x["dai"])[:80], "hitokoto": fuseru(x.get("hitokoto", ""))[:200],
+                    "link": x["link"], "heya": x.get("heya", ""), "heya_id": hs.get(x.get("heya", ""), ""),
+                    "busho": x.get("busho", ""), "dekita": str(x.get("dekita", ""))[:10], "naoshita": x.get("naoshita", ""),
+                    "at": x.get("at", ""), "kakunin": bool(x.get("kakarichou_kakunin")),
+                    "e": e if e.startswith(("https://", "http://")) else (f"api/e/{x['id']}" if e else ""),
+                    "shachou_dake": who != "shachou" and host.endswith("claude.ai") and not x.get("dare_demo")})
+    return out
+
+
+def e_fairu(fid: str) -> Path | None:
+    """札の見本の絵（PC の中の絵）。台帳に書かれた絵だけ・絵の形だけ出す。"""
+    try:
+        _s = _seika()
+        for x in _s.matomeru():
+            if x["id"] == fid:
+                p = Path(str(x.get("e", "")).strip())
+                if p.suffix.lower() in _s.E_KAKUCHOU and p.is_file():
+                    return p
+    except Exception:
+        pass
     return None
 
 
@@ -601,11 +661,11 @@ def tsukeru(app) -> None:
             for h in heya_ichiran():
                 st = yomu(h["sid"])
                 last = next((x for x in reversed(st["items"]) if x["dare"] in ("hito", "ai")), None)
-                hs.append({"id": h["id"], "dai": h["dai"], "namae": h["namae"], "kakari": h["kakari"],
+                hs.append({"id": h["id"], "dai": h["dai"], "namae": h["namae"], "kakari": h["kakari"], "kame": h.get("kame", False),
                            "ugoki": st.get("ugoki", ""), "saigo": (last or {}).get("text", "")[:60]})
                 zentai += seika(h, 8)
             zentai.sort(key=lambda x: x.get("at", ""), reverse=True)
-            return {"dare": who, "heya": hs, "seika": zentai[:40], "ima": ima()}
+            return {"dare": who, "heya": hs, "seika": zentai[:40], "atarashii": daichou(who)[:30], "ima": ima()}
         return jr(await asyncio.to_thread(tsukuru))
 
     async def chat(req):
@@ -641,7 +701,17 @@ def tsukeru(app) -> None:
         if not who or not h or not iri():
             return web.Response(status=404, text="404 Not Found")
         await asyncio.to_thread(yomu, h["sid"])
-        return jr({"seika": await asyncio.to_thread(seika, h)})
+        return jr({"seika": await asyncio.to_thread(seika, h), "fuda": await asyncio.to_thread(daichou, who, h["dai"])})
+
+    async def e_api(req):
+        if not mon(req) or not iri():
+            return web.Response(status=404, text="404 Not Found")
+        p = await asyncio.to_thread(e_fairu, req.match_info["fid"])
+        if not p:
+            return web.Response(status=404, text="404 Not Found")
+        r = web.FileResponse(p)
+        r.headers["Cache-Control"] = "private, max-age=600"
+        return r
 
     async def fairu(req):
         who = mon(req)
@@ -702,6 +772,7 @@ def tsukeru(app) -> None:
     r.add_get("/kamei/{k}/api/heya/{hid}/chat", chat)
     r.add_get("/kamei/{k}/api/heya/{hid}/seika", seika_api)
     r.add_get("/kamei/{k}/api/heya/{hid}/f", fairu)
+    r.add_get("/kamei/{k}/api/e/{fid}", e_api)
     r.add_post("/kamei/{k}/api/heya/{hid}/kaku", kaku)
     r.add_get("/kamei/{k}/api/tsukutta", tsukutta_api)
     r.add_post("/kamei/{k}/api/kettei", kettei_api)
@@ -720,6 +791,23 @@ def kagi_tsukuru() -> None:
     print("鍵を作りました：", p)
 
 
+def kamebeya_toroku(anken: str, sid: str, dai: str = "") -> dict:
+    """亀部屋名簿に1件足す（同じ案件名なら上書き）。係長が亀部屋を立てた時に使う。"""
+    anken = anken.strip()
+    sid = sid.strip().lower()
+    if not anken:
+        raise SystemExit("案件名が空です")
+    if not re.fullmatch(r"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}", sid):
+        raise SystemExit("部屋の番号（session_id）は 8-4-4-4-12 の形にしてください")
+    m = rj(KAMEBEYA, {})
+    ls = [x for x in m.get("kamebeya", []) if x.get("anken") != anken]
+    x = {"anken": anken, "session_id": sid, "dai": dai.strip() or f"【亀部屋】{anken}", "toroku_at": ima()}
+    ls.append(x)
+    m["kamebeya"] = ls
+    wj(KAMEBEYA, m)
+    return x
+
+
 def main() -> None:
     ap = argparse.ArgumentParser(description="亀井ページの道具")
     sub = ap.add_subparsers(dest="cmd", required=True)
@@ -734,6 +822,10 @@ def main() -> None:
     j.add_argument("i", type=int)
     j.add_argument("joutai")
     sub.add_parser("kagi", help="専用URLの鍵を作る（初回だけ）")
+    kb = sub.add_parser("kamebeya-toroku", help="亀部屋を名簿に足す（亀井ページ・社長ページの部屋一覧に出る）")
+    kb.add_argument("anken", help="案件名（部屋の題は【亀部屋】案件名 になる）")
+    kb.add_argument("session_id", help="その部屋の番号（ListAgents などで分かる 8-4-4-4-12 の形）")
+    kb.add_argument("--dai", default="", help="部屋の題が【亀部屋】案件名 と違う時だけ")
     a = ap.parse_args()
     if a.cmd == "tsuika":
         print(json.dumps(tsuika(a.heya, a.nani, a.oki, a.kekka, a.tanomi, a.uketsuke), ensure_ascii=False))
@@ -751,6 +843,10 @@ def main() -> None:
         print("済みました")
     elif a.cmd == "kagi":
         kagi_tsukuru()
+    elif a.cmd == "kamebeya-toroku":
+        x = kamebeya_toroku(a.anken, a.session_id, a.dai)
+        print("亀部屋を名簿に足しました：" + x["dai"])
+        print(json.dumps(x, ensure_ascii=False))
 
 
 if __name__ == "__main__":

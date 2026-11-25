@@ -88,6 +88,26 @@ details.shirase div{white-space:pre-wrap;overflow-wrap:anywhere;margin-top:6px}
 .tk .bt{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap}
 .tk .bt button{border:1px solid var(--acc);background:var(--acc);color:#fff;border-radius:10px;padding:6px 16px}
 .tk .bt button.mi{background:transparent;color:var(--acc)}
+/* 新しく出来た物（成果物台帳の大きな札） */
+.fudas{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px}
+.sf{display:flex;flex-direction:column;text-decoration:none;color:var(--ink);background:var(--card);border:1px solid var(--line);border-radius:18px;overflow:hidden;transition:box-shadow .2s,border-color .2s}
+.sf:hover,.sf:focus{border-color:var(--acc);box-shadow:0 6px 22px rgba(31,111,92,.18)}
+.sf .mi{aspect-ratio:16/9;background:var(--acc2);position:relative;overflow:hidden}
+.sf .mi img{width:100%;height:100%;object-fit:cover;object-position:top;display:block}
+.sf .mi .iro{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;align-items:center;color:#fff;padding:14px;text-align:center}
+.sf .mi .iro b{font-size:22px;line-height:1.4}
+.sf .mi .iro span{font-size:14px;opacity:.9}
+.sf .ue{padding:12px 16px 14px;display:flex;flex-direction:column;gap:4px}
+.sf .dai2{font-size:19px;font-weight:800;line-height:1.45}
+.sf .hk{font-size:15.5px}
+.sf .r2{color:var(--sub);font-size:13.5px;display:flex;flex-wrap:wrap;gap:4px 10px;align-items:center}
+.sumi{display:inline-block;background:var(--acc);color:#fff;border-radius:999px;padding:0 10px;font-size:13px;font-weight:700}
+.naoshi{display:inline-block;background:var(--warn2);color:var(--warn);border-radius:999px;padding:0 10px;font-size:13px;font-weight:700}
+.shachou-dake{color:var(--warn);font-size:13.5px}
+.heya.kakari{grid-column:1/-1;border:2px solid var(--acc);background:var(--acc2)}
+.heya.kakari .kakikomu{display:inline-block;margin-top:6px;background:var(--acc);color:#fff;border-radius:999px;padding:4px 16px;font-size:15.5px;font-weight:700}
+.heya.kame{border-color:var(--me2)}
+#heya-fuda .fudas{grid-template-columns:minmax(0,1fr);margin-bottom:12px}
 @media (max-width:860px){
   .tabs{display:flex;gap:6px;padding-top:10px}
   .tabs button{flex:1;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:12px;padding:8px;font-weight:700}
@@ -110,9 +130,13 @@ details.shirase div{white-space:pre-wrap;overflow-wrap:anywhere;margin-top:6px}
 <main id="iriguchi" class="wrap" hidden>
   <div class="chuui" id="chuui">このページは<b id="dareno">亀井さん</b>専用です。アドレスは他の人に渡さないでください。</div>
   <section id="tsukutta-waku" hidden>
-    <h2>亀井さんの頼みで作った物</h2>
+    <h2>亀井さんからの案（入れるか待ち）</h2>
     <p class="r" style="color:var(--sub);font-size:14.5px;margin:-4px 0 10px">「入れて」を押すと、その部屋の主任へ知らせが届き、主任が本番に入れます。</p>
     <div class="tsukutta" id="tsukutta"></div>
+  </section>
+  <section id="atarashii-waku">
+    <h2>新しく出来た物</h2>
+    <div class="fudas" id="atarashii"></div>
   </section>
   <h2>部屋</h2>
   <div class="heya-ichiran" id="heya-ichiran"></div>
@@ -140,6 +164,7 @@ details.shirase div{white-space:pre-wrap;overflow-wrap:anywhere;margin-top:6px}
     </section>
     <section class="seika-waku" id="seika-waku">
       <div class="ugoki" id="ugoki"></div>
+      <div id="heya-fuda"><div class="fudas" id="fuda"></div></div>
       <ul class="seika" id="seika"></ul>
     </section>
   </div>
@@ -204,18 +229,22 @@ function iriguchi(){
     if(j._status !== 200) return;
     DARE = j.dare;
     $("dareno").textContent = DARE === "shachou" ? "社長" : "亀井さん";
+    $("dai").textContent = DARE === "shachou" ? "KAI Lab 社長のページ" : "KAI Lab 亀井さんのページ";
+    document.title = $("dai").textContent;
     var box = $("heya-ichiran");
     j.heya.forEach(function(h){
       NAMAE[h.id] = h.dai;
       var a = box.querySelector('[data-key="'+h.id+'"]');
-      if(!a){ a = document.createElement("a"); a.className = "heya"; a.dataset.key = h.id; a.href = "#/h/" + h.id; box.appendChild(a); }
+      if(!a){ a = document.createElement("a"); a.className = "heya" + (h.kakari ? " kakari" : "") + (h.kame ? " kame" : ""); a.dataset.key = h.id; a.href = "#/h/" + h.id + (h.kakari ? "/kaku" : ""); box.appendChild(a); }
       var ima = h.ugoki && (Date.now() - new Date(h.ugoki)) < 90000;
       var html = "<b>"+esc(h.dai.replace(/^【主任】/,""))+(h.kakari?"":"<span style='font-weight:400;font-size:14px;color:var(--sub)'> の部屋</span>")+(ima?"<span class='ima'>いま作業中</span>":"")+"</b>"
         + "<span class='s'>"+(h.ugoki ? "最後に動いた " + esc(hi(h.ugoki)) : "まだ記録がありません")+"</span>"
-        + "<span class='s'>"+esc(h.saigo || "")+"</span>";
+        + "<span class='s'>"+esc(h.saigo || "")+"</span>"
+        + (h.kakari ? "<span class='kakikomu'>係長に書き込む →</span>" : "");
       if(a.innerHTML !== html) a.innerHTML = html;
     });
     seikaHyou($("zentai"), j.seika, true);
+    fudaHyou($("atarashii"), j.atarashii || [], true);
     if(DARE === "shachou"){ $("tsukutta-waku").hidden = false; tsukuttaYomu(); }
   });
 }
@@ -237,6 +266,34 @@ function seikaHyou(ul, list, heyaMo){
   });
   Array.prototype.slice.call(ul.children).forEach(function(li){ if(li.dataset.key && !keys[li.dataset.key]) ul.removeChild(li); });
 }
+
+// 新しく出来た物の札（data-key で変わった札だけ直す・並びは新しい順）
+var IRO = ["#1f6f5c","#2f5fb3","#9a4b16","#7a3fa0","#b0354a","#2b7f99","#5c6b1f","#8a5a12"];
+function iro(s){ var h = 0; s = String(s||""); for(var i=0;i<s.length;i++) h = (h*31 + s.charCodeAt(i)) >>> 0; return IRO[h % IRO.length]; }
+function heyaNa(s){ return String(s||"").replace(/^【(主任|係長|亀部屋)】/, function(m, a){ return a === "亀部屋" ? "亀部屋 " : a === "係長" ? "係長" : ""; }); }
+function fudaHyou(box, list, heyaMo){
+  if(!list.length){ if(!box.children.length) box.innerHTML = "<div class='kara'>まだありません。出来上がった物は、作った部屋が台帳に足すとここに並びます。</div>"; return; }
+  var kara = box.querySelector(".kara"); if(kara) box.removeChild(kara);
+  var keys = {};
+  list.forEach(function(x, i){
+    keys[x.id] = 1;
+    var a = box.querySelector('[data-key="'+x.id+'"]');
+    if(!a){ a = document.createElement("a"); a.className = "sf"; a.dataset.key = x.id; a.target = "_blank"; a.rel = "noopener noreferrer"; }
+    if(a.getAttribute("href") !== x.link) a.setAttribute("href", x.link);
+    var e = x.e ? (/^https?:/.test(x.e) ? x.e : BASE + x.e) : "";
+    var html = "<div class='mi'>" + (e ? "<img loading='lazy' alt='' src='"+esc(e)+"'>" : "<div class='iro' style='background:"+iro(x.heya)+"'><b>"+esc(x.dai)+"</b><span>"+esc(heyaNa(x.heya))+"</span></div>") + "</div>"
+      + "<div class='ue'><div class='dai2'>"+esc(x.dai)+"</div>"
+      + (x.hitokoto ? "<div class='hk'>"+esc(x.hitokoto)+"</div>" : "")
+      + "<div class='r2'>" + (x.kakunin ? "<span class='sumi'>係長確認済み</span>" : "") + (x.naoshita ? "<span class='naoshi'>"+esc(hiDake(x.naoshita))+" 直しました</span>" : "")
+      + (heyaMo ? "<span>"+esc(heyaNa(x.heya) || x.busho)+"</span>" : "") + "<span>"+esc(hiDake(x.dekita))+" 出来た</span></div>"
+      + (x.shachou_dake ? "<div class='shachou-dake'>※ 社長のスマホで開けます（このスマホでは開けないことがあります）</div>" : "")
+      + "</div>";
+    if(a.innerHTML !== html) a.innerHTML = html;
+    if(box.children[i] !== a) box.insertBefore(a, box.children[i] || null);
+  });
+  Array.prototype.slice.call(box.children).forEach(function(n){ if(n.dataset.key && !keys[n.dataset.key]) box.removeChild(n); });
+}
+function hiDake(d){ var m = String(d||"").match(/^(\d{4})-(\d{2})-(\d{2})/); return m ? (+m[2])+"月"+(+m[3])+"日" : ""; }
 
 function tsukuttaYomu(){
   api("tsukutta").then(function(j){
@@ -271,7 +328,7 @@ function heyaHiraku(id){
   if(HEYA !== id){
     HEYA = id; SAIGO = -1; SAISHO = 0; OKUTTA = {};
     var k = $("kaiwa"); Array.prototype.slice.call(k.querySelectorAll(".m,.sagyou,details")).forEach(function(n){ k.removeChild(n); });
-    $("seika").innerHTML = "";
+    $("seika").innerHTML = ""; $("fuda").innerHTML = "";
     $("mae").hidden = true;
   }
   $("iriguchi").hidden = true; $("heya-naka").hidden = false; $("modoru").hidden = false;
@@ -355,7 +412,7 @@ $("mae").addEventListener("click", function(){
 
 function seikaYomu(){
   var id = HEYA; if(!id) return;
-  api("heya/" + id + "/seika").then(function(j){ if(id === HEYA && j._status === 200) seikaHyou($("seika"), j.seika, false); });
+  api("heya/" + id + "/seika").then(function(j){ if(id === HEYA && j._status === 200){ seikaHyou($("seika"), j.seika, false); var f = $("fuda"); if((j.fuda||[]).length || f.children.length) fudaHyou(f, j.fuda || [], false); } });
 }
 
 // 書き込み
@@ -402,7 +459,9 @@ function michi(){
   var h = location.hash.replace(/^#\/?/, "").split("/");
   if(h[0] === "h" && h[1]){
     if(h[2] === "f" && h[3]){ if(HEYA !== h[1]) heyaHiraku(h[1]); yomu(h[1], h.slice(3).join("/")); return; }
-    yomuTojiru(); heyaHiraku(h[1]); return;
+    yomuTojiru(); heyaHiraku(h[1]);
+    if(h[2] === "kaku"){ tab(0); setTimeout(function(){ try{ $("kakiran").focus(); }catch(e){} }, 300); }
+    return;
   }
   yomuTojiru(); iriguchi();
 }
