@@ -136,7 +136,8 @@ details.shirase div{white-space:pre-wrap;overflow-wrap:anywhere;margin-top:6px}
 .sf .dai2{font-size:19px;font-weight:800;line-height:1.45}
 .sf .hk{font-size:15.5px}
 .sf .ni{gap:8px}
-.sf .oshi{display:inline-block;border:1px solid var(--acc);color:var(--acc);border-radius:999px;padding:3px 12px;font-size:14px;font-weight:700;cursor:pointer}
+.se .ni{display:inline-flex;flex-wrap:wrap;gap:6px;margin-left:8px;vertical-align:middle}
+.sf .oshi,.se .oshi{display:inline-block;border:1px solid var(--acc);color:var(--acc);border-radius:999px;padding:3px 12px;font-size:14px;font-weight:700;cursor:pointer}
 .sf .r2{color:var(--sub);font-size:13.5px;display:flex;flex-wrap:wrap;gap:4px 10px;align-items:center}
 .sumi{display:inline-block;background:var(--acc);color:#fff;border-radius:999px;padding:0 10px;font-size:13px;font-weight:700}
 .naoshi{display:inline-block;background:var(--warn2);color:var(--warn);border-radius:999px;padding:0 10px;font-size:13px;font-weight:700}
@@ -373,13 +374,14 @@ function seikaHyou(ul, list, heyaMo){
   var kara = ul.querySelector(".kara"); if(kara) kara.parentNode.removeChild(kara);
   var keys = {};
   list.forEach(function(x, i){
-    var key = x.fid ? x.heya+"|"+x.fid : (x.url || ("t"+x.tsukutta));
+    var key = x.fid ? x.heya+"|"+x.fid : x.eigyou && x.id ? "e"+x.id : (x.url || ("t"+x.tsukutta));
+    var ki = x.eigyou && x.hiraku ? (x.kiso || BASE + x.naka) : "";  // 営業用資料＝幅でスマホ用/パソコン用を開き分ける（新しく出来た物の札と同じ）
     keys[key] = 1;
     var li = ul.querySelector('[data-key="'+CSS.escape(key)+'"]');
     if(!li){ li = document.createElement("li"); li.dataset.key = key; }
-    var href = x.fid ? "#/h/"+x.heya+"/f/"+encodeURIComponent(x.fid) : x.naka ? BASE + x.naka : (x.url || "");
-    var inner = "<span class='fuda"+(x.tsukutta?" k":"")+"'>"+esc(x.shurui)+"</span><span class='t'>"+esc(x.namae)+(heyaMo?" <span style='color:var(--sub);font-size:13.5px'>（"+esc(x.heya_na)+"）</span>":"")+(x.joutai?" <span style='color:var(--sub);font-size:13.5px'>・"+esc(x.joutai)+"</span>":"")+"</span><span class='h'>"+esc(hi(x.at))+"</span>";
-    var html = href ? "<a href='"+esc(href)+"'"+(x.url && !x.naka?" target='_blank' rel='noopener noreferrer'":"")+">"+inner+"</a>" : "<span class='na'>"+inner+"</span>";
+    var href = x.fid ? "#/h/"+x.heya+"/f/"+encodeURIComponent(x.fid) : ki ? (SEMAI() ? ki + (x.sumaho || x.hiraku) : ki + x.hiraku) : x.naka ? BASE + x.naka : (x.url || "");
+    var inner = "<span class='fuda"+(x.tsukutta?" k":"")+"'>"+esc(x.shurui)+"</span><span class='t'>"+esc(x.namae)+(heyaMo?" <span style='color:var(--sub);font-size:13.5px'>（"+esc(x.heya_na)+"）</span>":"")+(x.joutai?" <span style='color:var(--sub);font-size:13.5px'>・"+esc(x.joutai)+"</span>":"")+(ki ? "<span class='ni'><span class='oshi' data-u='"+esc(ki + (x.sumaho || x.hiraku))+"'>スマホ用</span><span class='oshi' data-u='"+esc(ki + x.hiraku)+"'>パソコン用</span></span>" : "")+"</span><span class='h'>"+esc(hi(x.at))+"</span>";
+    var html = href ? "<a"+(ki ? " class='se' data-sp='"+esc(ki + (x.sumaho || x.hiraku))+"' data-pc='"+esc(ki + x.hiraku)+"'" : "")+" href='"+esc(href)+"'"+(x.url && !x.naka?" target='_blank' rel='noopener noreferrer'":"")+">"+inner+"</a>" : "<span class='na'>"+inner+"</span>";
     if(li.innerHTML !== html) li.innerHTML = html;
     if(ul.children[i] !== li) ul.insertBefore(li, ul.children[i] || null);
   });
@@ -421,14 +423,14 @@ function fudaHyou(box, list, heyaMo){
 function SEMAI(){ return !!(window.matchMedia && matchMedia("(max-width:700px)").matches); }
 // 札の中の「スマホ用」「パソコン用」（札は丸ごと a なので、押し口は span で受けて札の開き方に合わせて開く）
 document.addEventListener("click", function(ev){
-  var o = ev.target.closest && ev.target.closest(".sf .oshi"); if(!o) return;
+  var o = ev.target.closest && ev.target.closest(".sf .oshi, .se .oshi"); if(!o) return;
   ev.preventDefault(); ev.stopPropagation();
-  var a = o.closest(".sf"), u = o.dataset.u;
+  var a = o.closest(".sf, .se"), u = o.dataset.u;
   if(a.target === "_blank") window.open(u, "_blank", "noopener"); else location.href = u;
 }, true);
 // 幅が変わったら（回転・窓の大きさ）札の「開く」を持ち替える
 if(window.matchMedia) try{ matchMedia("(max-width:700px)").addEventListener("change", function(){
-  document.querySelectorAll(".sf[data-pc]").forEach(function(a){ a.setAttribute("href", SEMAI() ? a.dataset.sp : a.dataset.pc); });
+  document.querySelectorAll(".sf[data-pc], .se[data-pc]").forEach(function(a){ a.setAttribute("href", SEMAI() ? a.dataset.sp : a.dataset.pc); });
 }); }catch(e){}
 function hiDake(d){ var m = String(d||"").match(/^(\d{4})-(\d{2})-(\d{2})/); return m ? (+m[2])+"月"+(+m[3])+"日" : ""; }
 

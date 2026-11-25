@@ -730,7 +730,8 @@ def zentai_matome(zentai: list[dict], fuda: list[dict], hs: list[dict]) -> list[
     out, mita = [], set()
     for x in fuda:
         out.append({"shurui": "出来た物", "namae": x["dai"], "at": x.get("naoshita") or x.get("at") or x.get("dekita", ""),
-                    "url": x["link"], "naka": x.get("naka", ""), "heya": x.get("heya_id", ""), "heya_na": na.get(x.get("heya", "")) or x.get("busho") or re.sub(r"^【[^】]*】", "", x.get("heya", ""))})
+                    "url": x["link"], "naka": x.get("naka", ""), "heya": x.get("heya_id", ""), "heya_na": na.get(x.get("heya", "")) or x.get("busho") or re.sub(r"^【[^】]*】", "", x.get("heya", "")),
+                    **({"id": x["id"], "eigyou": True, "kiso": x.get("kiso", ""), "hiraku": x.get("hiraku", ""), "sumaho": x.get("sumaho", "")} if x.get("eigyou") else {})})  # 営業用資料はこの一覧でもスマホ用/パソコン用を開き分ける
         mita.add(x["link"].rstrip("/"))
     for x in zentai:
         u = (x.get("url") or "").rstrip("/")
