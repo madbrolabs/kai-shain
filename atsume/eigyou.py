@@ -231,19 +231,25 @@ def tsukuru(naisho: Path) -> tuple[list[dict], bool]:
         if not moto.is_file() or (karui and not karui.is_file()):
             log(naisho, f"{fid} 元ファイルが見つからないので飛ばした")
             continue
+        sumaho = Path(str(x.get("moto_sumaho") or "").strip()) if str(x.get("moto_sumaho") or "").strip() else None
+        if sumaho and not sumaho.is_file():
+            log(naisho, f"{fid} スマホ用が見つからないので、パソコン用だけで出す")
+            sumaho = None
+        ssuf = sumaho.suffix.lower() if sumaho else ""
+        sfz = fuzoku(sumaho) if sumaho and ssuf in (".html", ".htm") else []
         suf = moto.suffix.lower()
         pdf = suf == ".pdf"
         douga, zou = suf in DOUGA, suf in ZOU
         media = douga or zou
         fz = [] if (pdf or media) else fuzoku(moto)
-        files = [moto] + ([karui] if karui else []) + [moto.parent / f for f in fz]
+        files = [moto] + ([karui] if karui else []) + [moto.parent / f for f in fz] + ([sumaho] if sumaho else []) + [sumaho.parent / f for f in sfz]
         sm = shimon(files)
         if sm in mita_shimon:
             log(naisho, f"{fid} 中身が他の資料と同じなので1枚にまとめた")
             continue
         mita_shimon.add(sm)
         try:
-            honbun = "" if media else moji(moto)
+            honbun = ("" if media else moji(moto)) + (" " + moji(sumaho) if sumaho and ssuf in (".html", ".htm") else "")
         except Exception as e:
             log(naisho, f"{fid} 本文を読めませんでした {type(e).__name__}")
             continue
@@ -254,8 +260,10 @@ def tsukuru(naisho: Path) -> tuple[list[dict], bool]:
         hon = "shiryou.pdf" if pdf else ("douga" + suf if douga else ("zou" + suf if zou else "index.html"))
         hiraku = "karui.pdf" if karui else hon
         zentai = hon if karui else ""
+        shon = "sumaho" + (".html" if ssuf == ".htm" else ssuf) if sumaho else ""
         m = mae.get(fid)
-        if not (m and m.get("shimon") == sm and m.get("kouhou") == kouhou and (dst / hiraku).is_file() and (dst / "e.jpg").is_file()):
+        if not (m and m.get("shimon") == sm and m.get("kouhou") == kouhou and (dst / hiraku).is_file() and (dst / "e.jpg").is_file()
+                and (not shon or (dst / shon).is_file())):
             shutil.rmtree(dst, ignore_errors=True)
             dst.mkdir(parents=True)
             shutil.copy2(moto, dst / hon)
@@ -264,6 +272,11 @@ def tsukuru(naisho: Path) -> tuple[list[dict], bool]:
             for f in fz:
                 (dst / f).parent.mkdir(parents=True, exist_ok=True)
                 shutil.copy2(moto.parent / f, dst / f)
+            if sumaho:  # スマホ用（同じフォルダに置き、絵などは同じ相対の道で読む）
+                shutil.copy2(sumaho, dst / shon)
+                for f in sfz:
+                    (dst / f).parent.mkdir(parents=True, exist_ok=True)
+                    shutil.copy2(sumaho.parent / f, dst / f)
             try:
                 ok = (e_pdf(karui or moto, dst / "e.jpg") if (pdf or karui) else e_douga(moto, dst / "e.jpg") if douga
                       else e_jpg(moto, dst / "e.jpg") if zou else e_html(moto, dst / "e.jpg"))
@@ -278,7 +291,8 @@ def tsukuru(naisho: Path) -> tuple[list[dict], bool]:
         tana.append({
             "id": fid, "dai": x["dai"], "hitokoto": x.get("hitokoto", ""), "dekita": str(x.get("dekita", ""))[:10],
             "naoshita": x.get("naoshita", ""), "at": x.get("at", ""), "heya": x.get("heya", ""),
-            "shurui": mono, "hiraku": hiraku, "zentai": zentai,
+            "shurui": mono, "hiraku": hiraku, "zentai": zentai, "sumaho": shon,
+            "ookisa_sumaho": ookisa((dst / shon).stat().st_size) if shon else "",
             "ookisa": ookisa((dst / hiraku).stat().st_size), "ookisa_zentai": ookisa((dst / zentai).stat().st_size) if zentai else "",
             "dl_na": kirei_na(x["dai"]) + (".pdf" if (pdf or karui) else (suf if media else ".html")),
             "dl_na_zentai": kirei_na(x["dai"]) + ".pdf" if zentai else "",

@@ -102,7 +102,10 @@ footer{color:var(--sub);font-size:13px;padding:28px 0 36px;text-align:center}
       if(x.hitokoto) ui.appendChild(el("p", "", x.hitokoto));
       if(x.soto){ b.appendChild(bt(x.soto, "開く", "hi")); }
       else {
-        b.appendChild(bt(ue + x.hiraku, "開く", "hi"));
+        // 開く＝画面の幅でスマホ用／パソコン用を開き分ける（押した時の幅で決める）。スマホ用が無い物は同じ物
+        var pc = ue + x.hiraku, sp = ue + (x.sumaho || x.hiraku), hk = bt(pc, "開く", "hi");
+        hk.onclick = function(){ hk.href = window.matchMedia && matchMedia("(max-width:700px)").matches ? sp : pc; };
+        b.appendChild(hk); b.appendChild(bt(sp, "スマホ用", "")); b.appendChild(bt(pc, "パソコン用", ""));
         b.appendChild(bt(ue + x.hiraku, "保存", "", x.dl_na));
         if(x.zentai) b.appendChild(bt(ue + x.zentai, "ちゃんとした版（" + x.ookisa_zentai + "）", ""));
       }

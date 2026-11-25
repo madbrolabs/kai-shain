@@ -474,11 +474,12 @@ async function eigyou(push=1){
   if(m){try{(await monni("eigyou",{})).tana.forEach(x=>xs.push({...x,shain:1,ue:m.url+"/kai_mon/eigyou_mi/"+encodeURIComponent(m.kagi)+"/"+x.id+"/"}))}catch(e){nai="社員だけの資料は、いま門番につながらないので出ていません。"}}
   const T=$("#tana");if(!T)return;
   xs.sort((a,b)=>String(b.at||"").localeCompare(String(a.at||"")));
-  const bt=(h,t,c,dl)=>`<a class="${c||""}" href="${esc(h)}"${dl?` download="${esc(dl)}"`:` target="_blank" rel="noopener"`}>${esc(t)}</a>`;
+  // sp があれば「開く」＝押した時の画面の幅でスマホ用（sp）／パソコン用（h）を開き分ける
+  const bt=(h,t,c,dl,sp)=>`<a class="${c||""}" href="${esc(h)}"${sp?` data-pc="${esc(h)}" data-sp="${esc(sp)}" onclick="this.href=matchMedia('(max-width:700px)').matches?this.dataset.sp:this.dataset.pc"`:""}${dl?` download="${esc(dl)}"`:` target="_blank" rel="noopener"`}>${esc(t)}</a>`;
   T.innerHTML=xs.length?xs.map(x=>`<div class="sr"><div class="e">${x.e?`<img loading="lazy" alt="" src="${esc(x.ue+"e.jpg")}">`:""}</div><div class="ui">
     <div class="fu">${x.shain?"<b>社員だけ</b>":"<b>公式ページにも掲載</b>"}${esc(x.shurui==="PDF"?(x.zentai?"PDF・軽い版あり":"PDF"):(x.shurui==="動画"||x.shurui==="絵"?x.shurui:"ページ"))}</div>
     <h3>${esc(x.dai)}</h3>${x.hitokoto?`<p>${esc(x.hitokoto)}</p>`:""}
-    <div class="bt">${x.soto?bt(x.soto,"開く","hi"):bt(x.ue+x.hiraku,"開く","hi")+bt(x.ue+x.hiraku+(x.shain?"?dl=1":""),"保存","",x.shain?"":x.dl_na)+(x.zentai?bt(x.ue+x.zentai,"ちゃんとした版（"+x.ookisa_zentai+"）",""):"")}</div>
+    <div class="bt">${x.soto?bt(x.soto,"開く","hi"):bt(x.ue+x.hiraku,"開く","hi",0,x.ue+(x.sumaho||x.hiraku))+bt(x.ue+(x.sumaho||x.hiraku),"スマホ用","")+bt(x.ue+x.hiraku,"パソコン用","")+bt(x.ue+x.hiraku+(x.shain?"?dl=1":""),"保存","",x.shain?"":x.dl_na)+(x.zentai?bt(x.ue+x.zentai,"ちゃんとした版（"+x.ookisa_zentai+"）",""):"")}</div>
     ${x.ookisa?`<div class="fu">${x.zentai?"軽い版 ":""}${esc(x.ookisa)}</div>`:""}</div></div>`).join(""):`<div class="shita">まだありません。</div>`;
   if(nai)T.insertAdjacentHTML("afterend",`<div class="shita">${esc(nai)}</div>`);
 }

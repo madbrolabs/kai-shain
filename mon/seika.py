@@ -5,7 +5,7 @@
   e（見本の絵の URL か PC の中の絵の場所・空でよい）dekita（出来た日）kakarichou_kakunin（係長確認済みか）
   dare_demo（任意・claude.ai の物を「リンクを知っていれば誰でも」に公開した時だけ true。無ければ社長の札だけに「社長のスマホで開けます」。亀井さんには一切出さない）
   naka（任意・社長／亀井さんの専用アドレスの下の道 例 "kaisha/"。あれば札はそちらを開く。鍵は台帳に書かない）
-  moto・moto_karui（任意・busho「営業用資料」の時の元ファイル＝PC の中の PDF・HTML・動画（mp4/webm）・絵（png/jpg）。棚の係 atsume/eigyou.py が写しを公式ページ・社員ページへ置く。moto_karui は軽い版の PDF）
+  moto・moto_karui（任意・busho「営業用資料」の時の元ファイル＝PC の中の PDF・HTML・動画（mp4/webm）・絵（png/jpg）。棚の係 atsume/eigyou.py が写しを公式ページ・社員ページへ置く。moto_karui は軽い版の PDF。moto_sumaho はスマホ用＝縦の画面に組み直した HTML か絵）
   shain_dake（任意・営業用資料を検めに関わらず公式ページに出さず社員ページ等だけにする時 true。false の行で公式へ戻す）
 同じ link の行が後から来たら同じ札の「直した日」が新しくなって上へ上がる（2枚にしない）＝ matomeru()。
 使い方：python seika.py tasu --heya "【主任】超議事録" --dai "…" --hitokoto "…" --link "https://…" [--e 絵] [--kakunin]
@@ -105,7 +105,7 @@ def kensa(x: dict) -> list[str]:
             dame.append("絵（e）は URL か、PC の中の絵（png・jpg・webp・gif）の場所にしてください")
         elif not p.is_file():
             dame.append(f"絵（e）の場所に絵がありません：{e}")
-    for kk in ("moto", "moto_karui"):
+    for kk in ("moto", "moto_karui", "moto_sumaho"):
         m = str(x.get(kk, "") or "").strip()
         if not m:
             continue
@@ -116,6 +116,8 @@ def kensa(x: dict) -> list[str]:
             dame.append(f"元ファイル（{kk}）の場所にファイルがありません：{m}")
     if str(x.get("moto_karui", "") or "").strip() and not str(x.get("moto", "") or "").strip():
         dame.append("軽い版（moto_karui）だけでは足せません。ちゃんとした版（moto）も書いてください")
+    if str(x.get("moto_sumaho", "") or "").strip() and not str(x.get("moto", "") or "").strip():
+        dame.append("スマホ用（moto_sumaho）だけでは足せません。パソコン用（moto）も書いてください")
     now = ima()
     d = _hizuke(x.get("dekita", ""))
     if not d:
@@ -146,7 +148,7 @@ def gyou_yomu() -> list[dict]:
             x = json.loads(l)
         except Exception:
             continue
-        if isinstance(x, dict) and not kensa(dict(x, e="", moto="", moto_karui="")):  # 絵の場所が後で消えても札は出す
+        if isinstance(x, dict) and not kensa(dict(x, e="", moto="", moto_karui="", moto_sumaho="")):  # 絵の場所が後で消えても札は出す
             x["_gyou"] = i + 1
             out.append(x)
     return out
@@ -167,7 +169,7 @@ def matomeru(rows: list[dict] | None = None) -> list[dict]:
             y["hajime_at"] = mae["hajime_at"]
             if not str(x.get("e", "")).strip():
                 y["e"] = mae.get("e", "")
-            for kk in ("busho", "hitokoto", "moto", "moto_karui"):
+            for kk in ("busho", "hitokoto", "moto", "moto_karui", "moto_sumaho"):
                 if not str(x.get(kk, "")).strip():
                     y[kk] = mae.get(kk, "")
             if "shain_dake" not in x and "shain_dake" in mae:
@@ -215,7 +217,7 @@ def e_tsukuru(link: str) -> str:
 
 def tasu(heya: str, dai: str, hitokoto: str, link: str, e: str = "", busho: str = "", dekita: str = "",
          kakunin: bool = False, e_jidou: bool = True, dare_demo: bool = False, naka: str = "",
-         moto: str = "", moto_karui: str = "", shain_dake: bool | None = None) -> tuple[bool, dict | list[str]]:
+         moto: str = "", moto_karui: str = "", shain_dake: bool | None = None, moto_sumaho: str = "") -> tuple[bool, dict | list[str]]:
     link = link.strip()
     x = {"at": ima().isoformat(timespec="seconds"), "heya": heya.strip(), "busho": busho.strip(), "dai": dai.strip(),
          "hitokoto": hitokoto.strip(), "link": link, "e": e.strip(), "dekita": (dekita or ima().date().isoformat()).strip(),
@@ -228,6 +230,8 @@ def tasu(heya: str, dai: str, hitokoto: str, link: str, e: str = "", busho: str 
         x["moto"] = moto.strip()  # 営業用資料の元ファイル（棚の係が写しを作る）
     if moto_karui.strip():
         x["moto_karui"] = moto_karui.strip()
+    if moto_sumaho.strip():
+        x["moto_sumaho"] = moto_sumaho.strip()  # スマホ用（縦の画面に組み直した版）。棚の札は画面の幅で開き分ける
     if shain_dake is not None:
         x["shain_dake"] = bool(shain_dake)  # 営業用資料を公式ページに出さない（true）／出してよい（false）
     dame = kensa(x)
@@ -263,6 +267,7 @@ def main() -> None:
     t.add_argument("--dare-demo", action="store_true", help="claude.ai の物を「リンクを知っていれば誰でも」に公開してある時")
     t.add_argument("--naka", default="", help="社長／亀井さんの専用アドレスの下で開く道（例 kaisha/）。あれば札はそちらを開く")
     t.add_argument("--moto", default="", help="営業用資料の元ファイル（PC の中の PDF・HTML・動画・絵）。--busho 営業用資料 と一緒に")
+    t.add_argument("--moto-sumaho", default="", help="営業用資料のスマホ用（縦の画面に組み直した HTML か絵）。札の「開く」が画面の幅で開き分ける")
     t.add_argument("--moto-karui", default="", help="営業用資料の軽い版の PDF（あれば棚で先に開く）")
     t.add_argument("--shain-dake", action="store_const", const=True, default=None, help="営業用資料を公式ページに出さず、社員ページ・社長ページ等だけにする")
     t.add_argument("--koushiki-ok", dest="shain_dake", action="store_const", const=False, help="--shain-dake を外す（検めを通れば公式ページにも出す）")
@@ -271,7 +276,7 @@ def main() -> None:
     a = ap.parse_args()
     if a.cmd == "tasu":
         ok, v = tasu(a.heya, a.dai, a.hitokoto, a.link, a.e, a.busho, a.dekita, a.kakunin, not a.e_nashi, a.dare_demo, a.naka,
-                     a.moto, a.moto_karui, a.shain_dake)
+                     a.moto, a.moto_karui, a.shain_dake, a.moto_sumaho)
         if not ok:
             print("足せませんでした。直してからもう一度どうぞ：")
             for d in v:

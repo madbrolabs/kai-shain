@@ -135,6 +135,8 @@ details.shirase div{white-space:pre-wrap;overflow-wrap:anywhere;margin-top:6px}
 .sf .ue{padding:12px 16px 14px;display:flex;flex-direction:column;gap:4px}
 .sf .dai2{font-size:19px;font-weight:800;line-height:1.45}
 .sf .hk{font-size:15.5px}
+.sf .ni{gap:8px}
+.sf .oshi{display:inline-block;border:1px solid var(--acc);color:var(--acc);border-radius:999px;padding:3px 12px;font-size:14px;font-weight:700;cursor:pointer}
 .sf .r2{color:var(--sub);font-size:13.5px;display:flex;flex-wrap:wrap;gap:4px 10px;align-items:center}
 .sumi{display:inline-block;background:var(--acc);color:#fff;border-radius:999px;padding:0 10px;font-size:13px;font-weight:700}
 .naoshi{display:inline-block;background:var(--warn2);color:var(--warn);border-radius:999px;padding:0 10px;font-size:13px;font-weight:700}
@@ -361,6 +363,8 @@ function fudaHyou(box, list, heyaMo){
     var a = box.querySelector('[data-key="'+x.id+'"]');
     if(!a){ a = document.createElement("a"); a.className = "sf"; a.dataset.key = x.id; a.rel = "noopener noreferrer"; }
     var href = x.naka ? BASE + x.naka : x.link;  // naka＝この専用アドレスの下の写し（同じ画面で開き、戻るで帰れる）
+    var ki = x.eigyou && x.hiraku ? (x.kiso || BASE + x.naka) : "";  // 営業用資料＝スマホ用/パソコン用の2つ1組（スマホ用が無い物は同じ物）
+    if(ki){ a.dataset.pc = ki + x.hiraku; a.dataset.sp = ki + (x.sumaho || x.hiraku); href = SEMAI() ? a.dataset.sp : a.dataset.pc; }
     if(a.getAttribute("href") !== href) a.setAttribute("href", href);
     if(x.naka) a.removeAttribute("target"); else a.target = "_blank";
     var e = x.e ? (/^https?:/.test(x.e) ? x.e : BASE + x.e) : "";
@@ -369,6 +373,7 @@ function fudaHyou(box, list, heyaMo){
       + (x.hitokoto ? "<div class='hk'>"+esc(x.hitokoto)+"</div>" : "")
       + "<div class='r2'>" + (x.kakunin ? "<span class='sumi'>係長確認済み</span>" : "") + (x.naoshita ? "<span class='naoshi'>"+esc(hiDake(x.naoshita))+" 直しました</span>" : "")
       + (heyaMo ? "<span>"+esc(heyaNa(x.heya) || x.busho)+"</span>" : "") + "<span>"+esc(hiDake(x.dekita))+" 出来た</span></div>"
+      + (ki ? "<div class='r2 ni'><span class='oshi' data-u='"+esc(ki + (x.sumaho || x.hiraku))+"'>スマホ用</span><span class='oshi' data-u='"+esc(ki + x.hiraku)+"'>パソコン用</span></div>" : "")
       + (x.eigyou ? "<div class='r2'><span class='sumi'>営業用資料</span><span>"+(x.karui ? "軽い版の PDF が開きます（そのまま保存もできます）" : "そのまま開けます・保存もできます")+"</span></div>" : "")
       + (x.shachou_dake ? "<div class='shachou-dake'>※ 社長のスマホで開けます（このスマホでは開けないことがあります）</div>" : "")
       + "</div>";
@@ -377,6 +382,18 @@ function fudaHyou(box, list, heyaMo){
   });
   Array.prototype.slice.call(box.children).forEach(function(n){ if(n.dataset.key && !keys[n.dataset.key]) box.removeChild(n); });
 }
+function SEMAI(){ return !!(window.matchMedia && matchMedia("(max-width:700px)").matches); }
+// 札の中の「スマホ用」「パソコン用」（札は丸ごと a なので、押し口は span で受けて札の開き方に合わせて開く）
+document.addEventListener("click", function(ev){
+  var o = ev.target.closest && ev.target.closest(".sf .oshi"); if(!o) return;
+  ev.preventDefault(); ev.stopPropagation();
+  var a = o.closest(".sf"), u = o.dataset.u;
+  if(a.target === "_blank") window.open(u, "_blank", "noopener"); else location.href = u;
+}, true);
+// 幅が変わったら（回転・窓の大きさ）札の「開く」を持ち替える
+if(window.matchMedia) try{ matchMedia("(max-width:700px)").addEventListener("change", function(){
+  document.querySelectorAll(".sf[data-pc]").forEach(function(a){ a.setAttribute("href", SEMAI() ? a.dataset.sp : a.dataset.pc); });
+}); }catch(e){}
 function hiDake(d){ var m = String(d||"").match(/^(\d{4})-(\d{2})-(\d{2})/); return m ? (+m[2])+"月"+(+m[3])+"日" : ""; }
 
 function tsukuttaYomu(){

@@ -672,7 +672,9 @@ def daichou(who: str, heya_dai: str | None = None) -> list[dict]:
                         "naoshita": x.get("naoshita", ""), "at": x.get("at", ""), "kakunin": bool(x.get("kakarichou_kakunin")),
                         "e": (ue + "e.jpg" if t.get("kouhou") else f"api/e/{x['id']}") if t.get("e") else "",
                         "naka": "" if t.get("kouhou") else f"eigyou/{t['id']}/", "eigyou": True,
-                        "karui": bool(t.get("zentai")), "shachou_dake": False})
+                        "karui": bool(t.get("zentai")), "shachou_dake": False,
+                        # 札の「開く」を画面の幅で開き分ける（kiso＋hiraku＝パソコン用・kiso＋sumaho＝スマホ用。kiso 空＝専用アドレスの下 naka）
+                        "kiso": ue if t.get("kouhou") else "", "hiraku": t.get("hiraku", ""), "sumaho": t.get("sumaho", "")})
             continue
         e = str(x.get("e", "") or "").strip()
         host = re.sub(r"^https?://([^/:]+).*$", r"\1", x["link"]).lower()

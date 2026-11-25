@@ -39,7 +39,8 @@ def kakushi_tana() -> list[dict]:
         if t.get("kouhou"):
             continue
         out.append({k: t.get(k, "") for k in ("id", "dai", "hitokoto", "dekita", "naoshita", "at", "shurui", "hiraku", "zentai",
-                                              "ookisa", "ookisa_zentai", "dl_na", "dl_na_zentai", "e", "soto")})
+                                              "ookisa", "ookisa_zentai", "dl_na", "dl_na_zentai", "e", "soto",
+                                              "sumaho", "ookisa_sumaho")})
     return out
 
 
