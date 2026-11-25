@@ -3,7 +3,7 @@
 台帳＝内緒の場所/seikabutsu/daichou.jsonl（1行1件 JSON）。亀井ページ・社長ページ（kamei.py）はここを読むだけ。
   at（足した時刻）heya（部屋の題）busho（任意）dai（題）hitokoto（一言）link（押せば開くURL）
   e（見本の絵の URL か PC の中の絵の場所・空でよい）dekita（出来た日）kakarichou_kakunin（係長確認済みか）
-  dare_demo（任意・claude.ai の物を「リンクを知っていれば誰でも」に公開した時だけ true。無ければ亀井さんの札に「社長のスマホで開けます」）
+  dare_demo（任意・claude.ai の物を「リンクを知っていれば誰でも」に公開した時だけ true。無ければ社長の札だけに「社長のスマホで開けます」。副社長には一切出さない）
   naka（任意・社長／副社長の専用アドレスの下の道 例 "kaisha/"。あれば札はそちらを開く。鍵は台帳に書かない）
 同じ link の行が後から来たら同じ札の「直した日」が新しくなって上へ上がる（2枚にしない）＝ matomeru()。
 使い方：python seika.py tasu --heya "【主任】超議事録" --dai "…" --hitokoto "…" --link "https://…" [--e 絵] [--kakunin]

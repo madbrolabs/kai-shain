@@ -508,7 +508,7 @@ def daichou(who: str, heya_dai: str | None = None) -> list[dict]:
                     "at": x.get("at", ""), "kakunin": bool(x.get("kakarichou_kakunin")),
                     "e": e if e.startswith(("https://", "http://")) else (f"api/e/{x['id']}" if e else ""),
                     "naka": naka,
-                    "shachou_dake": who != "shachou" and not naka and host.endswith("claude.ai") and not x.get("dare_demo")})
+                    "shachou_dake": who == "shachou" and not naka and host.endswith("claude.ai") and not x.get("dare_demo")})
     return out
 
 
