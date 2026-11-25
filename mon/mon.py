@@ -190,19 +190,36 @@ def aki_port() -> int:
     raise RuntimeError("試しの部屋がいっぱいです")
 
 
+def tameshi_dir(s: dict, n: int) -> Path:
+    return TAMESHI_DIR / (f'{s["id"]}_pr{n}' if n else f'{s["id"]}_hon')
+
+
+def hajime(s: dict, n: int) -> str:
+    """入る所。{token} はその試しの部屋の合言葉ファイル（hajime_file）の中身に置き換える。"""
+    h = s.get("hajime", "/")
+    if "{token}" in h:
+        f = Path(s.get("hajime_file", "").replace("{dir}", str(tameshi_dir(s, n))))
+        for _ in range(30):
+            if f.exists() and f.read_text(encoding="utf-8").strip():
+                return h.replace("{token}", f.read_text(encoding="utf-8").strip())
+            time.sleep(1)
+        return "/"
+    return h
+
+
 def tameshi_okosu(s: dict, n: int) -> int:
-    """PR #n の中身をこのPCで別の番号に起こす（30分さわらなければ止める）。"""
+    """PR #n（0＝いちばん新しい本流）の中身をこのPCで別の番号に起こす（30分さわらなければ止める）。"""
     key = f'{s["id"]}#{n}'
     t = TAMESHI.get(key)
     if t and t["proc"].poll() is None:
         t["saigo"] = time.time()
         return t["port"]
     m = mirror(s)
-    d = TAMESHI_DIR / f'{s["id"]}_pr{n}'
+    d = tameshi_dir(s, n)
     if d.exists():
         subprocess.run(["git", "--git-dir", str(m), "worktree", "remove", "--force", str(d)], capture_output=True, creationflags=NO_WINDOW)
     subprocess.run(["git", "--git-dir", str(m), "worktree", "prune"], capture_output=True, creationflags=NO_WINDOW)
-    r = subprocess.run(["git", "--git-dir", str(m), "worktree", "add", "-f", "--detach", str(d), f"refs/pull/{n}/head"],
+    r = subprocess.run(["git", "--git-dir", str(m), "worktree", "add", "-f", "--detach", str(d), f"refs/pull/{n}/head" if n else "HEAD"],
                        capture_output=True, text=True, creationflags=NO_WINDOW, timeout=300)
     if r.returncode:
         raise RuntimeError("仮の更新を取り出せませんでした: " + r.stderr[-200:])
@@ -271,14 +288,14 @@ async def t_iriguchi(req: web.Request) -> web.StreamResponse:
     s = next((x for x in kaihatsu() if x["id"] == soft), None)
     if not dare(k) or not s or s.get("tameshi") != "pc" or (n and not n.isdigit()):
         return web.Response(text=MON_HTML, content_type="text/html", status=403)
-    if n:
+    if n or not s.get("port"):
         try:
-            port = await asyncio.to_thread(tameshi_okosu, s, int(n))
+            port = await asyncio.to_thread(tameshi_okosu, s, int(n or 0))
         except Exception as e:
             return web.Response(text=f"試しの部屋を用意できませんでした：{e}", status=500)
         if not await matsu_port(port):
             return web.Response(text="試しの部屋が起きませんでした。少し待ってもう一度どうぞ。", status=503)
-    res = web.HTTPFound(s.get("hajime", "/"))
+    res = web.HTTPFound(await asyncio.to_thread(hajime, s, int(n or 0)))
     for c, v in (("kai_soft", soft), ("kai_n", n), ("kai_mon", shirushi(soft, n))):
         res.set_cookie(c, v, max_age=12 * 3600, secure=True, httponly=True, samesite="Lax", path="/")
     return res
@@ -296,8 +313,8 @@ async def chuukei(req: web.Request) -> web.StreamResponse:
     s = next((x for x in kaihatsu() if x["id"] == soft), None)
     if not s:
         return web.Response(text=MON_HTML, content_type="text/html", status=403)
-    if n:
-        t = TAMESHI.get(f"{soft}#{n}")
+    if n or not s.get("port"):
+        t = TAMESHI.get(f"{soft}#{n or 0}")
         if not t:
             return web.Response(text="試しの部屋は止まっています。社員ページの「試す」から入り直してください。", status=410)
         t["saigo"] = time.time()
