@@ -178,7 +178,7 @@ details.shirase div{white-space:pre-wrap;overflow-wrap:anywhere;margin-top:6px}
   </section>
   <div class="chuui" id="chuui">このページは<b id="dareno">亀井さん</b>専用です。アドレスは他の人に渡さないでください。</div>
   <section id="tsukutta-waku" hidden>
-    <h2>亀井さんからの案（入れるか待ち）</h2>
+    <h2 id="tsukutta-dai">亀井さんからの案（入れるか待ち）</h2>
     <p class="r" style="color:var(--sub);font-size:14.5px;margin:-4px 0 10px">「入れて」を押すと、その部屋の主任へ知らせが届き、主任が本番に入れます。</p>
     <div class="tsukutta" id="tsukutta"></div>
   </section>
@@ -230,7 +230,7 @@ details.shirase div{white-space:pre-wrap;overflow-wrap:anywhere;margin-top:6px}
 "use strict";
 var BASE = location.pathname.replace(/\/+$/, "") + "/";
 var $ = function(id){ return document.getElementById(id); };
-var DARE = "kamei", HEYA = null, SAIGO = -1, SAISHO = 0, TIMER = null, OKUTTA = {}, ICHI = null, NAMAE = {};
+var KYAKU_NA = ["亀井さん"], DARE = "kamei", HEYA = null, SAIGO = -1, SAISHO = 0, TIMER = null, OKUTTA = {}, ICHI = null, NAMAE = {};
 
 function esc(s){ return String(s == null ? "" : s).replace(/[&<>"']/g, function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]; }); }
 function hi(at){ if(!at) return ""; var d = new Date(at); if(isNaN(d)) return ""; var n = new Date();
@@ -325,7 +325,7 @@ function iriguchi(){
     $("kakari-e").hidden = DARE === "shachou";  // 社長のページには出さない
     seikaHyou($("zentai"), j.seika, true);
     fudaHyou($("atarashii"), j.atarashii || [], true);
-    if(DARE === "shachou"){ $("tsukutta-waku").hidden = false; tsukuttaYomu(); }
+    if(DARE === "shachou"){ $("tsukutta-waku").hidden = false; KYAKU_NA = j.kyaku_na || KYAKU_NA; $("tsukutta-dai").textContent = KYAKU_NA.join("・") + "からの案（入れるか待ち）"; tsukuttaYomu(); }
   });
 }
 
@@ -350,7 +350,7 @@ function seikaHyou(ul, list, heyaMo){
 // 新しく出来た物の札（data-key で変わった札だけ直す・並びは新しい順）
 var IRO = ["#1f6f5c","#2f5fb3","#9a4b16","#7a3fa0","#b0354a","#2b7f99","#5c6b1f","#8a5a12"];
 function iro(s){ var h = 0; s = String(s||""); for(var i=0;i<s.length;i++) h = (h*31 + s.charCodeAt(i)) >>> 0; return IRO[h % IRO.length]; }
-function heyaNa(s){ return String(s||"").replace(/^【(主任|係長|亀部屋)】/, function(m, a){ return a === "亀部屋" ? "亀部屋 " : a === "係長" ? "係長" : ""; }); }
+function heyaNa(s){ return String(s||"").replace(/^【(主任|係長|[^】]{1,8}部屋)】/, function(m, a){ return a === "係長" ? "係長" : a === "主任" ? "" : a + " "; }); }
 function fudaHyou(box, list, heyaMo){
   if(!list.length){ if(!box.children.length) box.innerHTML = "<div class='kara'>まだありません。出来上がった物は、作った部屋が台帳に足すとここに並びます。</div>"; return; }
   var kara = box.querySelector(".kara"); if(kara) box.removeChild(kara);
@@ -381,13 +381,13 @@ function tsukuttaYomu(){
   api("tsukutta").then(function(j){
     if(j._status !== 200) return;
     var box = $("tsukutta");
-    if(!j.tsukutta.length){ box.innerHTML = "<div class='tk r'>まだありません。亀井さんが部屋に書き込んで、部屋の AI が作ると、ここに並びます。</div>"; return; }
+    if(!j.tsukutta.length){ box.innerHTML = "<div class='tk r'>まだありません。"+esc(KYAKU_NA.join("・"))+"が部屋に書き込んで、部屋の AI が作ると、ここに並びます。</div>"; return; }
     var kara = box.querySelector(".r.tk"); if(kara) box.removeChild(kara);
     j.tsukutta.forEach(function(x, i){
       var key = "i"+x.i, d = box.querySelector('[data-key="'+key+'"]');
       if(!d){ d = document.createElement("div"); d.className = "tk"; d.dataset.key = key; }
       var html = "<b>"+esc(x.nani)+"</b><div class='r'>"+esc(String(x.heya||"").replace(/^【主任】/,""))+" ・ "+esc(hi(x.at))+" ・ 状態："+esc(x.joutai||"試し中")+"</div>"
-        + (x.tanomi ? "<div>亀井さんの頼み：「"+esc(x.tanomi)+"」</div>" : "")
+        + (x.tanomi ? "<div>"+esc(x.fuda||"亀井さんの頼み")+"：「"+esc(x.tanomi)+"」</div>" : "")
         + (x.oki ? "<div class='r'>置き場："+esc(x.oki)+"</div>" : "")
         + (x.kekka ? "<div class='r'>試した結果："+esc(x.kekka)+"</div>" : "")
         + ((x.joutai||"試し中") === "試し中" ? "<div class='bt'><button data-i='"+x.i+"' data-k='irete'>入れて</button><button class='mi' data-i='"+x.i+"' data-k='miokuri'>見送り</button></div>" : "");
@@ -459,7 +459,7 @@ function okuttaNode(x){
   var j = x.joutai === "todoita"
     ? (x.henji ? "✓✓ " + dare + "から返事が来ました" : "✓ 届きました" + b + "　" + (UGOKU ? dare + "が書いています…" : dare + "が読むのを待っています"))
     : (x.nemuri ? "部屋がいま開いていません。開いた時にすぐ届けます" : "届けています…");
-  var html = "<div class='w'>" + (x.dare === "shachou" ? "社長" : "亀井さん") + " ・ " + esc(hi(x.at)) + "</div><div class='b'>" + md(x.text) + "</div><div class='joutai'>" + j + "</div>";
+  var html = "<div class='w'>" + (x.na || (x.dare === "shachou" ? "社長" : "亀井さん")) + " ・ " + esc(hi(x.at)) + "</div><div class='b'>" + md(x.text) + "</div><div class='joutai'>" + j + "</div>";
   if(d.innerHTML !== html) d.innerHTML = html;
   return nw ? d : null;
 }

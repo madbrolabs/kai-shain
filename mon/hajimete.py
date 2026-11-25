@@ -91,7 +91,8 @@ def tsukeru(app) -> None:
         return r
 
     r = app.router
-    r.add_get("/kamei/{k}/hajimete", page)
-    r.add_get("/kamei/{k}/hajimete/", page)
-    r.add_get("/kamei/{k}/hajimete/md", md)
-    r.add_get("/kamei/{k}/hajimete/img/{n}", img)
+    for m in ("kamei", "kyaku"):  # /kyaku/<鍵>/＝お客の表の人の専用URL（kamei.py の MICHI と同じ）
+        r.add_get(f"/{m}/{{k}}/hajimete", page)
+        r.add_get(f"/{m}/{{k}}/hajimete/", page)
+        r.add_get(f"/{m}/{{k}}/hajimete/md", md)
+        r.add_get(f"/{m}/{{k}}/hajimete/img/{{n}}", img)
