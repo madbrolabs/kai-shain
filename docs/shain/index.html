@@ -51,6 +51,17 @@ main{max-width:900px;margin:0 auto;padding:16px}
 .hibi li.ichi .hi{margin-right:6px}
 .hibi li.ichi>div,.hibi li.ichi>h3{display:inline}
 .hibi li.ichi .genbun{display:none}.hibi li.ichi.hiraki .genbun{display:block}
+.atama{display:flex;gap:20px;align-items:flex-start;margin-bottom:6px}
+.atama-l{flex:0 1 auto;min-width:160px}
+.omoi{flex:1 1 0;background:linear-gradient(135deg,var(--acc2),var(--card));border:1px solid var(--acc);border-radius:16px;padding:14px 20px;margin:4px 0 12px}
+.omoi-h{color:var(--acc);font-weight:700;font-size:14px;letter-spacing:.1em;margin-bottom:6px}
+.omoi p{font-size:20px;line-height:1.7;font-weight:700;margin:0 0 6px}
+.omoi-s{text-align:right;color:var(--sub);font-size:13px}
+@media (max-width:640px){.atama{flex-direction:column;gap:0}.omoi p{font-size:17px}}
+.hibi.mt{padding:12px 16px}
+.mt-m{font-size:18px;margin:6px 0 4px}
+.mt-t{margin:0 0 6px;padding-left:1.2em}.mt-t li{margin:3px 0;line-height:1.6}
+.hibi.mt details{margin:4px 0 6px;font-size:14px}.hibi.mt summary{color:var(--sub);cursor:pointer}
 .mi{display:flex;gap:8px;align-items:center;margin:4px 0 6px}
 .mi h1{font-size:22px;margin:0}
 .mi .hk{color:var(--sub);font-size:14px}
@@ -138,6 +149,8 @@ async function hairu(aik){
   m?heya(decodeURIComponent(m[1]),m[2],0):v?miseru({v:v[1],i:decodeURIComponent(v[2]||"")}):ichiran(0);
 }
 
+// 進みはまとめがあれば「日の数」で数える
+const KZ=(h,k)=>k==="susumi"&&(h.susumi_matome||[]).length?h.susumi_matome.length:(h[k]||[]).length;
 const KIND=[["susumi","進み"],["houkoku","出来た事"],["dameshi","ダメ出しと学び"],["kobanashi","開発の小話"],["kimatta","決まった事"],["fusaiyou","採らなかった案"],["omoi","創始者の思い"],["commit","工事日誌"]];
 
 // 画面の移り変わりを履歴に積む＝マウスやブラウザの「戻る」で前の画面へ
@@ -148,9 +161,9 @@ function ichiran(push=1){
   iku({v:"ichiran"},push);
   window.scrollTo(0,0);
   const rooms=D.soft.map((h,i)=>{
-    const ima=(h.susumi[0]||h.houkoku[0]||{});
+    const mt=(h.susumi_matome||[])[0], ima=mt?{hi:mt.hi,text:mt.midashi}:(h.susumi[0]||h.houkoku[0]||{});
     return `<div class="card" data-i="${i}"><h2>${esc(h.namae)}</h2><p class="hk">${esc(h.hitokoto)}</p>
-    <div class="kazu">${KIND.filter(([k])=>h[k].length).map(([k,n])=>`<span>${n} ${h[k].length}</span>`).join("")}</div>
+    <div class="kazu">${KIND.filter(([k])=>h[k].length).map(([k,n])=>`<span>${n} ${KZ(h,k)}</span>`).join("")}</div>
     ${ima.text||ima.daimei?`<div class="ima">いま：${(()=>{const t=Y(ima,"text")||Y(ima,"daimei");return esc((t.startsWith(ima.hi)?t:ima.hi+" "+t).slice(0,80))})()}…</div>`:""}</div>`}).join("");
   const H=D.hoka||{}, tb=H.tebiki||[];
   const yaru=[...tb.map(x=>[`yomu:${x.id}`,x.md.match(/^# (.+)/m)?.[1].split("：")[0]||x.id,(x.md.match(/^# .+：(.+)/m)||[])[1]||""]),
@@ -193,20 +206,34 @@ function heya(i,t0,push){
   const lab=i==="lab";
   const h=lab?{namae:"ラボ全体の心得",hitokoto:"どのソフトにも通じる、ダメ出しから学んだ決まり",dameshi:D.lab_dameshi}:D.soft[+i];
   if(!h)return ichiran(0);
-  const kinds=lab?[["dameshi","心得"]]:KIND.filter(([k])=>h[k].length);
+  // 創始者の思いはタブに入れず、名前の右に大きく出す（2026-11-25 社長「進みと同じ所はどうか」）
+  const kinds=lab?[["dameshi","心得"]]:KIND.filter(([k])=>k!=="omoi"&&h[k].length);
   let tab=kinds.some(([k])=>k===t0)?t0:kinds[0]?.[0], q="";
   iku({v:"heya",i,t:tab},push);
   window.scrollTo(0,0);
+  // 大きく出すのは「〜_小話」の短い思い（社員にも見せてよい形）。無い時だけ全部
+  // 小話の帳面の前書き（題の下の説明）は出さない＝「社長の思い」の見出しの下の行だけ。頭の日付も外す
+  const os=(h.omoi||[]), ok0=os.filter(x=>/_小話$/.test(x.moto||"")), ok1=ok0.filter(x=>/社長の思い/.test(x.midashi||"")), ok=ok1.length?ok1:ok0,
+    om=(ok.length?ok:os).map(x=>Y(x,"text").replace(/^\s*20\d\d-\d\d-\d\d[\s　]*/,"")).filter(Boolean);
   M.innerHTML=`<div class="mae"><button id="modoru">← 部屋の一覧</button></div>
-  <div class="mi"><h1>${esc(h.namae)}</h1></div><div class="hk" style="color:var(--sub);margin-bottom:8px">${esc(h.hitokoto)}</div>
+  <div class="atama"><div class="atama-l"><div class="mi"><h1>${esc(h.namae)}</h1></div><div class="hk" style="color:var(--sub);margin-bottom:8px">${esc(h.hitokoto)}</div></div>
+  ${om.length?`<div class="omoi"><div class="omoi-h">創始者の思い</div>${om.map(t=>`<p>${esc(t)}</p>`).join("")}<div class="omoi-s">── 社長</div></div>`:""}</div>
   ${lab?"":dekiru(h.id)}
-  <div class="tabs">${kinds.map(([k,n])=>`<button data-k="${k}">${n} ${h[k].length}</button>`).join("")}</div>
+  <div class="tabs">${kinds.map(([k,n])=>`<button data-k="${k}">${n} ${KZ(h,k)}</button>`).join("")}</div>
   <input class="sagasu" placeholder="この部屋の中をさがす"><div id="list"></div>`;
   $("#modoru").onclick=()=>ichiran(1);
   const sb=$("#sanka");if(sb)sb.onclick=()=>sanka(h);
   const draw=()=>{
     M.querySelectorAll(".tabs button").forEach(b=>b.classList.toggle("on",b.dataset.k===tab));
     const xs=(h[tab]||[]).filter(x=>!q||JSON.stringify(x).toLowerCase().includes(q));
+    // 進みは日ごとのまとめ（見出し＋要点）だけ。細かい記録・いきさつは原本（指示書）に残し、ここには出さない（2026-11-25 社長「意味わからん・簡潔に」「原点はこちらで保存しておけばいい」）
+    if(tab==="susumi"&&(h.susumi_matome||[]).length){
+      const ms=h.susumi_matome.filter(m=>!q||JSON.stringify(m).toLowerCase().includes(q));
+      $("#list").innerHTML=ms.length?ms.map(m=>{const t=new Date(m.hi+"T00:00:00+09:00");
+        return `<div class="hibi mt"><div class="hibi-h">${t.getMonth()+1}月${t.getDate()}日（${YOUBI[t.getDay()]}）</div>
+        <h3 class="mt-m">${esc(m.midashi)}</h3><ul class="mt-t">${m.ten.map(s=>`<li>${esc(s)}</li>`).join("")}</ul></div>`}).join(""):`<div class="kara">見つかりません</div>`;
+      return;
+    }
     $("#list").innerHTML=xs.length?hibi(tab,xs):`<div class="kara">まだありません</div>`;
   };
   M.querySelectorAll(".tabs button").forEach(b=>b.onclick=()=>{if(tab===b.dataset.k)return;tab=b.dataset.k;iku({v:"heya",i,t:tab},1);draw()});

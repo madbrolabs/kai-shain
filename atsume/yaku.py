@@ -36,6 +36,21 @@ TANOMI = """あなたは、ソフト開発の記録を社員向けに書き直�
 """
 
 
+MATOME = """あなたは、ソフト開発の1日の進みを、社員向けに短くまとめる係です。
+下は、あるソフト「{namae}」の、ある1日の進みの記録（細かい走り書き）です。
+これを、ソフト開発を知らない社員が10秒で読んで「今日は何が進んだか」が分かるようにまとめてください。
+
+決まり：
+- "midashi"：その日のいちばん大きな出来事を、20字以内の見出し1つ（例「写真をみんなに見せられるようになった」）。
+- "ten"：大事な事だけを2〜3個。1個は30字以内の短い文。使う人から見て「何が出来るようになったか・何が良くなったか」だけを書く。
+- 書かない物：中の作り・道具やサービスの名前（使う人が画面で選ぶ物は除く）・鍵や設定や試験や測る話・まだの事や予定や持ち越し・やり直しの話・人の名前や役職（「社長」は除く）。
+- 事実は変えない・足さない・盛らない。「社長」はそのまま。
+- 返事は JSON だけ：{{"midashi": "...", "ten": ["...", "..."]}}
+
+記録：
+"""
+
+
 def find_claude() -> str | None:
     root = Path(os.environ.get("LOCALAPPDATA", r"C:\Users\hiroy\AppData\Local")) / "Claude-Data"
     best, key = None, None
@@ -59,13 +74,63 @@ def tanomu(exe: str, bun: dict[str, str]) -> dict[str, str]:
                                 "--output-format", "text", "--no-session-persistence"],
                                input=prompt, capture_output=True, text=True, encoding="utf-8", errors="replace",
                                timeout=900, creationflags=NO_WINDOW, cwd=os.environ.get("TEMP", "."))
-            m = re.search(r"\{.*\}", r.stdout, re.S)
-            if m:
-                d = json.loads(m.group(0))
+            i = r.stdout.find("{")  # 罠：{.*} で取ると塊が2つの時に読めない→最初の塊だけ読む
+            if i >= 0:
+                d, _ = json.JSONDecoder().raw_decode(r.stdout[i:])
                 return {k: re.sub(r"ハイロ(様|さん|さま)?", "社長", str(v).strip()) for k, v in d.items() if k in bun and str(v).strip()}
         except Exception as e:  # noqa: BLE001
             print("やり直し:", e, file=sys.stderr)
     return {}
+
+
+def matome_tanomu(exe: str, namae: str, bun: list[str]) -> dict | None:
+    prompt = MATOME.format(namae=namae) + "\n".join("・" + b for b in bun)
+    for _ in range(3):
+        try:
+            r = subprocess.run([exe, "-p", "--model", "opus", "--effort", "medium", "--tools", "",
+                                "--output-format", "text", "--no-session-persistence"],
+                               input=prompt, capture_output=True, text=True, encoding="utf-8", errors="replace",
+                               timeout=900, creationflags=NO_WINDOW, cwd=os.environ.get("TEMP", "."))
+            i = r.stdout.find("{")  # 罠：{.*} で取ると塊が2つの時に読めない→最初の塊だけ読む
+            if i >= 0:
+                d, _ = json.JSONDecoder().raw_decode(r.stdout[i:])
+                fix = lambda v: re.sub(r"ハイロ(様|さん|さま)?", "社長", str(v).strip())
+                ten = [fix(t) for t in d.get("ten", []) if str(t).strip()][:3]
+                if d.get("midashi") and ten:
+                    return {"midashi": fix(d["midashi"]), "ten": ten}
+        except Exception as e:  # noqa: BLE001
+            print("やり直し:", e, file=sys.stderr)
+    return None
+
+
+def matome(exe: str | None, datas: list, cache: dict, cache_p: Path) -> None:
+    """進みを日ごとに束ね、見出し1つ＋要点2〜4個にまとめて h["susumi_matome"] に入れる（2026-11-25 社長「意味わからん・簡潔に」）。"""
+    mada = {}
+    kumi_all = []
+    for d in datas:
+        for h in d["soft"]:
+            hibi: dict[str, list] = {}
+            for x in h.get("susumi", []):
+                hibi.setdefault((x.get("hi") or "")[:10], []).append(x)
+            kumi = []
+            for hi in sorted(hibi, reverse=True):
+                bun = [(x.get("yasashi") or {}).get("text") or x.get("text") or "" for x in reversed(hibi[hi])]
+                bun = [b for b in bun if b]
+                key = "m2:" + yubi(  # 頼み文を変えたら番号を上げる＝全部頼み直す
+                    h["namae"] + "\n" + "\n".join(bun))
+                kumi.append((hi, key, len(bun)))
+                if key not in cache:
+                    mada[key] = (h["namae"], bun)
+            kumi_all.append((h, kumi))
+    print(f"まとめる日 {len(mada)} 件")
+    if mada and exe:
+        with ThreadPoolExecutor(DOUJI) as ex:
+            for key, got in zip(mada, ex.map(lambda k: matome_tanomu(exe, *mada[k]), list(mada))):
+                if got:
+                    cache[key] = json.dumps(got, ensure_ascii=False)
+                    cache_p.write_text(json.dumps(cache, ensure_ascii=False, indent=0), encoding="utf-8")
+    for h, kumi in kumi_all:
+        h["susumi_matome"] = [dict(json.loads(cache[k]), hi=hi, kazu=n) for hi, k, n in kumi if k in cache]
 
 
 def main() -> int:
@@ -106,6 +171,12 @@ def main() -> int:
                 cache.update(got)
                 cache_p.write_text(json.dumps(cache, ensure_ascii=False, indent=0), encoding="utf-8")
                 print(f"  {n + 1}/{len(kumi)} 組 済み（{len(got)} 件）", flush=True)
+    for d in datas:
+        for x, rans in koumoku(d):
+            y = {r: cache[yubi(x[r])] for r in rans if x.get(r) and yubi(x[r]) in cache}
+            if y:
+                x["yasashi"] = y
+    matome(exe, datas, cache, cache_p)
     for f, d in zip(files, datas):
         for x, rans in koumoku(d):
             y = {r: cache[yubi(x[r])] for r in rans if x.get(r) and yubi(x[r]) in cache}
