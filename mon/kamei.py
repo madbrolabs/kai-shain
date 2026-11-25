@@ -1063,6 +1063,8 @@ def tsukeru(app) -> None:
             raise web.HTTPFound(req.path + "/")
         t = (HERE / "kamei.html").read_text(encoding="utf-8")
         g = mon(req)
+        if g != "shachou":  # §28 しくみの覚え書きは社長ページだけ（お客のページには字も残さない）
+            t = re.sub(r"<!--shikumi-->.*?<!--/shikumi-->", "", t, flags=re.S)
         if g in KYAKU and g != "kamei":  # 画面の字の「亀井さん」をその人の呼び方に（中身の字に前のお客の名前を残さない）
             t = t.replace("亀井です", kyaku(g)["sei"] + "です").replace("亀井さん", kyaku(g)["san"])
         r = web.Response(text=t, content_type="text/html")
@@ -1219,6 +1221,16 @@ def tsukeru(app) -> None:
             return web.Response(status=404, text="404 Not Found")
         return jr({"tsukutta": list(reversed(await asyncio.to_thread(tsukutta)))})
 
+    async def shikumi_api(req):  # §28 社長ページだけ
+        if mon(req) != "shachou" or not iri():
+            return web.Response(status=404, text="404 Not Found")
+        import shikumi
+
+        def tsukuru():
+            fu = lambda v: [fuseru(x) for x in v] if isinstance(v, list) else fuseru(v)
+            return [{k: fu(v) for k, v in o.items()} for o in shikumi.ichiran()]
+        return jr({"shikumi": await asyncio.to_thread(tsukuru)})
+
     async def kettei_api(req):
         if mon(req) != "shachou" or not iri():
             return web.Response(status=404, text="404 Not Found")
@@ -1252,6 +1264,7 @@ def tsukeru(app) -> None:
         r.add_post(f"/{m}/{{k}}/api/heya/{{hid}}/kaku", kaku)
         r.add_post(f"/{m}/{{k}}/api/heya/{{hid}}/koe", koe_api)
         r.add_get(f"/{m}/{{k}}/api/tsukutta", tsukutta_api)
+        r.add_get(f"/{m}/{{k}}/api/shikumi", shikumi_api)
         r.add_post(f"/{m}/{{k}}/api/kettei", kettei_api)
         r.add_route("*", f"/{m}/{{k}}/{{tail:.*}}", nai)
         r.add_route("*", f"/{m}", nai)

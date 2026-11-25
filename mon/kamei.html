@@ -191,6 +191,41 @@ details.shirase div{white-space:pre-wrap;overflow-wrap:anywhere;margin-top:6px}
   </section>
   <h2>部屋</h2>
   <div class="heya-ichiran" id="heya-ichiran"></div>
+  <!--shikumi-->
+  <section id="shikumi-waku" hidden>
+    <h2>しくみの覚え書き</h2>
+    <p style="color:var(--sub);font-size:14.5px;margin:-4px 0 10px">各ソフトがどう動いているかの覚え書きです（社長のページだけに出ます）。名前を押すと開きます。ソフトが変わったら、その係の主任が自分の札を直します。置き場所の〔cl〕は会社のPCのCドライブにある cl の棚、〔ユーザー〕はCドライブの「ユーザー」の中の社長の棚です。</p>
+    <div class="shikumi" id="shikumi"></div>
+  </section>
+  <style>
+  .shikumi{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(360px,100%),1fr));gap:12px;align-items:start}
+  .sk{min-width:0;overflow-wrap:anywhere;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:0 14px}
+  .sk summary{cursor:pointer;padding:12px 0;font-size:17px;font-weight:800;line-height:1.45}
+  .sk summary .nn{display:block;font-size:14.5px;font-weight:400;color:var(--sub);margin-top:2px}
+  .sk h4{margin:10px 0 4px;font-size:14px;color:var(--acc)}
+  .sk ol,.sk ul{margin:0;padding-left:1.4em;font-size:15px;line-height:1.6}
+  .sk p{margin:0;font-size:15px;line-height:1.6}
+  .sk .kk{color:var(--sub);font-size:13.5px;margin:10px 0 12px}
+  </style>
+  <script>
+  function shikumiYomu(){
+    api("shikumi").then(function(j){
+      if(j._status !== 200 || !j.shikumi) return;
+      var box = document.getElementById("shikumi"); if(!box) return;
+      document.getElementById("shikumi-waku").hidden = false;
+      if(!j.shikumi.length){ box.innerHTML = "<p style='color:var(--sub)'>まだありません。</p>"; return; }
+      var li = function(a, tag){ return "<"+tag+">" + a.map(function(x){ return "<li>"+esc(x)+"</li>"; }).join("") + "</"+tag+">"; };
+      box.innerHTML = j.shikumi.map(function(o){
+        return "<details class='sk' data-key='"+esc(o.id)+"'><summary>"+esc(o.na)+"<span class='nn'>"+esc(o.nani.join(" "))+"</span></summary>"
+          + "<h4>どう動く</h4>" + li(o.ugoki, "ol")
+          + "<h4>どこに置いてある</h4>" + li(o.basho, "ul")
+          + "<h4>止まった時に見る所</h4><p>" + esc(o.tomatta.join(" ")) + "</p>"
+          + "<p class='kk'>係：" + esc(o.kakari || "—") + "（直す時は、この係の主任が自分の札のファイルを直します）</p></details>";
+      }).join("");
+    }).catch(function(){});
+  }
+  </script>
+  <!--/shikumi-->
   <h2>会社全体の成果物</h2>
   <ul class="seika" id="zentai"></ul>
   <p style="height:30px"></p>
@@ -328,7 +363,7 @@ function iriguchi(){
     $("kakari-e").hidden = DARE === "shachou";  // 社長のページには出さない
     seikaHyou($("zentai"), j.seika, true);
     fudaHyou($("atarashii"), j.atarashii || [], true);
-    if(DARE === "shachou"){ $("tsukutta-waku").hidden = false; KYAKU_NA = j.kyaku_na || KYAKU_NA; $("tsukutta-dai").textContent = KYAKU_NA.join("・") + "からの案（入れるか待ち）"; tsukuttaYomu(); }
+    if(DARE === "shachou"){ $("tsukutta-waku").hidden = false; KYAKU_NA = j.kyaku_na || KYAKU_NA; $("tsukutta-dai").textContent = KYAKU_NA.join("・") + "からの案（入れるか待ち）"; tsukuttaYomu(); if(typeof shikumiYomu === "function") shikumiYomu(); }
   });
 }
 
