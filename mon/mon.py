@@ -527,6 +527,13 @@ def main() -> None:
     app.router.add_post("/kai_mon/sanka", api_sanka)
     app.router.add_post("/kai_mon/kettei", api_kettei)
     app.router.add_route("OPTIONS", "/kai_mon/{x}", preflight)
+    try:  # アドオン：亀井ページ（kamei.py・設定 内緒の場所/kamei/settei.json の iri＝入/切）。無くても門番は動く
+        sys.path.insert(0, str(Path(__file__).resolve().parent))
+        os.environ.setdefault("KAI_NAISHO", str(NAISHO))
+        import kamei
+        kamei.tsukeru(app)
+    except Exception as e:
+        log(f"亀井ページを付けられませんでした {e!r}")
     app.router.add_route("*", "/{tail:.*}", chuukei)
 
     async def hajime(a):
