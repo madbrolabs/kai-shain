@@ -217,6 +217,21 @@ def seiri(xs: list[dict]) -> list[dict]:
     return out
 
 
+def csv_hyou(t: str) -> str:
+    """表計算の CSV を、画面で読める表（md の表）にする。中身が見出しだけなら「まだ書き込みはありません」を添える。"""
+    import csv
+    import io
+    rows = [[c.strip().replace("|", "／") for c in r] for r in csv.reader(io.StringIO(t)) if any(c.strip() for c in r)]
+    if not rows:
+        return "（まだ中身がありません）"
+    w = max(len(r) for r in rows)
+    rows = [r + [""] * (w - len(r)) for r in rows]
+    out = ["| " + " | ".join(rows[0]) + " |", "|" + "---|" * w] + ["| " + " | ".join(r) + " |" for r in rows[1:]]
+    if len(rows) == 1:
+        out.append("\n（まだ書き込みはありません。表計算のソフトで開いて書き込めます）")
+    return "\n".join(out)
+
+
 def hoka_no_mono(settei: dict) -> dict:
     """門番の行き先・開発の表・会社設立の書類・手引き・AIの包み（社長と社員の両方の箱へ）。鍵は箱ごとに別で入れる。"""
     o: dict = {"kaihatsu": [], "shorui": [], "tebiki": [], "tsutsumi": None}
@@ -229,9 +244,12 @@ def hoka_no_mono(settei: dict) -> dict:
         for f in st["files"]:
             fp = Path(st["dir"]) / f
             if fp.exists():
-                o["shorui"].append({"daimei": re.sub(r"^\d+_|\.md$", "", f).replace("_", "・"),
+                naka = fp.read_text(encoding="utf-8-sig")
+                if fp.suffix.lower() == ".csv":
+                    naka = csv_hyou(naka)
+                o["shorui"].append({"daimei": re.sub(r"^\d+_|\.(md|csv)$", "", f).replace("_", "・") + ("（表）" if fp.suffix.lower() == ".csv" else ""),
                                     "hi": dt.datetime.fromtimestamp(fp.stat().st_mtime, JST).strftime("%Y-%m-%d %H:%M"),
-                                    "md": fuseji(fp.read_text(encoding="utf-8"), st.get("kakusu", []))})
+                                    "md": fuseji(naka, st.get("kakusu", []))})
         o["shorui_midashi"] = st.get("midashi", "会社設立へ向けて")
     tb = settei.get("tebiki_dir")
     if tb:

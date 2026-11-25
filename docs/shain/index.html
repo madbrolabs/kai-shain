@@ -85,6 +85,14 @@ a.bt.s,button.bt.s{background:var(--card);color:var(--acc)}
 .fuda.miokuri{color:var(--sub)}
 .fuda.kenpin{background:var(--acc);color:#fff;border-color:var(--acc)}
 .kou{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.fuda.soudan{background:var(--warn);color:#fff;border-color:var(--warn)}
+.ichi.soudan{border-left:4px solid var(--warn)}
+.mittsu{margin-top:6px;font-size:14px;display:grid;grid-template-columns:auto 1fr;gap:2px 8px}
+.mittsu b{color:var(--sub);font-weight:600;white-space:nowrap}
+.kou-h{font-size:19px;margin:22px 0 4px}
+.kou-s{color:var(--sub);font-size:13px;margin-bottom:6px}
+.sumi1{padding:8px 0;border-bottom:1px dashed var(--line);font-size:15px}
+.sumi1 .yoi{color:var(--acc)}
 .form label{display:block;font-size:14px;margin:10px 0 4px}
 .form input,.form textarea{width:100%;font:inherit;padding:8px 10px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--ink)}
 .form textarea{min-height:90px}
@@ -288,17 +296,29 @@ async function kousin(push=1){
   <div class="hk" style="color:var(--sub);margin-bottom:8px">みんなが出した「仮の更新」です。${sha?"社長が「採用」を押すと本物に入ります。":"社長が採用すると本物に入ります。"}</div><div id="list"><div class="kara">読んでいます…</div></div>`;
   $("#modoru").onclick=()=>ichiran(1);
   let j;try{j=await monni("kousin",{})}catch(x){$("#list").innerHTML=`<div class="kara">一覧を読めませんでした（${esc(x.message)}）。少しして、もう一度どうぞ。</div>`;return}
-  const rows=[];
-  for(const s of j.soft)for(const p of s.prs)rows.push({...p,soft:s.id,namae:s.namae});
-  rows.sort((a,b)=>(a.joutai==="kari")-(b.joutai==="kari")||0).reverse();
-  rows.sort((a,b)=>(b.joutai==="kari")-(a.joutai==="kari")||String(b.hi).localeCompare(String(a.hi)));
+  // 3つに分ける：①主任から社長への相談（札「社長に相談」の PR と、倉庫の無い案件の相談）②みんなの仮の更新 ③主任が入れた済みの物（1件1行）
+  const rows=[], soudan=[], sumi=[];
+  for(const s of j.soft)for(const p of s.prs){const x={...p,soft:s.id,namae:s.namae};
+    if(p.ireta&&p.joutai==="saiyou")sumi.push({hi:p.hi,namae:s.namae,naiyou:p.naiyou||p.daimei,yoi:p.yoi,url:p.url});
+    else if(p.soudan)soudan.push(x);else rows.push(x)}
+  for(const t of j.todoita||[]){
+    if(t.sumi)sumi.push({hi:t.hi,namae:t.namae,naiyou:t.naiyou||t.daimei,yoi:t.yoi});
+    else soudan.push({...t,todoita:1,joutai:t.kettei||"kari",dare:""})}
+  const jun=(a,b)=>(b.joutai==="kari")-(a.joutai==="kari")||String(b.hi).localeCompare(String(a.hi));
+  rows.sort(jun);soudan.sort(jun);sumi.sort((a,b)=>String(b.hi).localeCompare(String(a.hi)));
   const k=id=>KH(id)||{id};
-  let html=rows.length?rows.map(p=>`<div class="ichi" data-s="${esc(p.soft)}" data-n="${p.n}"><span class="hi">${esc(p.hi)}</span>
-    <div><span class="fuda ${p.joutai}">${JN[p.joutai]||p.joutai}</span>${p.kenpin?`<span class="fuda kenpin">主任の検品済み</span>`:""}<b>${esc(p.namae)}</b>：${esc(p.daimei)}<span class="hi">（${esc(p.dare)}さん）</span></div>
-    ${p.setsumei?`<div class="hi" style="font-size:13px">${esc(p.setsumei.split(/\n/).find(l=>l.trim()&&!l.startsWith("#"))||"")}</div>`:""}
-    <div class="kou">${k(p.soft).tameshi==="pc"&&p.joutai==="kari"?`<a class="bt s" href="${esc(tamesu(k(p.soft),p.n))}" target="_blank" rel="noopener">この更新を試す</a>`:""}<a class="bt s" href="${esc(p.url)}" target="_blank" rel="noopener">中身を見る</a>
-    ${sha&&p.joutai==="kari"?`<button class="bt" data-k="saiyou">採用</button><button class="bt s" data-k="miokuri">見送り</button>`:""}</div><div class="err"></div></div>`).join("")
-    :`<div class="kara">まだ届いていません。最初の1つを出してみませんか？「練習の倉庫」なら何を壊しても大丈夫です。</div>`;
+  const ichi=p=>`<div class="ichi${p.soudan||p.todoita?" soudan":""}" ${p.todoita?`data-t="${esc(p.id)}"`:`data-s="${esc(p.soft)}" data-n="${p.n}"`}><span class="hi">${esc(p.hi)}</span>
+    <div><span class="fuda ${p.joutai}">${JN[p.joutai]||p.joutai}</span>${p.soudan||p.todoita?`<span class="fuda soudan">社長に相談</span>`:""}${p.kenpin?`<span class="fuda kenpin">主任の検品済み</span>`:""}<b>${esc(p.namae)}</b>：${esc(p.daimei)}${p.dare?`<span class="hi">（${esc(p.dare)}さん）</span>`:""}</div>
+    ${p.naiyou||p.yoi||p.abunai?`<div class="mittsu">${p.naiyou?`<b>中身</b><span>${esc(p.naiyou)}</span>`:""}${p.yoi?`<b>良い所</b><span>${esc(p.yoi)}</span>`:""}${p.abunai?`<b>危ない所</b><span>${esc(p.abunai)}</span>`:""}</div>`
+      :p.setsumei?`<div class="hi" style="font-size:13px">${esc(p.setsumei.split(/\n/).find(l=>l.trim()&&!l.startsWith("#"))||"")}</div>`:""}
+    <div class="kou">${!p.todoita&&k(p.soft).tameshi==="pc"&&p.joutai==="kari"?`<a class="bt s" href="${esc(tamesu(k(p.soft),p.n))}" target="_blank" rel="noopener">この更新を試す</a>`:""}${p.url?`<a class="bt s" href="${esc(p.url)}" target="_blank" rel="noopener">中身を見る</a>`:""}
+    ${sha&&p.joutai==="kari"?`<button class="bt" data-k="saiyou">採用</button><button class="bt s" data-k="miokuri">見送り</button>`:""}</div><div class="err"></div></div>`;
+  let html="";
+  if(soudan.length)html+=`<h2 class="kou-h">社長に相談</h2><div class="kou-s">各主任が「社長に決めてほしい」と出した案です。${sha?"採用か見送りを押してください。":""}</div>`+soudan.map(ichi).join("");
+  html+=`<h2 class="kou-h">みんなの仮の更新</h2>`+(rows.length?rows.map(ichi).join("")
+    :`<div class="kara">まだ届いていません。最初の1つを出してみませんか？「練習の倉庫」なら何を壊しても大丈夫です。</div>`);
+  if(sumi.length)html+=`<h2 class="kou-h">主任が入れた済みの物</h2><div class="kou-s">得しかない改善なので、主任がそのまま入れました。</div><div class="ichi">`+
+    sumi.map(x=>`<div class="sumi1"><b>${esc(x.namae)}</b>：${x.url?`<a href="${esc(x.url)}" target="_blank" rel="noopener">${esc(x.naiyou)}</a>`:esc(x.naiyou)}${x.yoi?`<span class="yoi">　良い所：${esc(x.yoi)}</span>`:""}<span class="hi">（${esc(x.hi)}）</span></div>`).join("")+`</div>`;
   if(sha){
     const sk=j.sanka||[], JS={machi:"返事待ち",shoutai:"招待済み",miokuri:"見送り"};
     html+=`<div class="mi" style="margin-top:22px"><h1 style="font-size:19px">参加の希望</h1></div>`+(sk.length?sk.map(x=>`<div class="ichi" data-id="${esc(x.id)}"><span class="hi">${esc(x.hi.replace("T"," "))}</span>
@@ -312,7 +332,7 @@ async function kousin(push=1){
     const kak=sa?(ki==="saiyou"?"この人を招待しますか？":"この希望を見送りますか？"):(ki==="saiyou"?"この更新を採用して、本物に入れますか？":"この更新を見送りますか？");
     if(!confirm(kak))return;
     c.querySelectorAll("button").forEach(x=>x.disabled=true);
-    try{await monni("kettei",sa?{shurui:"sanka",id:c.dataset.id,kettei:ki}:{soft:c.dataset.s,n:+c.dataset.n,kettei:ki});kousin(0)}
+    try{await monni("kettei",sa?{shurui:"sanka",id:c.dataset.id,kettei:ki}:c.dataset.t?{shurui:"todoita",id:c.dataset.t,kettei:ki}:{soft:c.dataset.s,n:+c.dataset.n,kettei:ki});kousin(0)}
     catch(x){c.querySelector(".err").textContent="出来ませんでした："+x.message;c.querySelectorAll("button").forEach(x=>x.disabled=false)}
   });
 }

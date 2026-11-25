@@ -116,6 +116,50 @@ def oshiraseru(text: str) -> None:
 
 
 JOUTAI_NA = {"OPEN": "kari", "MERGED": "saiyou", "CLOSED": "miokuri"}
+TODOITA_DIR = NAISHO / "todoita"
+TODOITA_KETTEI = TODOITA_DIR / "_kettei.json"
+MITTSU = {"中身": "naiyou", "良い所": "yoi", "よい所": "yoi", "危ない所": "abunai"}
+
+
+def mittsu(body: str) -> dict:
+    """主任の PR の本文3行『中身：／良い所：／危ない所：』を読む。無い行は空。"""
+    o = {"naiyou": "", "yoi": "", "abunai": ""}
+    for l in body.splitlines():
+        l = l.strip().lstrip("-*・ ").strip()
+        for k, v in MITTSU.items():
+            if l.startswith(k) and l[len(k):len(k) + 1] in ("：", ":"):
+                o[v] = kirei(l[len(k) + 1:], 200)
+    return o
+
+
+def todoita() -> list[dict]:
+    """GitHub に倉庫が無い案件の口：todoita/<案件>.jsonl の1行1件
+    {"at","shunin","daimei","naiyou","yoi","abunai","sumi":true|false}。社長の決め（相談の物）は _kettei.json に残す。"""
+    na = {}
+    for s in kaihatsu():
+        for kk in (s["id"], s.get("todoita"), s["namae"]):
+            if kk:
+                na[kk] = s["namae"]
+    kt = rj(TODOITA_KETTEI, {})
+    out = []
+    for fp in sorted(TODOITA_DIR.glob("*.jsonl")):
+        for i, l in enumerate(fp.read_text(encoding="utf-8-sig").splitlines()):
+            try:
+                x = json.loads(l)
+            except Exception:
+                continue
+            if not isinstance(x, dict) or not x.get("daimei"):
+                continue
+            tid = f"todoita:{fp.stem}#{i + 1}"
+            k = kt.get(tid) or {}
+            out.append({"id": tid, "anken": fp.stem,
+                        "namae": na.get(fp.stem) or str(x.get("shunin") or fp.stem).replace("【主任】", ""),
+                        "shunin": kirei(x.get("shunin"), 40), "daimei": kirei(x["daimei"], 120),
+                        "naiyou": kirei(x.get("naiyou"), 300), "yoi": kirei(x.get("yoi"), 200),
+                        "abunai": kirei(x.get("abunai"), 200), "sumi": bool(x.get("sumi")),
+                        "hi": str(x.get("at", ""))[:16].replace("T", " "),
+                        "kettei": k.get("kettei", ""), "kettei_hi": k.get("hi", "")})
+    return out
 
 
 def atsumeru() -> dict:
@@ -143,6 +187,8 @@ def atsumeru() -> dict:
                         "joutai": JOUTAI_NA.get(p["state"], "kari"),
                         "hi": dt.datetime.fromisoformat((p.get("mergedAt") or p.get("closedAt") or p["createdAt"]).replace("Z", "+00:00")).astimezone(JST).strftime("%Y-%m-%d %H:%M"),
                         "kenpin": "主任の検品済み" in labels, "url": p["url"],
+                        "soudan": "社長に相談" in labels, "ireta": "主任が入れた" in labels,
+                        **mittsu(body),
                     })
                     kid = f'{repo}#{p["number"]}'
                     if kid not in mita:
@@ -151,6 +197,12 @@ def atsumeru() -> dict:
                             atarashii.append(f'{s["namae"]}：{p["title"]}（{(p.get("author") or {}).get("login", "")}）')
         out["soft"].append({"id": s["id"], "namae": s["namae"], "repo": repo or "", "prs": prs,
                             "tameshi": s.get("tameshi", "")})
+    out["todoita"] = todoita()
+    for x in out["todoita"]:
+        if x["id"] not in mita:
+            mita.add(x["id"])
+            if not x["sumi"] and not x.get("kettei") and mae:
+                atarashii.append(f'{x["namae"]}の主任から相談：{x["daimei"]}')
     out["mita"] = sorted(mita)
     wj(JOUTAI, out)
     if atarashii:
@@ -364,7 +416,8 @@ async def api_kousin(req: web.Request) -> web.StreamResponse:
     if not who:
         return jres(req, {"ok": False, "err": "kagi"}, 403)
     j = rj(JOUTAI, {"soft": []})
-    o = {"ok": True, "dare": who, "tsukutta": j.get("tsukutta", ""), "soft": j.get("soft", [])}
+    o = {"ok": True, "dare": who, "tsukutta": j.get("tsukutta", ""), "soft": j.get("soft", []),
+         "todoita": j.get("todoita", [])}
     if who == "shachou":
         o["sanka"] = sorted((rj(p, {}) for p in SANKA_DIR.glob("*.json")), key=lambda x: x.get("hi", ""), reverse=True)
     return jres(req, o)
@@ -427,6 +480,18 @@ async def api_kettei(req: web.Request) -> web.StreamResponse:
         wj(p, x)
         log(f'参加 {x["id"]} → {x["joutai"]}')
         return jres(req, {"ok": True, "joutai": x["joutai"]})
+    if d.get("shurui") == "todoita":  # 倉庫の無い案件の相談：決めを残し、その主任へ知らせる
+        tid = str(d.get("id", ""))
+        x = next((t for t in todoita() if t["id"] == tid and not t["sumi"]), None)
+        if not x:
+            return jres(req, {"ok": False, "err": "nai"}, 404)
+        kt = rj(TODOITA_KETTEI, {})
+        kt[tid] = {"kettei": kettei, "hi": ima()}
+        wj(TODOITA_KETTEI, kt)
+        log(f"{tid} → {kettei}")
+        await asyncio.to_thread(oshiraseru, f'社長が{"採用" if kettei == "saiyou" else "見送り"}にしました：{x["namae"]}の相談「{x["daimei"]}」。' + (f'{x["namae"]}の主任は、入れてから todoita の行を "sumi": true にしてください。' if kettei == "saiyou" else "行はそのままで構いません。"))
+        await asyncio.to_thread(atsumeru)
+        return jres(req, {"ok": True})
     s = next((x for x in kaihatsu() if x["id"] == d.get("soft")), None)
     n = str(d.get("n", ""))
     if not s or not s.get("repo") or not n.isdigit():
