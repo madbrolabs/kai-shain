@@ -55,6 +55,34 @@ def jirei() -> str:
         return ""
 
 
+KAKUSU = "副社長"  # 辞令前、亀井さんの鍵で見える所に出さない言葉（社長のダメ出し 2026-11-25・主任の決め 案A）
+
+
+def kakusu(o, who):
+    """辞令前・亀井さんの鍵の時だけ、「副社長」を含む行を返す物から外す（記録は消さない）。部屋の札は残し、題は言い換える。"""
+    if who != "kamei" or jirei():
+        return o
+    return _kesu(o)
+
+
+def _kesu(o, key: str = ""):
+    if isinstance(o, str):
+        if KAKUSU not in o:
+            return o
+        return o.replace(KAKUSU, "亀井さん") if key in ("dai", "namae") else ""
+    if isinstance(o, list):
+        out = []
+        for x in o:
+            if isinstance(x, dict) and "kakari" in x:  # 部屋の札は消さず、中の文だけ直す
+                out.append(_kesu(x))
+            elif KAKUSU not in json.dumps(x, ensure_ascii=False):
+                out.append(x)
+        return out
+    if isinstance(o, dict):
+        return {k: _kesu(v, k) for k, v in o.items()}
+    return o
+
+
 def atama_zen() -> tuple:
     return ATAMA_ZEN + (kotoba()["atama"],)
 
@@ -903,7 +931,7 @@ def tsukeru(app) -> None:
                            "ugoki": st.get("ugoki", ""), "saigo": hitokoto(st)})
                 zentai += seika(h, 8)
             fuda = daichou(who)
-            return {"dare": who, "koe": koe_iri(), "heya": hs, "seika": zentai_matome(zentai, fuda, hs)[:40], "atarashii": fuda[:30], "ima": ima()}
+            return kakusu({"dare": who, "koe": koe_iri(), "heya": hs, "seika": zentai_matome(zentai, fuda, hs)[:40], "atarashii": fuda[:30], "ima": ima()}, who)
         return jr(await asyncio.to_thread(tsukuru))
 
     async def chat(req):
@@ -933,8 +961,8 @@ def tsukeru(app) -> None:
                "henji": bool(x.get("todoita_at")) and any(a >= x["todoita_at"] for a in ai_at[-50:])}
               for x in okutta(h["id"]) if x.get("shurui") == "kamei"]
         ugoki = st.get("ugoki", "")
-        return jr({"items": out, "okutta": ok, "ugoki": ugoki, "saisho": its[0]["n"] if its else 0,
-                   "ima": ima(), "dai": h["dai"], "namae": h["namae"]})
+        return jr(kakusu({"items": out, "okutta": ok, "ugoki": ugoki, "saisho": its[0]["n"] if its else 0,
+                          "ima": ima(), "dai": h["dai"], "namae": h["namae"]}, who))
 
     async def seika_api(req):
         who = mon(req)
@@ -942,7 +970,7 @@ def tsukeru(app) -> None:
         if not who or not h or not iri():
             return web.Response(status=404, text="404 Not Found")
         await asyncio.to_thread(yomu, h["sid"])
-        return jr({"seika": await asyncio.to_thread(seika, h), "fuda": await asyncio.to_thread(daichou, who, h["dai"])})
+        return jr(kakusu({"seika": await asyncio.to_thread(seika, h), "fuda": await asyncio.to_thread(daichou, who, h["dai"])}, who))
 
     async def e_api(req):
         if not mon(req) or not iri():
@@ -960,7 +988,7 @@ def tsukeru(app) -> None:
         if not who or not h or not iri():
             return web.Response(status=404, text="404 Not Found")
         r = await asyncio.to_thread(seika_file, h, req.query.get("f", ""))
-        if not r:
+        if not r or kakusu(r[1], who) != r[1]:  # 辞令前の亀井さんには「副社長」を含む資料を開かせない
             return web.Response(status=404, text="404 Not Found")
         if r[0] == "html":
             res = web.Response(text=r[1], content_type="text/html")
