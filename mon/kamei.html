@@ -42,6 +42,17 @@ h2{font-size:19px;margin:22px 0 10px}
 .seika .t{flex:1 1 12em;min-width:0;overflow-wrap:anywhere}
 .seika .h{flex:none;color:var(--sub);font-size:13px;white-space:nowrap}
 .kara{color:var(--sub);font-size:14.5px;padding:14px}
+/* 入口の大きなボタン（2026-11-25 社長「ドンとでっかく」） */
+.dekai{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(280px,100%),1fr));gap:10px;margin:14px 0 10px}
+.dekai a{display:flex;align-items:center;justify-content:center;gap:10px;min-height:64px;padding:10px 16px;border-radius:16px;text-decoration:none;font-size:21px;font-weight:800;letter-spacing:.04em;color:#fff;background:var(--acc);box-shadow:0 3px 10px rgba(0,0,0,.12)}
+.dekai a.kou{background:#2f5fb3}
+.dekai a span{font-size:14px;font-weight:600;opacity:.9}
+.dekai a:active{transform:translateY(1px)}
+a.mazu{display:block;margin:0 0 12px;padding:14px 18px;border-radius:16px;text-decoration:none;color:#3a1d00;background:#ffd23f;border:3px solid #e0a100;box-shadow:0 3px 12px rgba(224,161,0,.25)}
+a.mazu b{display:block;font-size:23px;line-height:1.4}
+a.mazu span{display:block;font-size:15.5px;line-height:1.55;margin-top:2px}
+a.mazu:hover,a.mazu:focus{border-color:#b37f00}
+a.mazu[hidden]{display:none}
 /* 部屋の中 */
 .tabs{display:none}
 .naka{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr);gap:16px;padding-top:14px;padding-bottom:16px}
@@ -118,6 +129,7 @@ details.shirase div{white-space:pre-wrap;overflow-wrap:anywhere;margin-top:6px}
 .heya.kakari .kakikomu{display:inline-block;margin-top:6px;background:var(--acc);color:#fff;border-radius:999px;padding:4px 16px;font-size:15.5px;font-weight:700}
 .heya.kame{border-color:var(--me2)}
 #heya-fuda .fudas{grid-template-columns:minmax(0,1fr);margin-bottom:12px}
+@media (min-width:861px){#heya-naka.seika-nashi .naka{grid-template-columns:minmax(0,1fr)}#heya-naka.seika-nashi #seika-waku{display:none}}
 @media (max-width:860px){
   .tabs{display:flex;gap:6px;padding-top:10px}
   .tabs button{flex:1;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:12px;padding:8px;font-weight:700}
@@ -138,6 +150,11 @@ details.shirase div{white-space:pre-wrap;overflow-wrap:anywhere;margin-top:6px}
 </div></header>
 
 <main id="iriguchi" class="wrap" hidden>
+  <nav class="dekai" aria-label="大きな入口">
+    <a href="https://madbrolabs.github.io/kai-shain/shain/" target="_blank" rel="noopener">社員ページ<span>を開く</span></a>
+    <a class="kou" href="https://madbrolabs.github.io/kai-shain/" target="_blank" rel="noopener">公式ページ<span>を開く</span></a>
+  </nav>
+  <a class="mazu" id="mazu" href="./hajimete/" hidden><b>👉 まずここを見てください</b><span>はじめての人の入口：AI を入れて、会社の部屋に参加するまでの5つの段</span></a>
   <div class="chuui" id="chuui">このページは<b id="dareno">副社長（亀井さん）</b>専用です。アドレスは他の人に渡さないでください。</div>
   <section id="tsukutta-waku" hidden>
     <h2>副社長からの案（入れるか待ち）</h2>
@@ -342,6 +359,7 @@ function heyaHiraku(id){
     HEYA = id; SAIGO = -1; SAISHO = 0; OKUTTA = {};
     var k = $("kaiwa"); Array.prototype.slice.call(k.querySelectorAll(".m,.sagyou,details")).forEach(function(n){ k.removeChild(n); });
     $("seika").innerHTML = ""; $("fuda").innerHTML = "";
+    $("heya-naka").classList.remove("seika-nashi");
     $("mae").hidden = true;
   }
   $("iriguchi").hidden = true; $("heya-naka").hidden = false; $("modoru").hidden = false;
@@ -438,7 +456,9 @@ $("mae").addEventListener("click", function(){
 
 function seikaYomu(){
   var id = HEYA; if(!id) return;
-  api("heya/" + id + "/seika").then(function(j){ if(id === HEYA && j._status === 200){ seikaHyou($("seika"), j.seika, false); var f = $("fuda"); if((j.fuda||[]).length || f.children.length) fudaHyou(f, j.fuda || [], false); } });
+  api("heya/" + id + "/seika").then(function(j){ if(id === HEYA && j._status === 200){ seikaHyou($("seika"), j.seika, false); var f = $("fuda");
+    // 成果物が無い部屋は（最後に動いた時刻は部屋の一覧に出ている）、広い画面でチャットを横いっぱいにする（右の列が白く空くため・2026-11-25 社長「この何も書いてない白い部分は」）
+    $("heya-naka").classList.toggle("seika-nashi", !(j.seika||[]).length && !(j.fuda||[]).length); if((j.fuda||[]).length || f.children.length) fudaHyou(f, j.fuda || [], false); } });
 }
 
 // 書き込み
@@ -675,6 +695,8 @@ window.addEventListener("hashchange", michi);
 document.addEventListener("visibilitychange", function(){ if(!document.hidden){ if(HEYA) chat(false); } });
 // 入口に戻った時の札を最新に
 setInterval(function(){ if(!HEYA && !document.hidden) iriguchi(); }, 30000);
+// 「まずここを見てください」は、はじめての人の入口が開ける時だけ出す（アドオンを外せば札も消える）
+fetch(BASE + "hajimete/md", {cache:"no-store"}).then(function(r){ if(r.ok){ $("mazu").href = BASE + "hajimete/"; $("mazu").hidden = false; } }).catch(function(){});
 api("ichiran").then(function(j){ (j.heya||[]).forEach(function(h){ NAMAE[h.id] = h.dai; }); if(j.dare) DARE = j.dare; micMieru(!!j.koe); michi(); });
 })();
 </script>

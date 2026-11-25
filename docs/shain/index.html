@@ -51,13 +51,18 @@ main{max-width:900px;margin:0 auto;padding:16px}
 .hibi li.ichi .hi{margin-right:6px}
 .hibi li.ichi>div,.hibi li.ichi>h3{display:inline}
 .hibi li.ichi .genbun{display:none}.hibi li.ichi.hiraki .genbun{display:block}
-.atama{display:flex;gap:20px;align-items:flex-start;margin-bottom:6px}
-.atama-l{flex:0 1 auto;min-width:160px}
-.omoi{flex:1 1 0;background:linear-gradient(135deg,var(--acc2),var(--card));border:1px solid var(--acc);border-radius:16px;padding:14px 20px;margin:4px 0 12px}
+/* 部屋の頭：2列にせず上から1列（題と説明→創始者の思い横幅いっぱい→中身）。2列だと左の下が白く空く（2026-11-25 社長「この何も書いてない白い部分は」） */
+.atama{display:block;margin-bottom:6px}
+.omoi{background:linear-gradient(135deg,var(--acc2),var(--card));border:1px solid var(--acc);border-radius:16px;padding:14px 20px;margin:4px 0 12px}
 .omoi-h{color:var(--acc);font-weight:700;font-size:14px;letter-spacing:.1em;margin-bottom:6px}
 .omoi p{font-size:20px;line-height:1.7;font-weight:700;margin:0 0 6px}
 .omoi-s{text-align:right;color:var(--sub);font-size:13px}
-@media (max-width:640px){.atama{flex-direction:column;gap:0}.omoi p{font-size:17px}}
+@media (max-width:640px){.omoi p{font-size:17px}}
+/* 一覧の一番上の大きな札（2026-11-25 社長「まずここ見てください、ドーンと色変えて」） */
+a.mazu{display:block;margin:0 0 14px;padding:16px 20px;border-radius:16px;text-decoration:none;color:#3a1d00;background:#ffd23f;border:3px solid #e0a100;box-shadow:0 3px 12px rgba(224,161,0,.25)}
+a.mazu b{display:block;font-size:24px;line-height:1.4}
+a.mazu span{display:block;font-size:16px;line-height:1.55;margin-top:2px}
+a.mazu:hover,a.mazu:focus{border-color:#b37f00}
 .hibi.mt{padding:12px 16px}
 .mt-m{font-size:18px;margin:6px 0 4px}
 .mt-t{margin:0 0 6px;padding-left:1.2em}.mt-t li{margin:3px 0;line-height:1.6}
@@ -175,11 +180,12 @@ function ichiran(push=1){
     <div class="kazu">${KIND.filter(([k])=>h[k].length).map(([k,n])=>`<span>${n} ${KZ(h,k)}</span>`).join("")}</div>
     ${ima.text||ima.daimei?`<div class="ima">いま：${(()=>{const t=Y(ima,"text")||Y(ima,"daimei");return esc((t.startsWith(ima.hi)?t:ima.hi+" "+t).slice(0,80))})()}…</div>`:""}</div>`}).join("");
   const H=D.hoka||{}, tb=H.tebiki||[];
-  const yaru=[...tb.map(x=>[`yomu:${x.id}`,x.md.match(/^# (.+)/m)?.[1].split("：")[0]||x.id,(x.md.match(/^# .+：(.+)/m)||[])[1]||""]),
+  const HJ="0_はじめての人の入口", hj=tb.find(x=>x.id===HJ);
+  const yaru=[...tb.filter(x=>x.id!==HJ).map(x=>[`yomu:${x.id}`,x.md.match(/^# (.+)/m)?.[1].split("：")[0]||x.id,(x.md.match(/^# .+：(.+)/m)||[])[1]||""]),
     H.tsutsumi?["tsutsumi","AI に渡す包み",`自分の AI に読ませる1枚（版 ${H.tsutsumi.ban}）`]:null,
     H.mon?["kousin","届いた更新",H.mon.dare==="shachou"?"仮の更新と参加の希望。採用・見送りはここで":"みんなが出した仮の更新の一覧"]:null,
     (H.shorui||[]).length?["shorui",H.shorui_midashi||"会社設立へ向けて","いまの準備の書類"]:null].filter(Boolean);
-  M.innerHTML=`<div class="yaru">${yaru.map(([k,n,t])=>`<a href="#" data-y="${esc(k)}"><b>${esc(n)}</b><span>${esc(t)}</span></a>`).join("")}</div>
+  M.innerHTML=`${hj?`<a class="mazu" href="#" data-y="yomu:${esc(HJ)}"><b>👉 まずここを見てください</b><span>はじめての人の入口：AI を入れて、会社の部屋に参加するまでの5つの段</span></a>`:""}<div class="yaru">${yaru.map(([k,n,t])=>`<a href="#" data-y="${esc(k)}"><b>${esc(n)}</b><span>${esc(t)}</span></a>`).join("")}</div>
   <p style="color:var(--sub);margin-top:0">ソフトごとの開発部屋です。進み・出来た事・工事日誌が、毎日の仕事から自動でたまっていきます。どの部屋からも「試す」「開発に参加したい」ができます。</p>
   <div class="heya">${rooms}${D.lab_dameshi.length?`<div class="card" data-i="lab"><h2>ラボ全体の心得</h2><p class="hk">どのソフトにも通じる、ダメ出しから学んだ決まり</p><div class="kazu"><span>心得 ${D.lab_dameshi.length}</span></div></div>`:""}</div>
   <div class="shita">最後に集めた時刻：${esc(D.tsukutta.replace("T"," "))}</div>`;
