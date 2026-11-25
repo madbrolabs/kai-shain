@@ -49,10 +49,12 @@
    "android": {
     "kata": "apk",
     "package": "jp.madbro.rokuon",
+    "url": "soft/rokuon.apk",
     "settei_link": "rokuon://setup?u={u}&k={k}&d={d}",
-    "jumbi": true,
-    "jumbi_wake": "新しい版を用意しています",
-    "url": ""
+    "sha256": "e76bec390b24b6ba26e1159ce927296bc290853e3e101b8e4cb7acebddc082b5",
+    "size": 981090,
+    "tsuuban": 21,
+    "ban": "0.18.1"
    },
    "iphone": {
     "kata": "web",
