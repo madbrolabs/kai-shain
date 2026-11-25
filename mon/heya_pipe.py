@@ -42,7 +42,7 @@ def ukeguchi(sid: str) -> dict | None:
             continue
         if o.get("sessionId") != sid or not o.get("messagingSocketPath"):
             continue
-        if not _ikiteru(o.get("pid", 0)):
+        if not isinstance(o.get("pid"), int) or not _ikiteru(o["pid"]):  # 札の pid が壊れていれば使わない
             continue
         if best is None or o.get("updatedAt", 0) > best.get("updatedAt", 0):
             best = o
