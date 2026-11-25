@@ -539,6 +539,11 @@ def main() -> None:
         kaisha.tsukeru(app)
     except Exception as e:
         log(f"会社紹介ページを付けられませんでした {e!r}")
+    try:  # アドオン：ご意見の札（goiken_fuda.py・L6・入/切＝内緒の場所/goiken_fuda.json）。社員ページ「届いた更新」の枠
+        import goiken_fuda
+        goiken_fuda.tsukeru(app, dare, jres)
+    except Exception as e:
+        log(f"ご意見の札を付けられませんでした {e!r}")
     try:  # アドオン：亀井ページ（kamei.py・設定 内緒の場所/kamei/settei.json の iri＝入/切）。無くても門番は動く
         import kamei
         kamei.tsukeru(app)

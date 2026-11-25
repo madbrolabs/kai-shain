@@ -320,7 +320,7 @@ async function kousin(push=1){
       :p.setsumei?`<div class="hi" style="font-size:13px">${esc(p.setsumei.split(/\n/).find(l=>l.trim()&&!l.startsWith("#"))||"")}</div>`:""}
     <div class="kou">${!p.todoita&&k(p.soft).tameshi==="pc"&&p.joutai==="kari"?`<a class="bt s" href="${esc(tamesu(k(p.soft),p.n))}" target="_blank" rel="noopener">この更新を試す</a>`:""}${p.url?`<a class="bt s" href="${esc(p.url)}" target="_blank" rel="noopener">中身を見る</a>`:""}
     ${sha&&p.joutai==="kari"?`<button class="bt" data-k="saiyou">採用</button><button class="bt s" data-k="miokuri">見送り</button>`:""}</div><div class="err"></div></div>`;
-  let html="";
+  let html=`<div id="gfuda"></div>`;
   if(soudan.length)html+=`<h2 class="kou-h">社長に相談</h2><div class="kou-s">各主任が「社長に決めてほしい」と出した案です。${sha?"採用か見送りを押してください。":""}</div>`+soudan.map(ichi).join("");
   html+=`<h2 class="kou-h">みんなの仮の更新</h2>`+(rows.length?rows.map(ichi).join("")
     :`<div class="kara">まだ届いていません。最初の1つを出してみませんか？「練習の倉庫」なら何を壊しても大丈夫です。</div>`);
@@ -334,6 +334,7 @@ async function kousin(push=1){
     ${x.joutai==="machi"?`<div class="kou"><button class="bt" data-k="saiyou">招待する</button><button class="bt s" data-k="miokuri">見送り</button></div>`:""}<div class="err"></div></div>`).join(""):`<div class="kara">まだありません</div>`);
   }
   $("#list").innerHTML=html;
+  goikenFuda();
   $("#list").querySelectorAll("button[data-k]").forEach(b=>b.onclick=async()=>{
     const c=b.closest(".ichi"), ki=b.dataset.k, sa=!!c.dataset.id;
     const kak=sa?(ki==="saiyou"?"この人を招待しますか？":"この希望を見送りますか？"):(ki==="saiyou"?"この更新を採用して、本物に入れますか？":"この更新を見送りますか？");
@@ -342,6 +343,21 @@ async function kousin(push=1){
     try{await monni("kettei",sa?{shurui:"sanka",id:c.dataset.id,kettei:ki}:c.dataset.t?{shurui:"todoita",id:c.dataset.t,kettei:ki}:{soft:c.dataset.s,n:+c.dataset.n,kettei:ki});kousin(0)}
     catch(x){c.querySelector(".err").textContent="出来ませんでした："+x.message;c.querySelectorAll("button").forEach(x=>x.disabled=false)}
   });
+}
+// ご意見の札（L6・門番のアドオン goiken_fuda.py）。各ソフトの「改善要望」「バグ報告」に付いた札番号と、今どうなっているかを並べる。
+// 読めない・切りの時は枠ごと出さない（届いた更新の他の所はそのまま）
+const GJ={uketsuke:["受け付けました","kari"],naoshichuu:["直しています","kenpin"],naotta:["直りました","saiyou"],miokuri:["見送り","miokuri"]};
+async function goikenFuda(){
+  const box=$("#gfuda");if(!box)return;
+  let j;try{j=await monni("goiken_fuda",{})}catch(x){return}
+  if(!j.iri)return;
+  const f=j.fuda||[], naotta=f.filter(x=>x.joutai==="naotta"), nokori=f.filter(x=>x.joutai!=="naotta");
+  const ichi=x=>`<div class="sumi1 gf"><span class="fuda ${GJ[x.joutai][1]}">${GJ[x.joutai][0]}</span><b>${esc(x.fudaban)}</b>
+    <span class="fuda">${x.shurui==="bug"?"バグ報告":"改善要望"}</span>${esc(x.soft_na)}：${esc(x.dai||"（題なし）")}
+    ${x.henji?`<div class="yoi">返事：${esc(x.henji)}</div>`:""}<span class="hi">（${esc(x.naotta_hi||x.hi)}${x.moto?"・"+esc(x.moto):""}）</span></div>`;
+  box.innerHTML=`<h2 class="kou-h">ご意見の札</h2><div class="kou-s">ソフトの「改善要望」「バグ報告」で届いた声です。札の番号で、今どうなっているかが分かります。直ったら、お世話係の子が言ってくれた人に知らせます。</div>`+
+    (f.length?(naotta.length?`<div class="ichi"><b>直りました</b>${naotta.map(ichi).join("")}</div>`:"")+(nokori.length?`<div class="ichi">${nokori.map(ichi).join("")}</div>`:"")
+      :`<div class="kara">まだ札はありません。各ソフトの「改善要望」「バグ報告」から送ると、ここに札が並びます。</div>`);
 }
 async function kopii(s,k){const ok="コピーしました。AI に貼り付けてください。";
   try{await navigator.clipboard.writeText(s);k.textContent=ok}
