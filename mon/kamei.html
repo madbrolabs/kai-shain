@@ -208,9 +208,10 @@ details.shirase div{white-space:pre-wrap;overflow-wrap:anywhere;margin-top:6px}
   .sk .kk{color:var(--sub);font-size:13.5px;margin:10px 0 12px}
   </style>
   <script>
-  function shikumiYomu(){
-    api("shikumi").then(function(j){
-      if(j._status !== 200 || !j.shikumi) return;
+  function shikumiYomu(){  // 本体の api/esc は囲いの中で見えないので、ここで自前に持つ
+    var esc = function(s){ return String(s == null ? "" : s).replace(/[&<>"']/g, function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]; }); };
+    fetch(location.pathname.replace(/\/+$/, "") + "/api/shikumi", {cache:"no-store"}).then(function(r){ return r.ok ? r.json() : null; }).then(function(j){
+      if(!j || !j.shikumi) return;
       var box = document.getElementById("shikumi"); if(!box) return;
       document.getElementById("shikumi-waku").hidden = false;
       if(!j.shikumi.length){ box.innerHTML = "<p style='color:var(--sub)'>まだありません。</p>"; return; }
