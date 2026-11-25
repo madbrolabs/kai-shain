@@ -5,6 +5,8 @@
   e（見本の絵の URL か PC の中の絵の場所・空でよい）dekita（出来た日）kakarichou_kakunin（係長確認済みか）
   dare_demo（任意・claude.ai の物を「リンクを知っていれば誰でも」に公開した時だけ true。無ければ社長の札だけに「社長のスマホで開けます」。亀井さんには一切出さない）
   naka（任意・社長／亀井さんの専用アドレスの下の道 例 "kaisha/"。あれば札はそちらを開く。鍵は台帳に書かない）
+  moto・moto_karui（任意・busho「営業用資料」の時の元ファイル＝PC の中の PDF か HTML。棚の係 atsume/eigyou.py が写しを公式ページ・社員ページへ置く。moto_karui は軽い版の PDF）
+  shain_dake（任意・営業用資料を検めに関わらず公式ページに出さず社員ページ等だけにする時 true。false の行で公式へ戻す）
 同じ link の行が後から来たら同じ札の「直した日」が新しくなって上へ上がる（2枚にしない）＝ matomeru()。
 使い方：python seika.py tasu --heya "【主任】超議事録" --dai "…" --hitokoto "…" --link "https://…" [--e 絵] [--kakunin]
 罠メモ：読む側は壊れた行を飛ばすだけ（台帳1行の書き損じでページ全体を止めない）。足す側は形を検査して弾く。
@@ -27,6 +29,8 @@ from urllib.parse import urlparse
 JST = dt.timezone(dt.timedelta(hours=9))
 NO_WINDOW = 0x08000000 if sys.platform == "win32" else 0
 E_KAKUCHOU = (".png", ".jpg", ".jpeg", ".webp", ".gif")
+MOTO_KAKUCHOU = (".pdf", ".html", ".htm")
+EIGYOU = "営業用資料"  # この部署で足した物は、営業用資料の棚（公式ページ・社員ページ）にも出る
 CHROME = [r"C:\Program Files\Google\Chrome\Application\chrome.exe",
           r"C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe"]
 
@@ -101,6 +105,17 @@ def kensa(x: dict) -> list[str]:
             dame.append("絵（e）は URL か、PC の中の絵（png・jpg・webp・gif）の場所にしてください")
         elif not p.is_file():
             dame.append(f"絵（e）の場所に絵がありません：{e}")
+    for kk in ("moto", "moto_karui"):
+        m = str(x.get(kk, "") or "").strip()
+        if not m:
+            continue
+        p = Path(m)
+        if not p.is_absolute() or p.suffix.lower() not in MOTO_KAKUCHOU or (kk == "moto_karui" and p.suffix.lower() != ".pdf"):
+            dame.append(f"元ファイル（{kk}）は PC の中の PDF か HTML の場所（C:\…）にしてください（軽い版は PDF だけ）")
+        elif not p.is_file():
+            dame.append(f"元ファイル（{kk}）の場所にファイルがありません：{m}")
+    if str(x.get("moto_karui", "") or "").strip() and not str(x.get("moto", "") or "").strip():
+        dame.append("軽い版（moto_karui）だけでは足せません。ちゃんとした版（moto）も書いてください")
     now = ima()
     d = _hizuke(x.get("dekita", ""))
     if not d:
@@ -131,7 +146,7 @@ def gyou_yomu() -> list[dict]:
             x = json.loads(l)
         except Exception:
             continue
-        if isinstance(x, dict) and not kensa(dict(x, e="")):  # 絵の場所が後で消えても札は出す
+        if isinstance(x, dict) and not kensa(dict(x, e="", moto="", moto_karui="")):  # 絵の場所が後で消えても札は出す
             x["_gyou"] = i + 1
             out.append(x)
     return out
@@ -152,9 +167,11 @@ def matomeru(rows: list[dict] | None = None) -> list[dict]:
             y["hajime_at"] = mae["hajime_at"]
             if not str(x.get("e", "")).strip():
                 y["e"] = mae.get("e", "")
-            for kk in ("busho", "hitokoto"):
+            for kk in ("busho", "hitokoto", "moto", "moto_karui"):
                 if not str(x.get(kk, "")).strip():
                     y[kk] = mae.get(kk, "")
+            if "shain_dake" not in x and "shain_dake" in mae:
+                y["shain_dake"] = mae["shain_dake"]
         else:
             y["kaisuu"] = 1
             y["hajime_at"] = x["at"]
@@ -197,7 +214,8 @@ def e_tsukuru(link: str) -> str:
 
 
 def tasu(heya: str, dai: str, hitokoto: str, link: str, e: str = "", busho: str = "", dekita: str = "",
-         kakunin: bool = False, e_jidou: bool = True, dare_demo: bool = False, naka: str = "") -> tuple[bool, dict | list[str]]:
+         kakunin: bool = False, e_jidou: bool = True, dare_demo: bool = False, naka: str = "",
+         moto: str = "", moto_karui: str = "", shain_dake: bool | None = None) -> tuple[bool, dict | list[str]]:
     link = link.strip()
     x = {"at": ima().isoformat(timespec="seconds"), "heya": heya.strip(), "busho": busho.strip(), "dai": dai.strip(),
          "hitokoto": hitokoto.strip(), "link": link, "e": e.strip(), "dekita": (dekita or ima().date().isoformat()).strip(),
@@ -206,9 +224,17 @@ def tasu(heya: str, dai: str, hitokoto: str, link: str, e: str = "", busho: str 
         x["dare_demo"] = True  # claude.ai の物でも「リンクを知っていれば誰でも開ける」設定にしてある
     if naka.strip():
         x["naka"] = naka.strip()  # 専用アドレスの下の写し（例 kaisha/）を開く。鍵は書かない
+    if moto.strip():
+        x["moto"] = moto.strip()  # 営業用資料の元ファイル（棚の係が写しを作る）
+    if moto_karui.strip():
+        x["moto_karui"] = moto_karui.strip()
+    if shain_dake is not None:
+        x["shain_dake"] = bool(shain_dake)  # 営業用資料を公式ページに出さない（true）／出してよい（false）
     dame = kensa(x)
     if dame:
         return False, dame
+    if busho.strip() == EIGYOU and moto.strip():
+        e_jidou = False  # 表紙の絵は棚の係が元ファイルから作る
     if not x["e"] and e_jidou and not any(m["link"] == link and m.get("e") for m in matomeru()):
         x["e"] = e_tsukuru(link)
     daichou_basho().parent.mkdir(parents=True, exist_ok=True)
@@ -236,11 +262,16 @@ def main() -> None:
     t.add_argument("--e-nashi", action="store_true", help="絵を自動で撮らない")
     t.add_argument("--dare-demo", action="store_true", help="claude.ai の物を「リンクを知っていれば誰でも」に公開してある時")
     t.add_argument("--naka", default="", help="社長／亀井さんの専用アドレスの下で開く道（例 kaisha/）。あれば札はそちらを開く")
+    t.add_argument("--moto", default="", help="営業用資料の元ファイル（PC の中の PDF か HTML）。--busho 営業用資料 と一緒に")
+    t.add_argument("--moto-karui", default="", help="営業用資料の軽い版の PDF（あれば棚で先に開く）")
+    t.add_argument("--shain-dake", action="store_const", const=True, default=None, help="営業用資料を公式ページに出さず、社員ページ・社長ページ等だけにする")
+    t.add_argument("--koushiki-ok", dest="shain_dake", action="store_const", const=False, help="--shain-dake を外す（検めを通れば公式ページにも出す）")
     sub.add_parser("kensa", help="台帳の全部の行を検査する")
     sub.add_parser("ichiran", help="ページに出る順で一覧を見る")
     a = ap.parse_args()
     if a.cmd == "tasu":
-        ok, v = tasu(a.heya, a.dai, a.hitokoto, a.link, a.e, a.busho, a.dekita, a.kakunin, not a.e_nashi, a.dare_demo, a.naka)
+        ok, v = tasu(a.heya, a.dai, a.hitokoto, a.link, a.e, a.busho, a.dekita, a.kakunin, not a.e_nashi, a.dare_demo, a.naka,
+                     a.moto, a.moto_karui, a.shain_dake)
         if not ok:
             print("足せませんでした。直してからもう一度どうぞ：")
             for d in v:

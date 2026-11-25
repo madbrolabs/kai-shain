@@ -632,6 +632,8 @@ def daichou(who: str, heya_dai: str | None = None) -> list[dict]:
         return []
     noz = [str(x).lower() for x in settei().get("nozoku", []) if str(x)]
     hs = {h["dai"]: h["id"] for h in heya_ichiran()}
+    tana = eigyou_tana()
+    kak = (kakusu_kotoba(who) + hoka_kotoba(who)) if who in KYAKU else ()
     out = []
     for x in rows:
         kan = " ".join(str(x.get(k, "")) for k in ("heya", "busho", "dai", "link", "e")).lower()
@@ -640,6 +642,19 @@ def daichou(who: str, heya_dai: str | None = None) -> list[dict]:
         if heya_dai is not None and x.get("heya") != heya_dai:
             continue
         if not seika_dasu("台帳", str(x.get("dai", ""))):
+            continue
+        if str(x.get("busho", "")).strip() == "営業用資料":  # 営業用資料の棚（atsume/eigyou.py が写しを作る）。写しの無い物・同じ中身の2枚目は出さない
+            t = tana.get(x["id"])
+            if not t or (kak and _aru(eigyou_moji(x["id"]), kak)):
+                continue
+            ue = EIGYOU_URL + t["id"] + "/"
+            out.append({"id": x["id"], "dai": fuseru(x["dai"])[:80], "hitokoto": fuseru(x.get("hitokoto", ""))[:200],
+                        "link": (t.get("soto") or ue + t["hiraku"]) if t.get("kouhou") else "", "heya": x.get("heya", ""),
+                        "heya_id": hs.get(x.get("heya", ""), ""), "busho": "営業用資料", "dekita": str(x.get("dekita", ""))[:10],
+                        "naoshita": x.get("naoshita", ""), "at": x.get("at", ""), "kakunin": bool(x.get("kakarichou_kakunin")),
+                        "e": (ue + "e.jpg" if t.get("kouhou") else f"api/e/{x['id']}") if t.get("e") else "",
+                        "naka": "" if t.get("kouhou") else f"eigyou/{t['id']}/", "eigyou": True,
+                        "karui": bool(t.get("zentai")), "shachou_dake": False})
             continue
         e = str(x.get("e", "") or "").strip()
         host = re.sub(r"^https?://([^/:]+).*$", r"\1", x["link"]).lower()
@@ -655,8 +670,28 @@ def daichou(who: str, heya_dai: str | None = None) -> list[dict]:
     return out
 
 
+EIGYOU_URL = "https://madbrolabs.github.io/kai-shain/eigyou/"
+
+
+def eigyou_tana() -> dict:
+    """営業用資料の棚の全部の一覧（内緒の場所/eigyou/tana.json。atsume/eigyou.py が作る）。"""
+    try:
+        return {t["id"]: t for t in json.loads((NAISHO / "eigyou" / "tana.json").read_text(encoding="utf-8")).get("tana", [])}
+    except Exception:
+        return {}
+
+
+def eigyou_moji(fid: str) -> str:
+    try:
+        return (NAISHO / "eigyou" / "moji" / f"{fid}.txt").read_text(encoding="utf-8")
+    except Exception:
+        return ""
+
+
 def e_fairu(fid: str) -> Path | None:
-    """札の見本の絵（PC の中の絵）。台帳に書かれた絵だけ・絵の形だけ出す。"""
+    """札の見本の絵（PC の中の絵）。台帳に書かれた絵だけ・絵の形だけ出す。社員だけの営業用資料は棚の絵。"""
+    if re.fullmatch(r"[0-9a-f]{12}", fid or "") and (NAISHO / "eigyou" / "kakushi" / fid / "e.jpg").is_file():
+        return NAISHO / "eigyou" / "kakushi" / fid / "e.jpg"
     try:
         _s = _seika()
         for x in _s.matomeru():

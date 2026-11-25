@@ -1,0 +1,398 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>話すだけで、会社がつながる</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@500;700;900&family=Noto+Sans+JP:wght@400;500;700&display=swap">
+<style>
+/* 外向けの紹介ページ（明るい公式の顔）。上＝写真の帯、次＝写真が入れ替わる物語＋小窓のつながり図、中＝1+1が100、下＝ソフトごと・料金 */
+:root{
+  --bg:#f6fafd; --card:#ffffff; --fg:#14283a; --sub:#526a7e; --line:#dbe7f0; --soft:#edf5fb;
+  --sky:#1a92dc; --leaf:#22a45f; --coral:#f0654c; --sun:#ffb000;
+  --veil:rgba(255,255,255,.86); --veil2:rgba(255,255,255,0); --glass:rgba(255,255,255,.84);
+  --disp:"Zen Kaku Gothic New","Hiragino Sans","Yu Gothic",sans-serif;
+  --body:"Noto Sans JP","Hiragino Sans","Yu Gothic",sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0e1923; --card:#152330; --fg:#e8f1f8; --sub:#9cb2c4; --line:#283a4a; --soft:#1b2d3c;
+  --sky:#5cbcff; --leaf:#4fd08c; --coral:#ff8a76; --sun:#ffc43d;
+  --veil:rgba(14,25,35,.86); --veil2:rgba(14,25,35,.05); --glass:rgba(21,35,48,.86); color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0e1923; --card:#152330; --fg:#e8f1f8; --sub:#9cb2c4; --line:#283a4a; --soft:#1b2d3c;
+  --sky:#5cbcff; --leaf:#4fd08c; --coral:#ff8a76; --sun:#ffc43d;
+  --veil:rgba(14,25,35,.86); --veil2:rgba(14,25,35,.05); --glass:rgba(21,35,48,.86); color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--body);font-size:15.5px;line-height:1.75}
+.in{max-width:1040px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.wrap{padding-block:32px 56px;display:grid;gap:48px}
+h1,h2,h3{font-family:var(--disp);margin:0;text-wrap:balance}
+h1{font-weight:900;font-size:clamp(2rem,5.4vw,3.1rem);line-height:1.28}
+h2{font-weight:900;font-size:clamp(1.4rem,3.6vw,1.9rem)}
+.eyebrow{font-family:var(--disp);font-weight:700;color:var(--sky);letter-spacing:.12em;font-size:.82rem}
+.lead{color:var(--sub);margin:10px 0 0;max-width:40em}
+
+/* 上の写真の帯 */
+.hero{position:relative;background:var(--soft) url("img/hero.jpg") center/cover no-repeat;border-bottom:1px solid var(--line)}
+.hero::before{content:"";position:absolute;inset:0;background:linear-gradient(100deg,var(--veil) 0%,var(--veil) 42%,var(--veil2) 78%)}
+.hero .in{position:relative;padding-block:72px 64px}
+.hero .lead{color:var(--fg);font-size:1.05rem;max-width:30em}
+.hero h1 em{font-style:normal;background:linear-gradient(transparent 62%,color-mix(in srgb,var(--sun) 45%,transparent) 62%)}
+
+/* 物語：写真が入れ替わり、小窓のつながり図が光る */
+.story{background:var(--card);border:1px solid var(--line);border-radius:20px;overflow:hidden;box-shadow:0 10px 30px -18px color-mix(in srgb,var(--sky) 55%,transparent)}
+.ph{position:relative;aspect-ratio:1152/600;max-width:100%;overflow:hidden;background:var(--soft)}
+.ph img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transform:scale(1);transition:opacity 1.2s ease,transform 0s 1.2s}
+.ph img.on{opacity:1;transform:scale(1.08);transition:opacity 1.2s ease,transform 7s linear}
+.mapwin{position:absolute;top:14px;right:14px;width:min(40%,400px);background:var(--glass);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border:1px solid var(--line);border-radius:16px;box-shadow:0 8px 24px -12px rgba(0,0,0,.35)}
+.mapwin svg{width:100%;height:auto;display:block;padding:6px}
+.node .ring{fill:none;stroke:var(--sun);stroke-width:5;opacity:0;transition:opacity .4s}
+.node.on .ring{opacity:1}
+.node{transition:opacity .4s}
+.dim .node:not(.on){opacity:.35}
+.lk{fill:none;stroke:var(--line);stroke-width:6;stroke-linecap:round;transition:stroke .4s}
+.lk.on{stroke:var(--sun);stroke-dasharray:2 12;animation:flow 1s linear infinite}
+@keyframes flow{to{stroke-dashoffset:-14}}
+.dot{fill:var(--sun)}
+.nlabel{font-family:var(--disp);font-weight:900;font-size:23px;fill:var(--fg)}
+.cap{display:grid;grid-template-columns:1.2fr 1fr;gap:10px 28px;padding:22px 26px;align-items:start}
+.cap>*{min-width:0}
+.cap .no{font-family:var(--disp);font-weight:900;color:var(--sky);font-size:.9rem;letter-spacing:.1em}
+.cap h3{font-size:1.4rem;margin:2px 0 8px}
+.cap p{margin:0;color:var(--sub)}
+.bub{display:grid;gap:6px;align-content:center;padding-top:6px}
+.bub span{display:block;background:var(--soft);border-radius:14px;padding:7px 13px;font-size:.92rem;width:fit-content;max-width:100%}
+.bub span.r{justify-self:end;background:color-mix(in srgb,var(--sun) 24%,var(--card))}
+.ctrl{display:flex;align-items:center;gap:10px;padding:12px 20px;border-top:1px solid var(--line);flex-wrap:wrap}
+.ctrl button{font:inherit;font-family:var(--disp);font-weight:700;border:1px solid var(--line);background:var(--card);color:var(--fg);border-radius:999px;padding:6px 16px;cursor:pointer}
+.ctrl button:hover,.ctrl button:focus-visible{border-color:var(--sky);outline:none}
+.pips{display:flex;gap:8px;margin-left:auto}
+.pips i{width:10px;height:10px;border-radius:50%;background:var(--line);cursor:pointer;transition:background .3s,transform .3s}
+.pips i.on{background:var(--sky);transform:scale(1.3)}
+
+/* 1+1が100 */
+.big{font-family:var(--disp);font-weight:900}
+.big b{color:var(--sky)}
+.pairs{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:20px}
+.pair{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:18px;display:flex;flex-direction:column;gap:10px;min-width:0}
+.duo{display:flex;align-items:center;gap:6px}
+.duo svg.ic{width:46px;height:46px;flex:none}
+.duo svg.wire{flex:1;height:14px;min-width:30px}
+.duo svg.wire line{stroke:var(--sun);stroke-width:4;stroke-linecap:round;stroke-dasharray:2 10;animation:flow 1s linear infinite}
+.pair h3{font-size:1.08rem}
+.lbl{font-family:var(--disp);font-weight:900;font-size:.8rem;letter-spacing:.08em}
+.before{background:var(--soft);border-radius:12px;padding:10px 12px;font-size:.9rem;color:var(--sub)}
+.before .lbl{color:var(--sub);display:block}
+.after .lbl{color:var(--leaf)}
+.chain{list-style:none;margin:6px 0 0;padding:0;display:grid;gap:0;font-size:.92rem}
+.chain li{position:relative;padding:6px 0 6px 26px}
+.chain li::before{content:"";position:absolute;left:5px;top:13px;width:11px;height:11px;border-radius:50%;background:var(--leaf)}
+.chain li:not(:last-child)::after{content:"";position:absolute;left:10px;top:26px;bottom:-6px;width:2px;background:color-mix(in srgb,var(--leaf) 45%,transparent)}
+.chain li:last-child{font-weight:700}
+.chain li:last-child::before{background:var(--sun);box-shadow:0 0 0 4px color-mix(in srgb,var(--sun) 30%,transparent)}
+
+/* ソフトごと */
+.apps{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:18px}
+.app{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:20px;display:flex;flex-direction:column;gap:8px;min-width:0}
+.app svg{width:60px;height:60px}
+.app h3{font-size:1.25rem}
+.app .one{color:var(--sub);margin:0}
+.app ul{margin:4px 0 0;padding-left:1.1em;display:grid;gap:3px;font-size:.92rem}
+.app .solo{margin-top:auto;font-size:.82rem;color:var(--sub);border-top:1px dashed var(--line);padding-top:8px}
+.soon{font-size:.72rem;font-weight:700;color:var(--sky);border:1px solid color-mix(in srgb,var(--sky) 45%,transparent);border-radius:999px;padding:0 7px;margin-left:4px;white-space:nowrap}
+
+.band{background:linear-gradient(135deg,color-mix(in srgb,var(--sky) 9%,var(--card)),color-mix(in srgb,var(--leaf) 8%,var(--card)));border:1px solid var(--line);border-radius:18px;padding:22px 24px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-top:14px}
+.grid3>*{min-width:0}
+.grid3 h3{font-size:1.05rem;margin-bottom:2px}
+.grid3 p{margin:0;color:var(--sub);font-size:.92rem}
+.gauge{height:12px;border-radius:6px;background:var(--card);overflow:hidden;margin:6px 0 4px;border:1px solid var(--line)}
+.gauge b{display:block;height:100%;width:30%;background:linear-gradient(90deg,var(--leaf),var(--sky));border-radius:6px;animation:fill 5s ease-in-out infinite alternate}
+@keyframes fill{to{width:85%}}
+
+/* 3つ全部つながる：横いっぱいの大きな段 */
+.all{background:linear-gradient(135deg,color-mix(in srgb,var(--sky) 10%,var(--card)),color-mix(in srgb,var(--leaf) 9%,var(--card)) 60%,color-mix(in srgb,var(--sun) 10%,var(--card)));border:1px solid var(--line);border-radius:24px;padding:34px 28px 30px;text-align:center;box-shadow:0 14px 40px -22px color-mix(in srgb,var(--sky) 60%,transparent)}
+.all h2{font-size:clamp(1.7rem,4.6vw,2.6rem)}
+.allmap{max-width:760px;margin:10px auto 0}
+.allmap svg{width:100%;height:auto;display:block}
+.allmap .ring{stroke-width:6}
+.allmap .lk.on{stroke-width:9}
+.allflow{list-style:none;margin:18px 0 0;padding:0;display:grid;grid-template-columns:repeat(5,1fr);gap:10px;counter-reset:f;text-align:left}
+.allflow li{position:relative;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px 12px 12px;min-width:0;counter-increment:f}
+.allflow li::before{content:counter(f);display:inline-grid;place-items:center;width:24px;height:24px;border-radius:50%;background:var(--sky);color:#fff;font-family:var(--disp);font-weight:900;font-size:.8rem;margin-bottom:4px}
+.allflow li:last-child::before{background:var(--sun);color:#14283a}
+.allflow b{display:block;font-family:var(--disp);font-weight:900;font-size:1.02rem}
+.allflow span{display:block;color:var(--sub);font-size:.86rem;line-height:1.6}
+.allnote{margin:18px auto 0;max-width:40em;color:var(--sub)}
+.allnote b{color:var(--fg)}
+
+@media (max-width:760px){
+  .hero .in{padding-block:48px 44px}
+  .hero::before{background:linear-gradient(180deg,var(--veil) 0%,var(--veil) 100%)}
+  .ph{aspect-ratio:auto;padding-top:62.5%;overflow:visible}
+  .ph img{height:auto;bottom:auto;aspect-ratio:1152/720}
+  .ph{clip-path:inset(0 round 0)}
+  .mapwin{position:static;width:auto;margin:12px 12px 0;backdrop-filter:none;-webkit-backdrop-filter:none;background:var(--soft);box-shadow:none}
+  .cap{grid-template-columns:1fr;padding:14px 18px 20px}
+  .pairs,.apps,.grid3{grid-template-columns:1fr}
+  .all{padding:24px 14px 22px}
+  .allmap{margin:4px -6px 0}
+  .allflow{grid-template-columns:1fr 1fr}
+  .allflow li:last-child{grid-column:1/-1}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}.ph img.on{transform:none}}
+</style>
+
+<header class="hero">
+  <div class="in">
+    <div class="eyebrow">KAI のソフト</div>
+    <h1>話すだけで、<br><em>会社がつながる。</em></h1>
+    <p class="lead">通訳なしで、いつもの営業が外国のお客様と商談できる。その話は自動で記録になって上司に届き、帰ったあとも連絡が続き、会社みんなの記憶になる。3つのソフトはつなぐほど、出来る事が次々とつながっていきます。</p>
+  </div>
+</header>
+
+<div class="in wrap">
+
+<section class="story" aria-label="ある一日の流れ">
+  <div class="ph" id="ph">
+    <img src="img/s1.jpg" alt="展示場で営業が外国のお客様2人とタブレットを囲んで笑顔で話している">
+    <img src="img/s2.jpg" alt="机の上でスマホが商談を録音している">
+    <img src="img/s3.jpg" alt="自宅のソファで外国の女性がスマホのメッセージを見て微笑んでいる">
+    <img src="img/s4.jpg" alt="事務所で社員がノートパソコンでお客様の記録を見ている">
+    <img src="img/s5.jpg" alt="営業と同僚がスマホを見て満足そうにしている">
+    <div class="mapwin">
+    <svg id="map" viewBox="0 0 600 400" role="img" aria-label="同時通訳・超議事録・縁ythingの3つが線でつながる図">
+      <path id="L-ts" class="lk" d="M150 105 L450 105"/>
+      <path id="L-te" class="lk" d="M128 160 L272 300"/>
+      <path id="L-es" class="lk" d="M328 300 L472 160"/>
+      <g class="node" id="N-t" transform="translate(100 105)">
+        <circle class="ring" r="58"/>
+        <g transform="translate(-42 -42) scale(.875)"><rect x="6" y="6" width="84" height="84" rx="20" fill="var(--leaf)"/><path d="M16 22h36a6 6 0 0 1 6 6v18a6 6 0 0 1-6 6H30l-10 9v-9h-4a6 6 0 0 1-6-6V28a6 6 0 0 1 6-6z" fill="#fff"/><text x="34" y="44" font-size="17" font-weight="700" text-anchor="middle" fill="var(--leaf)" font-family="sans-serif">あ</text><path d="M80 40H50a6 6 0 0 0-6 6v18a6 6 0 0 0 6 6h18l10 9v-9h2a6 6 0 0 0 6-6V46a6 6 0 0 0-6-6z" fill="#fff" opacity=".85"/><text x="64" y="62" font-size="17" font-weight="700" text-anchor="middle" fill="var(--leaf)" font-family="sans-serif">A</text></g>
+        <text class="nlabel" y="86" text-anchor="middle">同時通訳</text>
+      </g>
+      <g class="node" id="N-s" transform="translate(500 105)">
+        <circle class="ring" r="58"/>
+        <g transform="translate(-42 -42) scale(.875)"><rect x="6" y="6" width="84" height="84" rx="20" fill="var(--sky)"/><rect x="38" y="20" width="20" height="34" rx="10" fill="#fff"/><path d="M30 46a18 18 0 0 0 36 0" fill="none" stroke="#fff" stroke-width="5" stroke-linecap="round"/><line x1="48" y1="64" x2="48" y2="74" stroke="#fff" stroke-width="5" stroke-linecap="round"/><rect x="62" y="58" width="22" height="26" rx="3" fill="#fff"/><line x1="66" y1="65" x2="80" y2="65" stroke="var(--sky)" stroke-width="2.5"/><line x1="66" y1="71" x2="80" y2="71" stroke="var(--sky)" stroke-width="2.5"/><line x1="66" y1="77" x2="76" y2="77" stroke="var(--sky)" stroke-width="2.5"/></g>
+        <text class="nlabel" y="86" text-anchor="middle">超議事録</text>
+      </g>
+      <g class="node" id="N-e" transform="translate(300 300)">
+        <circle class="ring" r="58"/>
+        <g transform="translate(-42 -42) scale(.875)"><rect x="6" y="6" width="84" height="84" rx="20" fill="var(--coral)"/><path d="M16 24h28a6 6 0 0 1 6 6v14a6 6 0 0 1-6 6H28l-8 8v-8h-4a6 6 0 0 1-6-6V30a6 6 0 0 1 6-6z" fill="#fff"/><path d="M80 46H52a6 6 0 0 0-6 6v14a6 6 0 0 0 6 6h16l8 8v-8h4a6 6 0 0 0 6-6V52a6 6 0 0 0-6-6z" fill="#fff"/><path d="M30 37c10 0 14 6 20 14s12 10 18 8" fill="none" stroke="var(--coral)" stroke-width="3.5" stroke-linecap="round"/></g>
+        <text class="nlabel" y="86" text-anchor="middle">縁ything</text>
+      </g>
+      <g id="dots"></g>
+    </svg>
+    </div>
+  </div>
+  <div class="cap" aria-live="polite">
+    <div>
+      <div class="no" id="cNo">1 / 5</div>
+      <h3 id="cT"></h3>
+      <p id="cP"></p>
+    </div>
+    <div class="bub" id="cB"></div>
+  </div>
+  <div class="ctrl">
+    <button id="prev" aria-label="前へ">◀ 前へ</button>
+    <button id="play">一時停止</button>
+    <button id="next" aria-label="次へ">次へ ▶</button>
+    <div class="pips" id="pips"></div>
+  </div>
+</section>
+
+<section>
+  <div class="eyebrow">つながると、何が変わる？</div>
+  <h2 class="big">1＋1が2じゃない。<b>100になる。</b></h2>
+  <p class="lead">2つをつなぐと、これまで<b>そもそも出来なかった事</b>が出来るようになり、そこから出来る事が次々とつながっていきます。</p>
+  <div class="pairs">
+    <div class="pair">
+      <div class="duo"><svg class="ic" viewBox="0 0 96 96" aria-hidden="true"><rect x="6" y="6" width="84" height="84" rx="20" fill="var(--leaf)"/><text x="48" y="62" font-size="38" font-weight="700" text-anchor="middle" fill="#fff" font-family="sans-serif">訳</text></svg><svg class="wire" viewBox="0 0 100 14" preserveAspectRatio="none" aria-hidden="true"><line x1="4" y1="7" x2="96" y2="7"/></svg><svg class="ic" viewBox="0 0 96 96" aria-hidden="true"><rect x="6" y="6" width="84" height="84" rx="20" fill="var(--sky)"/><text x="48" y="62" font-size="38" font-weight="700" text-anchor="middle" fill="#fff" font-family="sans-serif">録</text></svg></div>
+      <h3>同時通訳 ＋ 超議事録</h3>
+      <div class="before"><span class="lbl">これまで</span>言葉が通じず、笑ってごまかすだけ。商談にならず、そもそもお店で受けられなかった。</div>
+      <div class="after"><span class="lbl">つながると</span>
+        <ol class="chain">
+          <li>いつもの営業が、いつもの展示場で、通訳なしで一人で商談できる</li>
+          <li>話した中身が、自動で議事録になる</li>
+          <li>そのまま上司に届く</li>
+          <li>会社の記憶として、みんなに共有される</li>
+        </ol>
+      </div>
+    </div>
+    <div class="pair">
+      <div class="duo"><svg class="ic" viewBox="0 0 96 96" aria-hidden="true"><rect x="6" y="6" width="84" height="84" rx="20" fill="var(--leaf)"/><text x="48" y="62" font-size="38" font-weight="700" text-anchor="middle" fill="#fff" font-family="sans-serif">訳</text></svg><svg class="wire" viewBox="0 0 100 14" preserveAspectRatio="none" aria-hidden="true"><line x1="4" y1="7" x2="96" y2="7"/></svg><svg class="ic" viewBox="0 0 96 96" aria-hidden="true"><rect x="6" y="6" width="84" height="84" rx="20" fill="var(--coral)"/><text x="48" y="62" font-size="38" font-weight="700" text-anchor="middle" fill="#fff" font-family="sans-serif">縁</text></svg></div>
+      <h3>同時通訳 ＋ 縁ything</h3>
+      <div class="before"><span class="lbl">これまで</span>共通の言葉がなく、話すことさえ出来なかった。LINEも連絡先も交換できず、一度来た方はそれきり。</div>
+      <div class="after"><span class="lbl">つながると</span>
+        <ol class="chain">
+          <li>その場で、LINEのように連絡先がつながる</li>
+          <li>外国語が話せなくても大丈夫。こちらは日本語で打つだけで、お客様には英語で届く</li>
+          <li>お客様の返事も、日本語になって届く</li>
+          <li>一度きりの来場者が「お客様」になる</li>
+        </ol>
+      </div>
+    </div>
+    <div class="pair">
+      <div class="duo"><svg class="ic" viewBox="0 0 96 96" aria-hidden="true"><rect x="6" y="6" width="84" height="84" rx="20" fill="var(--coral)"/><text x="48" y="62" font-size="38" font-weight="700" text-anchor="middle" fill="#fff" font-family="sans-serif">縁</text></svg><svg class="wire" viewBox="0 0 100 14" preserveAspectRatio="none" aria-hidden="true"><line x1="4" y1="7" x2="96" y2="7"/></svg><svg class="ic" viewBox="0 0 96 96" aria-hidden="true"><rect x="6" y="6" width="84" height="84" rx="20" fill="var(--sky)"/><text x="48" y="62" font-size="38" font-weight="700" text-anchor="middle" fill="#fff" font-family="sans-serif">録</text></svg></div>
+      <h3>縁ything ＋ 超議事録</h3>
+      <div class="before"><span class="lbl">これまで</span>お客様との連絡は担当者のスマホの中だけ。会社の誰も中身を知らず、担当が替わると話が途切れていた。</div>
+      <div class="after"><span class="lbl">つながると</span>
+        <ol class="chain">
+          <li>毎日のやりとりが、お客様ごとの1冊に自動でたまる</li>
+          <li>「あのお客様、何て言ってた？」に誰でもすぐ答えが出る</li>
+          <li>担当が休んでも替わっても、続きから話せる</li>
+          <li>会社みんなの記憶になる</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="all" aria-labelledby="allT">
+  <div class="eyebrow">ぜんぶ、くっつくと</div>
+  <h2 class="big" id="allT">3つ全部つながると</h2>
+  <div class="allmap">
+    <svg id="allmap" viewBox="0 0 600 400" role="img" aria-label="同時通訳・超議事録・縁ythingの3つが全部つながった図">
+      <path id="A-L-ts" class="lk on" d="M150 105 L450 105"/>
+      <path id="A-L-te" class="lk on" d="M128 160 L272 300"/>
+      <path id="A-L-es" class="lk on" d="M328 300 L472 160"/>
+      <g class="node on" id="A-N-t" transform="translate(100 105)">
+        <circle class="ring" r="58"/>
+        <g transform="translate(-42 -42) scale(.875)"><rect x="6" y="6" width="84" height="84" rx="20" fill="var(--leaf)"/><path d="M16 22h36a6 6 0 0 1 6 6v18a6 6 0 0 1-6 6H30l-10 9v-9h-4a6 6 0 0 1-6-6V28a6 6 0 0 1 6-6z" fill="#fff"/><text x="34" y="44" font-size="17" font-weight="700" text-anchor="middle" fill="var(--leaf)" font-family="sans-serif">あ</text><path d="M80 40H50a6 6 0 0 0-6 6v18a6 6 0 0 0 6 6h18l10 9v-9h2a6 6 0 0 0 6-6V46a6 6 0 0 0-6-6z" fill="#fff" opacity=".85"/><text x="64" y="62" font-size="17" font-weight="700" text-anchor="middle" fill="var(--leaf)" font-family="sans-serif">A</text></g>
+        <text class="nlabel" y="86" text-anchor="middle">同時通訳</text>
+      </g>
+      <g class="node on" id="A-N-s" transform="translate(500 105)">
+        <circle class="ring" r="58"/>
+        <g transform="translate(-42 -42) scale(.875)"><rect x="6" y="6" width="84" height="84" rx="20" fill="var(--sky)"/><rect x="38" y="20" width="20" height="34" rx="10" fill="#fff"/><path d="M30 46a18 18 0 0 0 36 0" fill="none" stroke="#fff" stroke-width="5" stroke-linecap="round"/><line x1="48" y1="64" x2="48" y2="74" stroke="#fff" stroke-width="5" stroke-linecap="round"/><rect x="62" y="58" width="22" height="26" rx="3" fill="#fff"/><line x1="66" y1="65" x2="80" y2="65" stroke="var(--sky)" stroke-width="2.5"/><line x1="66" y1="71" x2="80" y2="71" stroke="var(--sky)" stroke-width="2.5"/><line x1="66" y1="77" x2="76" y2="77" stroke="var(--sky)" stroke-width="2.5"/></g>
+        <text class="nlabel" y="86" text-anchor="middle">超議事録</text>
+      </g>
+      <g class="node on" id="A-N-e" transform="translate(300 300)">
+        <circle class="ring" r="58"/>
+        <g transform="translate(-42 -42) scale(.875)"><rect x="6" y="6" width="84" height="84" rx="20" fill="var(--coral)"/><path d="M16 24h28a6 6 0 0 1 6 6v14a6 6 0 0 1-6 6H28l-8 8v-8h-4a6 6 0 0 1-6-6V30a6 6 0 0 1 6-6z" fill="#fff"/><path d="M80 46H52a6 6 0 0 0-6 6v14a6 6 0 0 0 6 6h16l8 8v-8h4a6 6 0 0 0 6-6V52a6 6 0 0 0-6-6z" fill="#fff"/><path d="M30 37c10 0 14 6 20 14s12 10 18 8" fill="none" stroke="var(--coral)" stroke-width="3.5" stroke-linecap="round"/></g>
+        <text class="nlabel" y="86" text-anchor="middle">縁ything</text>
+      </g>
+      <g id="alldots"></g>
+    </svg>
+  </div>
+  <ol class="allflow">
+    <li><b>商談できる</b><span>言葉が通じなかったお客様と、いつもの営業が一人で</span></li>
+    <li><b>記録が残る</b><span>話した中身が自動で議事録に。上司にも届く</span></li>
+    <li><b>連絡が続く</b><span>外国語が話せなくても、日本語で打つだけで届く</span></li>
+    <li><b>お客様になる</b><span>一度きりの来場者が、ずっと続くお客様に</span></li>
+    <li><b>会社の記憶になる</b><span>誰が担当でも、みんなが続きから話せる</span></li>
+  </ol>
+  <p class="allnote">1つずつなら「便利」。3つ全部つながると、<b>これまで出来なかった仕事が、最初から最後まで一本の流れになります。</b></p>
+</section>
+
+<section>
+  <div class="eyebrow">ひとつずつでも頼れる</div>
+  <h2>3つのソフト</h2>
+  <div class="apps">
+    <div class="app">
+      <svg viewBox="0 0 96 96" aria-hidden="true"><rect x="6" y="6" width="84" height="84" rx="20" fill="var(--sky)"/><rect x="38" y="20" width="20" height="34" rx="10" fill="#fff"/><path d="M30 46a18 18 0 0 0 36 0" fill="none" stroke="#fff" stroke-width="5" stroke-linecap="round"/><line x1="48" y1="64" x2="48" y2="74" stroke="#fff" stroke-width="5" stroke-linecap="round"/><rect x="62" y="58" width="22" height="26" rx="3" fill="#fff"/></svg>
+      <h3>超議事録</h3>
+      <p class="one">スマホで録るだけ。会社の話が全部文字で残り、あとから何でも聞ける。</p>
+      <ul>
+        <li>録音はスマホで録るだけで自動で届く</li>
+        <li>全文の文字起こしと、要点・決まった事・宿題の議事録</li>
+        <li>「あの件どうなった？」に答える聞ける帳</li>
+        <li>声で直せる。一度直した名前は二度と間違えない</li>
+        <li>電話の録音と商談の振り返り<span class="soon">近日</span></li>
+      </ul>
+      <div class="solo">単体でも使えます</div>
+    </div>
+    <div class="app">
+      <svg viewBox="0 0 96 96" aria-hidden="true"><rect x="6" y="6" width="84" height="84" rx="20" fill="var(--leaf)"/><path d="M16 22h36a6 6 0 0 1 6 6v18a6 6 0 0 1-6 6H30l-10 9v-9h-4a6 6 0 0 1-6-6V28a6 6 0 0 1 6-6z" fill="#fff"/><text x="34" y="44" font-size="17" font-weight="700" text-anchor="middle" fill="var(--leaf)" font-family="sans-serif">あ</text><path d="M80 40H50a6 6 0 0 0-6 6v18a6 6 0 0 0 6 6h18l10 9v-9h2a6 6 0 0 0 6-6V46a6 6 0 0 0-6-6z" fill="#fff" opacity=".85"/><text x="64" y="62" font-size="17" font-weight="700" text-anchor="middle" fill="var(--leaf)" font-family="sans-serif">A</text></svg>
+      <h3>同時通訳</h3>
+      <p class="one">向かい合って話すだけ。お互いの言葉に訳して、見せて、読み上げる。</p>
+      <ul>
+        <li>画面を半分ずつ。対になる文が同時に光る</li>
+        <li>金額や日付などの数字は強調して見せる</li>
+        <li>間取り図や写真を差し込んで説明できる</li>
+        <li>営業が相手の言葉を自分の口で話すモード</li>
+        <li>翌日に3問だけの練習で、外国語も上達</li>
+      </ul>
+      <div class="solo">単体でも使えます</div>
+    </div>
+    <div class="app">
+      <svg viewBox="0 0 96 96" aria-hidden="true"><rect x="6" y="6" width="84" height="84" rx="20" fill="var(--coral)"/><path d="M16 24h28a6 6 0 0 1 6 6v14a6 6 0 0 1-6 6H28l-8 8v-8h-4a6 6 0 0 1-6-6V30a6 6 0 0 1 6-6z" fill="#fff"/><path d="M80 46H52a6 6 0 0 0-6 6v14a6 6 0 0 0 6 6h16l8 8v-8h4a6 6 0 0 0 6-6V52a6 6 0 0 0-6-6z" fill="#fff"/><path d="M30 37c10 0 14 6 20 14s12 10 18 8" fill="none" stroke="var(--coral)" stroke-width="3.5" stroke-linecap="round"/></svg>
+      <h3>縁ything（エニシ）</h3>
+      <p class="one">外国語が話せなくても、外国のお客様と連絡が取り合える。こちらは日本語のままでOK。社内の連絡にも。</p>
+      <ul>
+        <li>日本語で送れば、相手の言葉で届く。返事は読み上げ</li>
+        <li>声で送れる。スマホでもパソコンでも</li>
+        <li>電話番号だけで、スマホを替えても元どおり</li>
+        <li>点検の時期になったら、ひと言お知らせ<span class="soon">近日</span></li>
+        <li>お客様からの紹介の入口<span class="soon">近日</span></li>
+      </ul>
+      <div class="solo">単体でも使えます</div>
+    </div>
+  </div>
+</section>
+
+<section class="band">
+  <div class="eyebrow">どのソフトにも</div>
+  <h2>3つ全部に付いてきます</h2>
+  <div class="grid3">
+    <div><h3>声でご意見</h3><p>「ここが使いにくい」としゃべるだけで届く。写真も添えられる。</p></div>
+    <div><h3>お世話係のキャラ</h3><p>知的な秘書さん、動物、やさしいおじいちゃん…。好きなキャラを選ぶと、その子がお知らせや問いかけを届けます。何人選んでも、日替わりでもOK。キャラなしの落ち着いた表示にも切り替えられます。<span class="soon">近日</span></p></div>
+    <div><h3>会社の辞書</h3><p>社名・人名・現場名を一度教えれば、どのソフトでも正しく書く。<span class="soon">近日</span></p></div>
+  </div>
+</section>
+
+<section class="band">
+  <div class="eyebrow">料金の考え方</div>
+  <h2>月額に全部入り。AIは使った分だけ。</h2>
+  <div class="grid3">
+    <div><h3>月額の標準料金</h3><p>上に書いた機能は、全部この中に入っています。機能ごとの追加料金はありません。</p></div>
+    <div><h3>AIはゲージ式</h3><div class="gauge" aria-hidden="true"><b></b></div><p>使うほどゲージがたまり、いっぱいになったら足して使う。使わない月は安く済みます。</p></div>
+    <div><h3>経営者向けの特別版</h3><p>経営する方だけが使える特別な機能を、別料金でご用意しています。詳しくはお問い合わせください。</p></div>
+  </div>
+</section>
+
+</div>
+
+<script>
+// 物語：場面ごとに写真(img)・光る札(n)・流れる線(l)・文
+const S=[
+ {img:0,n:["t"],l:[],t:"通訳なしで、いつもの営業が一人で",p:"いつもの展示場で、いつもの営業が、外国のお客様と向かい合って話すだけ。これまで笑ってごまかすしかなかった場面が、ちゃんとした商談になります。",b:[["The second floor has three bedrooms?",""],["2階は3部屋ですか？","r"]]},
+ {img:1,n:["t","s"],l:[["L-ts"]],t:"話した商談が、そのまま議事録に",p:"訳した会話は、両方の言葉のまま超議事録へ。商談が終わった時には、要点と宿題がもう出来ていて、上司にも届いています。",b:[["要点：2階に3部屋を希望",""],["宿題：来週までに間取り図を送る","r"]]},
+ {img:2,n:["t","e"],l:[["L-te"]],t:"その場で連絡先がつながる",p:"言葉が通じず、LINEの交換もできなかったお客様と、その場で縁ythingがつながります。帰ったあとも、外国語が話せなくて大丈夫。こちらは日本語で打つだけで、お客様には相手の言葉で届き、返事は日本語になって届きます。",b:[["間取り図をお送りします。",""],["Here is the floor plan.","r"]]},
+ {img:3,n:["e","s"],l:[["L-es"]],t:"やりとりも、会社の記憶へ",p:"帰ったあとの連絡も、同じお客様の1冊に自動でたまります。担当が休んでも替わっても、誰でも続きから話せます。",b:[["会った日・話した事・送った物・もらった返事",""]]},
+ {img:4,n:["t","s","e"],l:[["L-ts"],["L-te"],["L-es"]],t:"1＋1が、100になる",p:"通じなかったお客様と商談でき、記録が残り、連絡が続き、お客様になり、会社みんなの記憶になる。つなぐほど、出来る事が増えていきます。",b:[["あのお客様、何を気にしてた？",""],["2階の部屋数と、駅までの近さです。","r"]]}
+];
+const $=id=>document.getElementById(id);
+const map=$("map"),dots=$("dots"),pips=$("pips"),imgs=[...$("ph").querySelectorAll("img")];
+let i=0,playing=true,timer=null,raf=null;
+S.forEach((_,k)=>{const e=document.createElement("i");e.title=(k+1)+"番目";e.onclick=()=>{go(k);stop()};pips.appendChild(e)});
+function esc(s){return s.replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]))}
+function go(k){
+  i=(k+S.length)%S.length;const s=S[i];
+  imgs.forEach((im,j)=>im.classList.toggle("on",j===s.img));
+  map.classList.add("dim");
+  ["t","s","e"].forEach(x=>$("N-"+x).classList.toggle("on",s.n.includes(x)));
+  ["L-ts","L-te","L-es"].forEach(x=>$(x).classList.toggle("on",s.l.some(l=>l[0]===x)));
+  $("cNo").textContent=(i+1)+" / "+S.length;$("cT").textContent=s.t;$("cP").textContent=s.p;
+  $("cB").innerHTML=s.b.map(b=>'<span class="'+b[1]+'">'+esc(b[0])+'</span>').join("");
+  [...pips.children].forEach((e,j)=>e.classList.toggle("on",j===i));
+  runDots(s.l);
+}
+function runDots(ls){
+  cancelAnimationFrame(raf);dots.innerHTML="";
+  if(matchMedia("(prefers-reduced-motion: reduce)").matches)return;
+  const ps=ls.map(l=>{const p=$(l[0]);const c=document.createElementNS("http://www.w3.org/2000/svg","circle");c.setAttribute("r","10");c.setAttribute("class","dot");dots.appendChild(c);return{p,c,L:p.getTotalLength()}});
+  const t0=performance.now();
+  (function f(t){const u=((t-t0)/1400)%1;ps.forEach(o=>{const q=o.p.getPointAtLength(u*o.L);o.c.setAttribute("cx",q.x);o.c.setAttribute("cy",q.y)});raf=requestAnimationFrame(f)})(t0);
+}
+function start(){clearInterval(timer);timer=setInterval(()=>go(i+1),6000);playing=true;$("play").textContent="一時停止"}
+function stop(){clearInterval(timer);playing=false;$("play").textContent="自動で見る"}
+$("prev").onclick=()=>{go(i-1);stop()};$("next").onclick=()=>{go(i+1);stop()};
+$("play").onclick=()=>playing?stop():start();
+go(0);start();
+
+// 3つ全部つながる段：点を3本の線にずっと流す
+(function(){
+  const box=$("alldots");if(!box||matchMedia("(prefers-reduced-motion: reduce)").matches)return;
+  const ps=["A-L-ts","A-L-te","A-L-es"].map(id=>{const p=$(id);const c=document.createElementNS("http://www.w3.org/2000/svg","circle");c.setAttribute("r","11");c.setAttribute("class","dot");box.appendChild(c);return{p,c,L:p.getTotalLength()}});
+  const t0=performance.now();
+  (function f(t){const u=((t-t0)/1600)%1;ps.forEach(o=>{const q=o.p.getPointAtLength(u*o.L);o.c.setAttribute("cx",q.x);o.c.setAttribute("cy",q.y)});requestAnimationFrame(f)})(t0);
+})();
+</script>
+
+</body></html>

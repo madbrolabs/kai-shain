@@ -53,6 +53,15 @@ a.ln:hover .more{opacity:1;transform:translateX(4px)}
 .mark .d{display:none}
 @media (prefers-color-scheme:dark){.mark .l{display:none}.mark .d{display:block}}
 footer{color:var(--sub);font-size:13px;padding:28px 0 36px;text-align:center}
+.sr{display:flex;flex-direction:column;padding:0;overflow:hidden}
+.sr .mi{aspect-ratio:16/10;background:var(--acc2);overflow:hidden;border-bottom:1px solid var(--line)}
+.sr .mi img{width:100%;height:100%;object-fit:cover;object-position:top;display:block}
+.sr .ui{padding:18px 20px 20px;display:flex;flex-direction:column;gap:6px;flex:1}
+.sr .bt{display:flex;flex-wrap:wrap;gap:8px;margin-top:auto;padding-top:10px}
+.sr .bt a{display:inline-block;text-decoration:none;font-size:14px;font-weight:700;border-radius:99px;padding:6px 16px;border:1px solid var(--acc);color:var(--acc)}
+.sr .bt a.hi{background:var(--acc);color:#fff}
+@media (prefers-color-scheme:dark){.sr .bt a.hi{color:#0b1520}}
+.sr .ok{font-size:12.5px;color:var(--sub)}
 </style>
 </head>
 <body>
@@ -72,6 +81,40 @@ footer{color:var(--sub);font-size:13px;padding:28px 0 36px;text-align:center}
 <a class="c ln" href="gijiroku.html"><span class="tag">現場で試験中</span><h3>会議の全文記録</h3><p>会議を録るだけで、ひと言も漏らさない文字起こしと議事録に。「先週言ったじゃないですか」を無くします。</p><span class="more">くわしく見る →</span></a>
 <a class="c ln" href="tsuuyaku.html"><span class="tag">開発中</span><h3>その場の同時通訳</h3><p>目の前の外国のお客様と、言葉の壁を感じずに話せる通訳ソフト。</p><span class="more">くわしく見る →</span></a>
 </div>
+
+<section id="eigyou" hidden>
+<h2><small>SALES</small>営業用資料</h2>
+<div class="g" id="eigyou-tana"></div>
+</section>
+<script>
+/* 営業用資料の棚：eigyou/tana.json（atsume/eigyou.py が台帳から作る・検めを通った物だけ）を1回だけ並べる */
+(function(){
+  var box = document.getElementById("eigyou-tana");
+  function el(t, c, x){ var e = document.createElement(t); if(c) e.className = c; if(x) e.textContent = x; return e; }
+  function bt(href, text, cls, dl){ var a = el("a", cls, text); a.href = href; if(dl) a.setAttribute("download", dl); else { a.target = "_blank"; a.rel = "noopener"; } return a; }
+  fetch("eigyou/tana.json", {cache: "no-cache"}).then(function(r){ return r.ok ? r.json() : {tana: []}; }).then(function(j){
+    var t = (j && j.tana) || []; if(!t.length) return;
+    t.forEach(function(x){
+      var ue = "eigyou/" + x.id + "/", c = el("div", "c sr"), mi = el("div", "mi"), ui = el("div", "ui"), b = el("div", "bt");
+      if(x.e){ var im = el("img"); im.src = ue + "e.jpg"; im.alt = ""; im.loading = "lazy"; mi.appendChild(im); }
+      c.appendChild(mi);
+      ui.appendChild(el("span", "tag", x.shurui === "PDF" ? (x.zentai ? "PDF・軽い版あり" : "PDF") : "ページ"));
+      ui.appendChild(el("h3", "", x.dai));
+      if(x.hitokoto) ui.appendChild(el("p", "", x.hitokoto));
+      if(x.soto){ b.appendChild(bt(x.soto, "開く", "hi")); }
+      else {
+        b.appendChild(bt(ue + x.hiraku, "開く", "hi"));
+        b.appendChild(bt(ue + x.hiraku, "保存", "", x.dl_na));
+        if(x.zentai) b.appendChild(bt(ue + x.zentai, "ちゃんとした版（" + x.ookisa_zentai + "）", ""));
+      }
+      ui.appendChild(b);
+      if(x.ookisa) ui.appendChild(el("span", "ok", (x.zentai ? "軽い版 " : "") + x.ookisa));
+      c.appendChild(ui); box.appendChild(c);
+    });
+    document.getElementById("eigyou").hidden = false;
+  }).catch(function(){});
+})();
+</script>
 
 <h2><small>COMPANY</small>会社概要</h2>
 <dl class="gaiyou">

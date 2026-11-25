@@ -544,6 +544,11 @@ def main() -> None:
         goiken_fuda.tsukeru(app, dare, jres)
     except Exception as e:
         log(f"ご意見の札を付けられませんでした {e!r}")
+    try:  # アドオン：営業用資料の棚の社員だけの写し（eigyou.py・写し＝内緒の場所/eigyou・入/切＝内緒の場所/eigyou.json）。亀井ページより先に付ける
+        import eigyou
+        eigyou.tsukeru(app, dare, jres, cors)
+    except Exception as e:
+        log(f"営業用資料の口を付けられませんでした {e!r}")
     try:  # アドオン：亀井ページ（kamei.py・設定 内緒の場所/kamei/settei.json の iri＝入/切）。無くても門番は動く
         import kamei
         kamei.tsukeru(app)

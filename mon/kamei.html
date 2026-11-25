@@ -368,6 +368,7 @@ function fudaHyou(box, list, heyaMo){
       + (x.hitokoto ? "<div class='hk'>"+esc(x.hitokoto)+"</div>" : "")
       + "<div class='r2'>" + (x.kakunin ? "<span class='sumi'>係長確認済み</span>" : "") + (x.naoshita ? "<span class='naoshi'>"+esc(hiDake(x.naoshita))+" 直しました</span>" : "")
       + (heyaMo ? "<span>"+esc(heyaNa(x.heya) || x.busho)+"</span>" : "") + "<span>"+esc(hiDake(x.dekita))+" 出来た</span></div>"
+      + (x.eigyou ? "<div class='r2'><span class='sumi'>営業用資料</span><span>"+(x.karui ? "軽い版の PDF が開きます（そのまま保存もできます）" : "そのまま開けます・保存もできます")+"</span></div>" : "")
       + (x.shachou_dake ? "<div class='shachou-dake'>※ 社長のスマホで開けます（このスマホでは開けないことがあります）</div>" : "")
       + "</div>";
     if(a.innerHTML !== html) a.innerHTML = html;
