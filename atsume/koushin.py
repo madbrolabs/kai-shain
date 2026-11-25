@@ -27,9 +27,9 @@ def log(naishō: Path, msg: str) -> None:
         f.write(f"{t} {msg}\n")
 
 
-def hashiru(args: list[str]) -> subprocess.CompletedProcess:
+def hashiru(args: list[str], timeout: int = 600) -> subprocess.CompletedProcess:
     return subprocess.run(args, cwd=REPO, capture_output=True, text=True, encoding="utf-8",
-                          errors="replace", timeout=600, creationflags=NO_WINDOW)
+                          errors="replace", timeout=timeout, creationflags=NO_WINDOW)
 
 
 def shimon(p: Path) -> str:
@@ -47,6 +47,11 @@ def main() -> int:
     if r.returncode:
         log(naishō, "集める係が失敗: " + r.stderr[-500:])
         return 1
+    # 機械の言葉まじりの記録を、普通の日本語に直して書き足す（覚えた物は頼まない）
+    r = hashiru([sys.executable.replace("pythonw", "python"), "-I", "-X", "utf8", str(KOKO / "yaku.py"),
+                 str(naishō), str(out), str(out.with_name("data_shain.json"))], timeout=5400)
+    if r.returncode:
+        log(naishō, "言い直し係が失敗（原文のまま出す）: " + r.stderr[-300:])
     ato = shimon(out)
     if ato == mae and "--itsumo" not in sys.argv:
         log(naishō, "中身に変わりなし。今回は出さない")

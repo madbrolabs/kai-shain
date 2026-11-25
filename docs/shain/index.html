@@ -34,7 +34,11 @@ main{max-width:900px;margin:0 auto;padding:16px}
 .tabs button{white-space:nowrap;font-size:14px}
 .ichi{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin:8px 0}
 .ichi .hi{font-size:12px;color:var(--sub)}
-.ichi .moto{font-size:11px;color:var(--sub);float:right}
+.ichi .moto{font-size:11px;color:var(--sub);float:right;display:flex;gap:6px;align-items:center}
+.ichi .gb{font-size:11px;padding:0 7px;border-radius:99px;line-height:1.7;color:var(--sub)}
+.ichi .gb.on{background:var(--acc2);color:var(--acc);border-color:var(--acc)}
+.ichi .genbun{display:none;margin-top:8px;padding:8px 10px;border-radius:8px;background:var(--bg);color:var(--sub);font-size:13px;border:1px dashed var(--line)}
+.ichi.hiraki .genbun{display:block}
 .ichi.dame{border-left:4px solid var(--warn)}
 .ichi.dame .naze{background:var(--warn2);border-radius:8px;padding:6px 10px;margin-top:6px;font-size:14px}
 .ichi h3{font-size:15px;margin:2px 0}
@@ -90,48 +94,61 @@ async function hairu(aik){
   let d=null;
   try{d=await hiraku(aik)}catch(e){return mon("ページを読めませんでした。電波を確かめて、もう一度どうぞ。")}
   if(!d){put(LS,null);return mon("合言葉が違うようです。")}
-  put(LS,aik);D=d;$("#deru").hidden=false;ichiran();
+  put(LS,aik);D=d;$("#deru").hidden=false;
+  const m=location.hash.match(/h=([^&]+)&t=([^&]*)/);m?heya(decodeURIComponent(m[1]),m[2],0):ichiran(0);
 }
 
 const KIND=[["susumi","進み"],["houkoku","出来た事"],["dameshi","ダメ出しと学び"],["kobanashi","開発の小話"],["kimatta","決まった事"],["fusaiyou","採らなかった案"],["omoi","創始者の思い"],["commit","工事日誌"]];
 
-function ichiran(){
+// 画面の移り変わりを履歴に積む＝マウスやブラウザの「戻る」で前の画面へ
+function iku(st,push){const u=location.pathname+(st.v==="heya"?`#h=${st.i}&t=${st.t||""}`:"");push?history.pushState(st,"",u):history.replaceState(st,"",u)}
+function miseru(st){if(!D)return;st&&st.v==="heya"?heya(st.i,st.t,0):ichiran(0)}
+addEventListener("popstate",e=>miseru(e.state));
+function ichiran(push=1){
+  iku({v:"ichiran"},push);
   window.scrollTo(0,0);
   const rooms=D.soft.map((h,i)=>{
     const ima=(h.susumi[0]||h.houkoku[0]||{});
     return `<div class="card" data-i="${i}"><h2>${esc(h.namae)}</h2><p class="hk">${esc(h.hitokoto)}</p>
     <div class="kazu">${KIND.filter(([k])=>h[k].length).map(([k,n])=>`<span>${n} ${h[k].length}</span>`).join("")}</div>
-    ${ima.text||ima.daimei?`<div class="ima">いま：${(()=>{const t=ima.text||ima.daimei;return esc((t.startsWith(ima.hi)?t:ima.hi+" "+t).slice(0,80))})()}…</div>`:""}</div>`}).join("");
+    ${ima.text||ima.daimei?`<div class="ima">いま：${(()=>{const t=Y(ima,"text")||Y(ima,"daimei");return esc((t.startsWith(ima.hi)?t:ima.hi+" "+t).slice(0,80))})()}…</div>`:""}</div>`}).join("");
   M.innerHTML=`<p style="color:var(--sub);margin-top:0">ソフトごとの開発部屋です。進み・出来た事・工事日誌が、毎日の仕事から自動でたまっていきます。</p>
   <div class="heya">${rooms}${D.lab_dameshi.length?`<div class="card" data-i="lab"><h2>ラボ全体の心得</h2><p class="hk">どのソフトにも通じる、ダメ出しから学んだ決まり</p><div class="kazu"><span>心得 ${D.lab_dameshi.length}</span></div></div>`:""}</div>
   <div class="shita">最後に集めた時刻：${esc(D.tsukutta.replace("T"," "))}</div>`;
-  M.querySelectorAll(".card").forEach(c=>c.onclick=()=>heya(c.dataset.i));
+  M.querySelectorAll(".card").forEach(c=>c.onclick=()=>heya(c.dataset.i,null,1));
 }
 
+// 読みやすく直した文（yasashi）を先に出す。原文は「原文」ボタンで同じ札の中に開く（行を増やさない）
+const Y=(x,r)=>(x.yasashi&&x.yasashi[r])||x[r]||"";
 function ichi(k,x){
-  if(k==="dameshi")return `<div class="ichi dame"><span class="hi">${esc(x.hi)}</span><h3>${esc(x.setsumei)}</h3><div>${esc(x.honbun)}</div>${x.naze?`<div class="naze">なぜ：${esc(x.naze)}</div>`:""}</div>`;
-  if(k==="houkoku")return `<div class="ichi"><span class="hi">${esc(x.hi)}</span><h3>${esc(x.daimei)}</h3><div>${esc(x.naiyou)}</div></div>`;
-  if(k==="commit")return `<div class="ichi"><span class="moto">${esc(x.repo)}</span><span class="hi">${esc(x.hi)}</span><div>${esc(x.text)}</div></div>`;
-  return `<div class="ichi"><span class="moto">${esc(x.moto)}</span><span class="hi">${esc(x.hi)}</span><div>${esc(x.text)}</div></div>`;
+  const ari=!!x.yasashi, moto=k==="commit"?x.repo:x.moto;
+  const fuda=`<span class="moto">${ari?`<button class="gb" title="元の書き方を見る">原文</button>`:""}${moto?esc(moto):""}</span>`;
+  const gen=r=>ari?`<div class="genbun">${r.map(([n,v])=>v?`${n?esc(n)+"：":""}${esc(v)}`:"").filter(Boolean).join("<br>")}</div>`:"";
+  if(k==="dameshi")return `<div class="ichi dame">${fuda}<span class="hi">${esc(x.hi)}</span><h3>${esc(Y(x,"setsumei"))}</h3><div>${esc(Y(x,"honbun"))}</div>${x.naze?`<div class="naze">なぜ：${esc(Y(x,"naze"))}</div>`:""}${gen([["",x.setsumei],["",x.honbun],["なぜ",x.naze]])}</div>`;
+  if(k==="houkoku")return `<div class="ichi">${fuda}<span class="hi">${esc(x.hi)}</span><h3>${esc(Y(x,"daimei"))}</h3><div>${esc(Y(x,"naiyou"))}</div>${gen([["",x.daimei],["",x.naiyou]])}</div>`;
+  return `<div class="ichi">${fuda}<span class="hi">${esc(x.hi)}</span><div>${esc(Y(x,"text"))}</div>${gen([["",x.text]])}</div>`;
 }
+M.addEventListener("click",e=>{const b=e.target.closest(".gb");if(!b)return;const c=b.closest(".ichi");b.classList.toggle("on",c.classList.toggle("hiraki"))});
 
-function heya(i){
-  window.scrollTo(0,0);
+function heya(i,t0,push){
   const lab=i==="lab";
   const h=lab?{namae:"ラボ全体の心得",hitokoto:"どのソフトにも通じる、ダメ出しから学んだ決まり",dameshi:D.lab_dameshi}:D.soft[+i];
+  if(!h)return ichiran(0);
   const kinds=lab?[["dameshi","心得"]]:KIND.filter(([k])=>h[k].length);
-  let tab=kinds[0]?.[0], q="";
+  let tab=kinds.some(([k])=>k===t0)?t0:kinds[0]?.[0], q="";
+  iku({v:"heya",i,t:tab},push);
+  window.scrollTo(0,0);
   M.innerHTML=`<div class="mae"><button id="modoru">← 部屋の一覧</button></div>
   <div class="mi"><h1>${esc(h.namae)}</h1></div><div class="hk" style="color:var(--sub);margin-bottom:8px">${esc(h.hitokoto)}</div>
   <div class="tabs">${kinds.map(([k,n])=>`<button data-k="${k}">${n} ${h[k].length}</button>`).join("")}</div>
   <input class="sagasu" placeholder="この部屋の中をさがす"><div id="list"></div>`;
-  $("#modoru").onclick=ichiran;
+  $("#modoru").onclick=()=>ichiran(1);
   const draw=()=>{
     M.querySelectorAll(".tabs button").forEach(b=>b.classList.toggle("on",b.dataset.k===tab));
     const xs=(h[tab]||[]).filter(x=>!q||JSON.stringify(x).toLowerCase().includes(q));
     $("#list").innerHTML=xs.length?xs.map(x=>ichi(tab,x)).join(""):`<div class="kara">まだありません</div>`;
   };
-  M.querySelectorAll(".tabs button").forEach(b=>b.onclick=()=>{tab=b.dataset.k;draw()});
+  M.querySelectorAll(".tabs button").forEach(b=>b.onclick=()=>{if(tab===b.dataset.k)return;tab=b.dataset.k;iku({v:"heya",i,t:tab},1);draw()});
   let t;$(".sagasu").oninput=e=>{clearTimeout(t);t=setTimeout(()=>{q=e.target.value.trim().toLowerCase();draw()},200)};
   draw();
 }

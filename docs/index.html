@@ -36,6 +36,11 @@ h2 small{display:block;font-size:12px;color:var(--acc);letter-spacing:.2em;font-
 .c p{margin:0;color:var(--sub);font-size:15px}
 .tag{display:inline-block;font-size:12px;background:var(--acc2);color:var(--acc);border-radius:99px;padding:0 10px;margin-bottom:10px}
 .c a{color:var(--acc)}
+a.ln{display:block;color:inherit;text-decoration:none;position:relative}
+a.ln:hover,a.ln:focus-visible{transform:translateY(-4px);border-color:var(--acc);box-shadow:0 0 0 3px var(--acc2),0 14px 36px rgba(27,111,120,.28);outline:none}
+a.ln:hover h3,a.ln:focus-visible h3{color:var(--acc)}
+a.ln .more{display:block;margin-top:12px;font-size:14px;font-weight:700;color:var(--acc);opacity:.75;transition:opacity .2s,transform .2s}
+a.ln:hover .more{opacity:1;transform:translateX(4px)}
 .mark{display:flex;justify-content:center;margin:72px 0 0}
 .mark img{width:min(260px,60vw);height:auto}
 .mark .d{display:none}
@@ -56,9 +61,9 @@ footer{color:var(--sub);font-size:13px;padding:28px 0 36px;text-align:center}
 <main class="w">
 <h2><small>PRODUCTS</small>つくっている物</h2>
 <div class="g">
-<div class="c"><span class="tag">公開中・フリーソフト</span><h3>HIVOT</h3><p>しゃべるだけで動く AI の秘書。声で頼めば、調べ物も段取りも引き受けます。<a href="https://github.com/madbrolabs/hivot">GitHub で見る</a></p></div>
-<div class="c"><span class="tag">現場で試験中</span><h3>会議の全文記録</h3><p>会議を録るだけで、ひと言も漏らさない文字起こしと議事録に。「先週言ったじゃないですか」を無くします。</p></div>
-<div class="c"><span class="tag">開発中</span><h3>その場の同時通訳</h3><p>目の前の外国のお客様と、言葉の壁を感じずに話せる通訳ソフト。</p></div>
+<a class="c ln" href="hivot.html"><span class="tag">公開中・フリーソフト</span><h3>HIVOT</h3><p>しゃべるだけで動く AI の秘書。声で頼めば、調べ物も段取りも引き受けます。</p><span class="more">くわしく見る →</span></a>
+<a class="c ln" href="gijiroku.html"><span class="tag">現場で試験中</span><h3>会議の全文記録</h3><p>会議を録るだけで、ひと言も漏らさない文字起こしと議事録に。「先週言ったじゃないですか」を無くします。</p><span class="more">くわしく見る →</span></a>
+<a class="c ln" href="tsuuyaku.html"><span class="tag">開発中</span><h3>その場の同時通訳</h3><p>目の前の外国のお客様と、言葉の壁を感じずに話せる通訳ソフト。</p><span class="more">くわしく見る →</span></a>
 </div>
 
 <h2><small>HOW WE BUILD</small>つくり方</h2>
