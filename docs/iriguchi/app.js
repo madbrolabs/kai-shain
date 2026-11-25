@@ -109,7 +109,7 @@
   function yousu(g) {
     var w = g[KIKAI === "iphone" ? "iphone" : KIKAI];
     if (!w) return { k: "nai" };
-    if (g.jumbi) return { k: "jumbi", moji: "準備中です" + (g.jumbi_wake ? "（" + g.jumbi_wake + "）" : "") };
+    if (g.jumbi || w.jumbi) { var wk = w.jumbi_wake || g.jumbi_wake; return { k: "jumbi", moji: "準備中です" + (wk ? "（" + wk + "）" : "") }; }  // 機械ごとの準備中も見る
     if (g.jibun) return { k: "jibun", moji: "このページです" };
     var u = umeru(w.url, g.id);
     if (u == null) return { k: "machi", moji: "会社からの招待がまだです" };

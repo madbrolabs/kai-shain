@@ -1,6 +1,6 @@
 {
  "katachi": "madbro.iriguchi.ichiran.v1",
- "setsumei": "入口アプリの一覧表（ここ1か所だけ）。1行＝1ソフト。windows／android／iphone に入れ方を書く。無い機械は書かない（＝その機械では出ない）。jumbi が true の行は「準備中」で押せない。{u} などの波かっこは招待の中の値で埋まる（{kaisha}・{namae} は全ソフト共通）。url は一覧表の置き場からの相対でもよい。sha256・size は tsukuru.py が配り物から計って書く。",
+ "setsumei": "入口アプリの一覧表（ここ1か所だけ）。1行＝1ソフト。windows／android／iphone に入れ方を書く。無い機械は書かない（＝その機械では出ない）。jumbi が true の行は「準備中」で押せない（機械の中に jumbi: true を書くと、その機械だけ準備中。jumbi_wake も機械の中に書ける）。{u} などの波かっこは招待の中の値で埋まる（{kaisha}・{namae} は全ソフト共通）。url は一覧表の置き場からの相対でもよい。sha256・size は tsukuru.py が配り物から計って書く。",
  "soft": [
   {
    "id": "iriguchi",
@@ -12,19 +12,19 @@
    "windows": {
     "kata": "jibun",
     "url": "iriguchi.exe",
-    "sha256": "acd91218fba8b7f8c66f1956e01c6c5fdc8d83b49cce55283bae5cc58a46881a",
+    "sha256": "5e3c77e2300af9ba28d96f7d5443f82911e07a98b5575bae59ad3d6b42eeb9f3",
     "size": 29696,
-    "tsuuban": 1,
-    "ban": "0.1.0"
+    "tsuuban": 2,
+    "ban": "0.1.1"
    },
    "android": {
     "kata": "apk",
     "package": "jp.madbrolab.iriguchi",
     "url": "iriguchi.apk",
-    "sha256": "81c57ac46bf48df6c5b420721ef28a0debbe20144dcc643aaf65aac0617ca98b",
+    "sha256": "dc77a69ebc681a5e91ac0a3884164e8fe32b176bdc61f822601914fcc43be8d1",
     "size": 45459,
-    "tsuuban": 1,
-    "ban": "0.1.0"
+    "tsuuban": 2,
+    "ban": "0.1.1"
    },
    "iphone": {
     "kata": "web",
@@ -49,12 +49,10 @@
    "android": {
     "kata": "apk",
     "package": "jp.madbro.rokuon",
-    "url": "soft/rokuon.apk",
     "settei_link": "rokuon://setup?u={u}&k={k}&d={d}",
-    "sha256": "c35ed8dedd4befc65c534845683bd1277dbe7f224f481c7ed6c2bdb54d37e0ed",
-    "size": 981090,
-    "tsuuban": 20,
-    "ban": "0.18.0"
+    "jumbi": true,
+    "jumbi_wake": "新しい版を用意しています",
+    "url": ""
    },
    "iphone": {
     "kata": "web",
