@@ -20,7 +20,9 @@ import json
 import os
 import re
 import secrets
+import subprocess
 import sys
+import threading
 import time
 from pathlib import Path
 
@@ -55,32 +57,64 @@ def jirei() -> str:
         return ""
 
 
-KAKUSU = "副社長"  # 辞令前、亀井さんの鍵で見える所に出さない言葉（社長のダメ出し 2026-11-25・主任の決め 案A）
+KAKUSU = ("副社長",)  # 今まで使った肩書の名残。今の肩書（合図の yakushoku）と同じ物以外は、亀井さんの鍵で見える所に出さない
+# （社長のダメ出し 2026-11-25・案A／通達 T1795592825：本人が望めば肩書を替える。替えたら前の肩書は隠す。肩書を替えたらここに足す）
+KATAGAKI_NOZOMI = re.compile(r"肩書|役職|呼び方|呼び名|と呼んで|って呼んで|と呼ばれ|" + "|".join(map(re.escape, KAKUSU)))
+TSUUTATSU = Path(os.environ.get("KAI_TSUUTATSU", "C:/Users/hiroy/.claude/skills/shunin/tsuutatsu.py"))
+
+
+def kakusu_kotoba() -> tuple:
+    y = jirei()
+    return tuple(w for w in KAKUSU if w != y)
 
 
 def kakusu(o, who):
-    """辞令前・亀井さんの鍵の時だけ、「副社長」を含む行を返す物から外す（記録は消さない）。部屋の札は残し、題は言い換える。"""
-    if who != "kamei" or jirei():
+    """亀井さんの鍵の時、今の肩書でない肩書（辞令前は全部）を含む行を返す物から外す（記録は消さない）。部屋の札は残し、題は言い換える。"""
+    if who != "kamei":
         return o
-    return _kesu(o)
+    ng = kakusu_kotoba()
+    return _kesu(o, ng, yobi()) if ng else o
 
 
-def _kesu(o, key: str = ""):
+def _aru(t: str, ng: tuple) -> bool:
+    return any(w in t for w in ng)
+
+
+def _kesu(o, ng: tuple, yb: str, key: str = ""):
     if isinstance(o, str):
-        if KAKUSU not in o:
+        if not _aru(o, ng):
             return o
-        return o.replace(KAKUSU, "亀井さん") if key in ("dai", "namae") else ""
+        if key in ("dai", "namae"):
+            for w in ng:
+                o = o.replace(w, yb)
+            return o
+        return ""
     if isinstance(o, list):
         out = []
         for x in o:
             if isinstance(x, dict) and "kakari" in x:  # 部屋の札は消さず、中の文だけ直す
-                out.append(_kesu(x))
-            elif KAKUSU not in json.dumps(x, ensure_ascii=False):
+                out.append(_kesu(x, ng, yb))
+            elif not _aru(json.dumps(x, ensure_ascii=False), ng):
                 out.append(x)
         return out
     if isinstance(o, dict):
-        return {k: _kesu(v, k) for k, v in o.items()}
+        return {k: _kesu(v, ng, yb, k) for k, v in o.items()}
     return o
+
+
+def katagaki_shiraseru(text: str, dai: str) -> bool:
+    """亀井さんが肩書・呼び方の望みを書いたら、係長への報告帳に1行足す（機械が書くだけ。AI は使わない）。"""
+    if not KATAGAKI_NOZOMI.search(text or ""):
+        return False
+    hon = " ".join(str(text).split())[:80]
+    try:
+        r = subprocess.run([PY, "-I", "-X", "utf8", str(TSUUTATSU), "houkoku", "亀井ページ",
+                            f"亀井さんが肩書の望みを書きました：{hon}（部屋：{dai}）"],
+                           capture_output=True, timeout=30, creationflags=NO_WINDOW)
+        return r.returncode == 0
+    except Exception as e:  # noqa: BLE001
+        log(f"肩書の知らせを書けず {e!r}")
+        return False
 
 
 def atama_zen() -> tuple:
@@ -103,7 +137,10 @@ def kotoba() -> dict:
             "henji": f"{y}への返事", "aisatsu": f"{y}、お越しいただきありがとうございます", "yakushoku_nashi": ""}
 
 
-PY = r"C:\Users\hiroy\AppData\Roaming\uv\python\cpython-3.11-windows-x86_64-none\python.exe"
+PY = next((x for x in [r"C:\Users\hiroy\AppData\Roaming\uv\python\cpython-3.11-windows-x86_64-none\python.exe"]
+           + sorted(glob.glob(r"C:\Users\hiroy\AppData\Roaming\uv\python\cpython-3.1[1-9]*\python.exe"), reverse=True)
+           + [r"C:\AI\ComfyUI\python_embeded\python.exe", sys.executable] if x and os.path.exists(x)), sys.executable)
+# ↑ uv の「cpython-3.11-…」は版の入れ替えで中身の無い札になる事がある（2026-11-25 このPCで実測）。在る物を順に使う
 
 
 def ima() -> str:
@@ -658,6 +695,8 @@ def uketsukeru(hid: str, text: str, who: str = "kamei", shurui: str = "kamei") -
         x["yobi"] = yb
     wj(ukebako() / f'{x["id"]}.json', x)
     log(f'受け付け {x["id"]} → {h["dai"]}（{len(text)}字・{shurui}）')
+    if shurui == "kamei" and who == "kamei":
+        threading.Thread(target=katagaki_shiraseru, args=(text, h["dai"]), daemon=True).start()
     return True, x["id"]
 
 
