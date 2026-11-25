@@ -87,6 +87,7 @@ a.bt.s,button.bt.s{background:var(--card);color:var(--acc)}
 .shorui-tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
 @media (prefers-color-scheme:dark){header .lg{filter:invert(1) hue-rotate(180deg) brightness(1.6)}}
 .tsutsumi-b{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:14px}.tsutsumi-b button{padding:10px 14px;border-radius:8px;border:1px solid var(--line,#ccc);background:transparent;color:inherit;font-size:15px}.tsutsumi-b .shu{background:#2563eb;color:#fff;border-color:#2563eb;font-weight:bold}#kopi-k{color:var(--sub);font-size:14px}
+.kopi-blk{position:relative;margin:10px 0}.kopi-blk pre{white-space:pre-wrap;word-break:break-word;background:rgba(127,127,127,.12);border:1px solid rgba(127,127,127,.3);border-radius:8px;padding:44px 12px 12px;font-size:14px;line-height:1.7;margin:0}.kopi-b{position:absolute;top:8px;left:8px;padding:6px 14px;border-radius:6px;border:0;background:#2563eb;color:#fff;font-weight:bold;font-size:14px}.kopi-k{position:absolute;top:12px;left:90px;font-size:13px;color:var(--sub)}
 </style>
 </head>
 <body>
@@ -287,6 +288,12 @@ async function kousin(push=1){
     catch(x){c.querySelector(".err").textContent="出来ませんでした："+x.message;c.querySelectorAll("button").forEach(x=>x.disabled=false)}
   });
 }
+async function kopii(s,k){const ok="コピーしました。AI に貼り付けてください。";
+  try{await navigator.clipboard.writeText(s);k.textContent=ok}
+  catch(e){const ta=document.createElement("textarea");ta.value=s;ta.style.cssText="position:fixed;top:0;left:0;opacity:0";document.body.appendChild(ta);ta.select();
+    try{document.execCommand("copy");k.textContent=ok}catch(e2){k.textContent="コピー出来ませんでした。文を長押しで選んでコピーしてください。"}ta.remove()}}
+function kopiBotan(){M.querySelectorAll(".kopi-b").forEach(b=>b.onclick=()=>{const k=document.createElement("span");k.className="kopi-k";
+  b.parentNode.querySelector(".kopi-k")?.remove();b.after(k);kopii(b.parentNode.querySelector("pre").textContent,k)})}
 // スマホのブラウザはファイルの保存が出来ない事がある（2026-11-25 社長）→ 画面で開いて「全部コピー」を主にする
 function tsutsumi(push=1){
   const t=D.hoka.tsutsumi;if(!t)return ichiran(0);
@@ -296,10 +303,7 @@ function tsutsumi(push=1){
   <div class="tsutsumi-b"><button id="kopi" class="shu">全部コピー</button><button id="hozon">ファイルで保存（パソコン向け）</button><span id="kopi-k"></span></div>
   <div class="md">${md(t.md)}</div>`;
   $("#modoru").onclick=()=>ichiran(1);
-  $("#kopi").onclick=async()=>{const k=$("#kopi-k");
-    try{await navigator.clipboard.writeText(t.md);k.textContent="コピーしました。AI に貼り付けてください。"}
-    catch(e){const ta=document.createElement("textarea");ta.value=t.md;ta.style.cssText="position:fixed;top:0;left:0;opacity:0";document.body.appendChild(ta);ta.select();
-      try{document.execCommand("copy");k.textContent="コピーしました。AI に貼り付けてください。"}catch(e2){k.textContent="コピー出来ませんでした。下の文を長押しで選んでコピーしてください。"}ta.remove()}};
+  $("#kopi").onclick=()=>kopii(t.md,$("#kopi-k"));
   $("#hozon").onclick=()=>{const a=document.createElement("a");
     a.href=URL.createObjectURL(new Blob([t.md],{type:"text/markdown;charset=utf-8"}));a.download=t.namae;a.click();
     setTimeout(()=>URL.revokeObjectURL(a.href),4000)};
@@ -307,10 +311,12 @@ function tsutsumi(push=1){
 // ---------- 読み物（手引き・紹介・会社設立の書類） ----------
 function md(t){
   const il=s=>esc(s).replace(/!\[([^\]]*)\]\(([^)\s]+)\)/g,(m,a,u)=>/^(\.\.\/|https:)/.test(u)?`<img src="${u}" alt="${a}" loading="lazy">`:"")
-    .replace(/\*\*(.+?)\*\*/g,"<b>$1</b>").replace(/`([^`]+)`/g,"<code>$1</code>");
+    .replace(/\[([^\]]+)\]\((https:[^)\s]+)\)/g,'<a href="$2" target="_blank" rel="noopener">$1</a>').replace(/\*\*(.+?)\*\*/g,"<b>$1</b>").replace(/`([^`]+)`/g,"<code>$1</code>");
   const L=t.replace(/\r/g,"").split("\n"), o=[];let i=0;
   while(i<L.length){
     const l=L[i];
+    if(/^```/.test(l)){const b=[];i++;while(i<L.length&&!/^```/.test(L[i]))b.push(L[i++]);i++;
+      o.push(`<div class="kopi-blk"><button class="kopi-b">コピー</button><pre>${esc(b.join("\n"))}</pre></div>`);continue}
     if(/^#{1,4} /.test(l)){const n=l.match(/^#+/)[0].length;o.push(`<h${n}>${il(l.slice(n+1))}</h${n}>`);i++;continue}
     if(/^\|/.test(l)){const rs=[];while(i<L.length&&/^\|/.test(L[i]))rs.push(L[i++]);
       const c=r=>r.replace(/^\||\|$/g,"").split("|").map(x=>x.trim());
@@ -320,7 +326,7 @@ function md(t){
     if(/^> ?/.test(l)){const b=[];while(i<L.length&&/^> ?/.test(L[i]))b.push(L[i++].replace(/^> ?/,""));o.push(`<blockquote>${b.map(il).join("<br>")}</blockquote>`);continue}
     if(/^---+$/.test(l)){o.push("<hr>");i++;continue}
     if(!l.trim()){i++;continue}
-    const p=[];while(i<L.length&&L[i].trim()&&!/^(#{1,4} |\||\s*([-*]|\d+\.) |> ?|---+$)/.test(L[i]))p.push(L[i++]);
+    const p=[];while(i<L.length&&L[i].trim()&&!/^(```|#{1,4} |\||\s*([-*]|\d+\.) |> ?|---+$)/.test(L[i]))p.push(L[i++]);
     o.push(`<p>${p.map(il).join("<br>")}</p>`);
   }
   return o.join("");
@@ -329,7 +335,7 @@ function yomu(id,push=1){
   const x=(D.hoka.tebiki||[]).find(t=>t.id===id);if(!x)return ichiran(0);
   iku({v:"yomu",i:id},push);window.scrollTo(0,0);
   M.innerHTML=`<div class="mae"><button id="modoru">← 部屋の一覧</button></div><div class="md">${md(x.md)}</div>`;
-  $("#modoru").onclick=()=>ichiran(1);
+  $("#modoru").onclick=()=>ichiran(1);kopiBotan();
 }
 function shorui(id,push=1){
   const H=D.hoka, xs=H.shorui||[];if(!xs.length)return ichiran(0);
