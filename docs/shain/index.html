@@ -88,6 +88,7 @@ a.bt.s,button.bt.s{background:var(--card);color:var(--acc)}
 @media (prefers-color-scheme:dark){header .lg{filter:invert(1) hue-rotate(180deg) brightness(1.6)}}
 .tsutsumi-b{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:14px}.tsutsumi-b button{padding:10px 14px;border-radius:8px;border:1px solid var(--line,#ccc);background:transparent;color:inherit;font-size:15px}.tsutsumi-b .shu{background:#2563eb;color:#fff;border-color:#2563eb;font-weight:bold}#kopi-k{color:var(--sub);font-size:14px}
 .kopi-blk{position:relative;margin:10px 0}.kopi-blk pre{white-space:pre-wrap;word-break:break-word;background:rgba(127,127,127,.12);border:1px solid rgba(127,127,127,.3);border-radius:8px;padding:44px 12px 12px;font-size:14px;line-height:1.7;margin:0}.kopi-b{position:absolute;top:8px;left:8px;padding:6px 14px;border-radius:6px;border:0;background:#2563eb;color:#fff;font-weight:bold;font-size:14px}.kopi-k{position:absolute;top:12px;left:90px;font-size:13px;color:var(--sub)}
+.tsutsumi-n{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:0 0 10px}.tsutsumi-n label{font-weight:bold}.tsutsumi-n input{flex:1;min-width:0;max-width:260px;padding:10px 12px;font-size:16px;border-radius:8px;border:1px solid rgba(127,127,127,.5);background:transparent;color:inherit}
 </style>
 </head>
 <body>
@@ -295,17 +296,44 @@ async function kopii(s,k){const ok="コピーしました。AI に貼り付け�
 function kopiBotan(){M.querySelectorAll(".kopi-b").forEach(b=>b.onclick=()=>{const k=document.createElement("span");k.className="kopi-k";
   b.parentNode.querySelector(".kopi-k")?.remove();b.after(k);kopii(b.parentNode.querySelector("pre").textContent,k)})}
 // スマホのブラウザはファイルの保存が出来ない事がある（2026-11-25 社長）→ 画面で開いて「全部コピー」を主にする
+// 包みの原本は社長と AI の約束のまま。社員が使う時は「全体の決まり」の中の「社長」を使い手の名前に読み替える
+// （日付つきのいきさつ＝（2026-…社長「…」）は社長の言葉なので残す）。原本（ai_norikae）は書き換えない。
+function tsutsumiYomikae(src,na){
+  const dare=na?`${na}さん`:"あなたの使い手";
+  const a=src.indexOf("\n# 全体の決まり"),b=src.indexOf("\n# 役目の型",a+1);
+  let s=src;
+  if(a>=0&&b>a){
+    const kae=x=>x.split("社長").join(dare);
+    const mid=src.slice(a,b).split(/(（[^（）]*）)/).map(x=>/^（/.test(x)?(/20\d\d-\d\d-\d\d/.test(x)?x:kae(x)):kae(x)).join("");
+    s=src.slice(0,a)+mid+src.slice(b);
+  }
+  const head=`## この包みを使う人（いちばん先に読む）
+- あなたの使い手は **${dare}** です。KAI Lab の社員で、社長ではありません。${na?"":"最初に使い手の名前を聞いて、以後はその名前で呼んでください。"}
+- 「全体の決まり」の約束（説明のしかた・聞く事と聞かない事・報告のしかた・やらない事）は、${dare}との約束です。そこに出てくる「社長」は${dare}に置き換えてあります。
+- それ以外の所の「社長」は、会社の社長（創始者）の事です。${dare}が出した「仮の更新」は、主任が検品して、社長が採用すると本物になります。
+- 日付つきのいきさつ（「2026-11-24 社長『…』」など）は、決まりが出来た理由の記録で、社長が言った言葉です。${dare}が言った事ではありません。
+`;
+  const k=s.indexOf("\n## ");
+  return k>=0?s.slice(0,k+1)+head+"\n"+s.slice(k+1):head+"\n"+s;
+}
 function tsutsumi(push=1){
   const t=D.hoka.tsutsumi;if(!t)return ichiran(0);
   iku({v:"tsutsumi"},push);window.scrollTo(0,0);
+  let na="";try{na=localStorage.getItem("kai_namae")||""}catch(e){}
   M.innerHTML=`<div class="mae"><button id="modoru">← 部屋の一覧</button></div><div class="mi"><h1>AI に渡す包み</h1></div>
-  <p style="color:var(--sub);margin:0 0 10px">「全部コピー」を押して、自分の AI（Claude・Gemini・Grok など）の入力欄に貼り付けてください。会社のしくみが AI に伝わります。（版 ${esc(t.ban)}）</p>
+  <p style="color:var(--sub);margin:0 0 10px">① あなたのお名前を入れる → ②「全部コピー」→ ③ 自分の AI（Claude・Gemini・Grok など）の入力欄に貼り付け。会社のしくみが、<b>あなた用</b>に書き換わって AI に伝わります（AI があなたを社長と勘違いしないように）。（版 ${esc(t.ban)}）</p>
+  <div class="tsutsumi-n"><label for="namae">あなたのお名前</label><input id="namae" maxlength="20" placeholder="例：山田" autocomplete="name" value="${esc(na)}"></div>
   <div class="tsutsumi-b"><button id="kopi" class="shu">全部コピー</button><button id="hozon">ファイルで保存（パソコン向け）</button><span id="kopi-k"></span></div>
-  <div class="md">${md(t.md)}</div>`;
+  <div class="md" id="tsu-md"></div>`;
+  const namae=()=>$("#namae").value.replace(/[「」『』*`#<>]/g,"").trim().replace(/さん$/,"");
+  const bun=()=>tsutsumiYomikae(t.md,namae());
+  const kaku=()=>{$("#tsu-md").innerHTML=md(bun());try{localStorage.setItem("kai_namae",namae())}catch(e){}};
+  kaku();$("#namae").oninput=kaku;
+  const iru=()=>{if(namae())return true;$("#kopi-k").textContent="先にお名前を入れてください。";$("#namae").focus();return false};
   $("#modoru").onclick=()=>ichiran(1);
-  $("#kopi").onclick=()=>kopii(t.md,$("#kopi-k"));
-  $("#hozon").onclick=()=>{const a=document.createElement("a");
-    a.href=URL.createObjectURL(new Blob([t.md],{type:"text/markdown;charset=utf-8"}));a.download=t.namae;a.click();
+  $("#kopi").onclick=()=>{if(iru())kopii(bun(),$("#kopi-k"))};
+  $("#hozon").onclick=()=>{if(!iru())return;const a=document.createElement("a");
+    a.href=URL.createObjectURL(new Blob([bun()],{type:"text/markdown;charset=utf-8"}));a.download=t.namae;a.click();
     setTimeout(()=>URL.revokeObjectURL(a.href),4000)};
 }
 // ---------- 読み物（手引き・紹介・会社設立の書類） ----------
