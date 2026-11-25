@@ -447,8 +447,8 @@ def seika(h: dict, ooku: int = 30) -> list[dict]:
         if "●" not in u and "#" not in u and seika_dasu("公開ページ", na):  # 鍵入りの入口（伏せた物）は成果物ではない
             out.append({"shurui": "公開ページ", "namae": na, "at": at, "url": u, "heya": h["id"], "heya_na": h["namae"]})
     for x in tsukutta():
-        if x.get("heya_id") == h["id"] and seika_dasu("副社長の頼み", x.get("nani", "")):
-            out.append({"shurui": "副社長の頼み", "namae": x.get("nani", "")[:80], "at": x.get("at", ""),
+        if x.get("heya_id") == h["id"] and seika_dasu("亀井さんの頼み", x.get("nani", "")):
+            out.append({"shurui": "亀井さんの頼み", "namae": x.get("nani", "")[:80], "at": x.get("at", ""),
                         "heya": h["id"], "heya_na": h["namae"], "tsukutta": x["i"], "joutai": x.get("joutai", "")})
     out.sort(key=lambda x: x.get("at", ""), reverse=True)
     return out
