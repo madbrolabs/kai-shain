@@ -41,6 +41,13 @@ a.ln:hover,a.ln:focus-visible{transform:translateY(-4px);border-color:var(--acc)
 a.ln:hover h3,a.ln:focus-visible h3{color:var(--acc)}
 a.ln .more{display:block;margin-top:12px;font-size:14px;font-weight:700;color:var(--acc);opacity:.75;transition:opacity .2s,transform .2s}
 a.ln:hover .more{opacity:1;transform:translateX(4px)}
+.gaiyou{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:6px 22px;margin:0}
+.gaiyou div{display:grid;grid-template-columns:8em 1fr;gap:12px;padding:14px 0;border-top:1px solid var(--line)}
+.gaiyou div:first-child{border-top:0}
+.gaiyou dt{color:var(--sub);font-size:14px;font-weight:600}
+.gaiyou dd{margin:0;font-size:15px}
+.gaiyou ol{margin:0;padding-left:1.4em}
+@media (max-width:560px){.gaiyou div{grid-template-columns:1fr;gap:2px}}
 .mark{display:flex;justify-content:center;margin:72px 0 0}
 .mark img{width:min(260px,60vw);height:auto}
 .mark .d{display:none}
@@ -71,6 +78,19 @@ footer{color:var(--sub);font-size:13px;padding:28px 0 36px;text-align:center}
 <div class="c"><h3>小さな芯 ＋ 足せる機能</h3><p>どのソフトも、まず小さく強い芯をつくり、残りは付け外しできる機能に分けます。要る物だけ使え、困った時はその機能だけ止められます。</p></div>
 <div class="c"><h3>現場の声で磨く</h3><p>使う人のひと言を、その日のうちに直しへ回します。直した理由と失敗の記録は、ラボの全員で共有しています。</p></div>
 </div>
+
+<h2><small>COMPANY</small>会社概要</h2>
+<dl class="gaiyou">
+<div><dt>会社名</dt><dd>合同会社KAI Lab（KAI Lab LLC）<br><span style="color:var(--sub);font-size:14px">呼び名：KAI Lab（加藤AI研究所）・設立の準備中</span></dd></div>
+<div><dt>事業の内容</dt><dd><ol>
+<li>ソフトウェア・アプリの企画・開発・販売・保守運用</li>
+<li>AI を使ったシステム・サービスの研究開発・提供</li>
+<li>システムの受託開発とその相談</li>
+<li>インターネットの情報サービス、ウェブサイトの企画・制作・運営</li>
+<li>電子書籍・映像・音楽などデジタルコンテンツの企画・制作・販売</li>
+</ol></dd></div>
+<div><dt>決算月</dt><dd>11月</dd></div>
+</dl>
 
 <div class="mark"><img class="l" src="img/kai_logo.png" alt="KAI"><img class="d" src="img/kai_logo_shiro.png" alt=""></div>
 <footer>© KAI Lab</footer>
