@@ -175,14 +175,18 @@ def memo_kara(d: Path, nozoku: list[str]) -> list[dict]:
 
 
 def shain_ban(data: dict, p: Path) -> None:
-    """社員の版：エピソード（小話・ダメ出しと学び・ラボの心得）と、思い・決まった事・採らなかった案は社長だけ。
+    """社員の版：エピソード（小話・ダメ出しと学び・ラボの心得）と、思い・決まった事・採らなかった案は社長だけ（「〜_小話.md」の思い・小話は社員にも出す）。
     進み・出来た事・工事日誌だけを、内輪の言葉が混じる行を落として出す。"""
     def ok(x: dict) -> bool:
         return not NAIWA.search(json.dumps(x, ensure_ascii=False))
+
+    def kokai(x: dict) -> bool:  # 社長が「社員にも」と言った話は「〜_小話.md」に書く＝社員の版にも出す
+        return str(x.get("moto", "")).endswith("_小話")  # 帳面ごと社員向けに書く物なので内輪の言葉の網はかけない
     soft = []
     for h in data["soft"]:
         soft.append({"id": h["id"], "namae": h["namae"], "hitokoto": h["hitokoto"],
-                     "omoi": [], "kimatta": [], "fusaiyou": [], "kobanashi": [], "dameshi": [],
+                     "omoi": [x for x in h["omoi"] if kokai(x)], "kimatta": [], "fusaiyou": [],
+                     "kobanashi": [x for x in h["kobanashi"] if kokai(x)], "dameshi": [],
                      "susumi": [x for x in h["susumi"] if ok(x)],
                      "houkoku": [x for x in h["houkoku"] if ok(x)],
                      "commit": [x for x in h["commit"] if ok(x)]})
