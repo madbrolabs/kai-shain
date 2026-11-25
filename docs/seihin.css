@@ -52,3 +52,4 @@ footer{color:var(--sub);font-size:13px;padding:36px 0;text-align:center}
 /* 全部つながる（詳しいページの締め） */
 .tsunagaru .dan{margin:8px 0 22px}
 .tsunagaru .hito b{color:var(--acc)}
+.tsunagaru .hito{margin-bottom:22px}
