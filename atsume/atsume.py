@@ -76,11 +76,13 @@ def shijisho_kara(path: Path, scrub: list[str]) -> dict:
     out = {k: [] for k in ("omoi", "kimatta", "fusaiyou", "susumi", "kobanashi")}
     midashi = ""
     midashi_hi = ""
+    saigo_hi = ""
     for raw in yomu(path).splitlines():
         line = raw.rstrip()
         if line.startswith("#"):
             midashi = line.lstrip("#").strip()
             midashi_hi = hizuke(midashi)
+            saigo_hi = ""
             continue
         if not line.strip() or SHIJI_NOZOKU.search(midashi):
             continue
@@ -89,7 +91,8 @@ def shijisho_kara(path: Path, scrub: list[str]) -> dict:
         t = kirei(line)
         if len(t) < 6:
             continue
-        hi = hizuke(line) or midashi_hi
+        hi = hizuke(line) or saigo_hi or midashi_hi
+        saigo_hi = hi
         item = {"hi": hi, "text": t, "moto": path.stem, "midashi": kirei(midashi, 80)}
         if "思い" in midashi:
             out["omoi"].append(item)
@@ -193,6 +196,27 @@ def fuseji(t: str, kakusu: list[str]) -> str:
     return "\n".join(out)
 
 
+# 見出しだけで中身の無い行／アドレス・番号・鍵らしき文字列の行／同じ中身の繰り返しは見せない（2026-11-25 社長）
+MIENAI = re.compile(r"[:：]\s*$|https?:|https?[A-Za-z0-9]{6,}|\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}|/h/|(?=[A-Za-z0-9_-]*\d)(?=[A-Za-z0-9_-]*[A-Z])[A-Za-z0-9_-]{16,}")
+ATAMA = re.compile(r"^\s*(20\d\d-\d\d-\d\d(\s+\d\d:\d\d)?\s*)?")
+
+
+def seiri(xs: list[dict]) -> list[dict]:
+    mita, out = set(), []
+    for x in xs:
+        t = x.get("text") or x.get("daimei") or x.get("setsumei") or ""
+        if t and MIENAI.search(t):
+            continue
+        if MIENAI.search(" ".join(str(v) for v in x.values() if isinstance(v, str)).replace("：", "").replace(":", "")):
+            continue
+        kagi = ATAMA.sub("", t + "|" + (x.get("naiyou") or "")).strip()
+        if kagi in mita:
+            continue
+        mita.add(kagi)
+        out.append(x)
+    return out
+
+
 def hoka_no_mono(settei: dict) -> dict:
     """門番の行き先・開発の表・会社設立の書類・手引き・AIの包み（社長と社員の両方の箱へ）。鍵は箱ごとに別で入れる。"""
     o: dict = {"kaihatsu": [], "shorui": [], "tebiki": [], "tsutsumi": None}
@@ -278,6 +302,9 @@ def main() -> None:
                 tsukatta.add(mm["namae"])
         for k in ("susumi", "houkoku", "commit", "kobanashi", "kimatta"):
             heya[k].sort(key=lambda x: x.get("hi", ""), reverse=True)
+        for k in heya:
+            if isinstance(heya[k], list):
+                heya[k] = seiri(heya[k])
         heya["susumi"] = heya["susumi"][:60]
         heya["kobanashi"] = heya["kobanashi"][:40]
         heya["kimatta"] = heya["kimatta"][:80]

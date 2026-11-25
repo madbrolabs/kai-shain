@@ -42,6 +42,15 @@ main{max-width:900px;margin:0 auto;padding:16px}
 .ichi.dame{border-left:4px solid var(--warn)}
 .ichi.dame .naze{background:var(--warn2);border-radius:8px;padding:6px 10px;margin-top:6px;font-size:14px}
 .ichi h3{font-size:15px;margin:2px 0}
+.hibi{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 14px 6px;margin:10px 0}
+.hibi-h{font-weight:700;color:var(--acc);font-size:15px;display:flex;justify-content:space-between;align-items:baseline}
+.hibi-h span{font-size:12px;color:var(--sub);font-weight:400}
+.hibi ul{margin:6px 0 0;padding-left:1.2em}
+.hibi li.ichi{background:none;border:0;border-radius:0;padding:6px 0;margin:0;border-top:1px dashed var(--line)}
+.hibi li.ichi:first-child{border-top:0}
+.hibi li.ichi .hi{margin-right:6px}
+.hibi li.ichi>div,.hibi li.ichi>h3{display:inline}
+.hibi li.ichi .genbun{display:none}.hibi li.ichi.hiraki .genbun{display:block}
 .mi{display:flex;gap:8px;align-items:center;margin:4px 0 6px}
 .mi h1{font-size:22px;margin:0}
 .mi .hk{color:var(--sub);font-size:14px}
@@ -156,13 +165,24 @@ function ichiran(push=1){
 
 // 読みやすく直した文（yasashi）を先に出す。原文は「原文」ボタンで同じ札の中に開く（行を増やさない）
 const Y=(x,r)=>(x.yasashi&&x.yasashi[r])||x[r]||"";
-function ichi(k,x){
+function ichi(k,x,li){
+  if(li){const tm=(x.hi||"").slice(11,16), r=ichi(k,{...x,hi:tm});return r.replace(/^<div class="ichi( dame)?">/,'<li class="ichi$1">').replace(/<\/div>$/,"</li>")}
   const ari=!!x.yasashi, moto=k==="commit"?x.repo:x.moto;
   const fuda=`<span class="moto">${ari?`<button class="gb" title="元の書き方を見る">原文</button>`:""}${moto?esc(moto):""}</span>`;
   const gen=r=>ari?`<div class="genbun">${r.map(([n,v])=>v?`${n?esc(n)+"：":""}${esc(v)}`:"").filter(Boolean).join("<br>")}</div>`:"";
   if(k==="dameshi")return `<div class="ichi dame">${fuda}<span class="hi">${esc(x.hi)}</span><h3>${esc(Y(x,"setsumei"))}</h3><div>${esc(Y(x,"honbun"))}</div>${x.naze?`<div class="naze">なぜ：${esc(Y(x,"naze"))}</div>`:""}${gen([["",x.setsumei],["",x.honbun],["なぜ",x.naze]])}</div>`;
   if(k==="houkoku")return `<div class="ichi">${fuda}<span class="hi">${esc(x.hi)}</span><h3>${esc(Y(x,"daimei"))}</h3><div>${esc(Y(x,"naiyou"))}</div>${gen([["",x.daimei],["",x.naiyou]])}</div>`;
   return `<div class="ichi">${fuda}<span class="hi">${esc(x.hi)}</span><div>${esc(Y(x,"text"))}</div>${gen([["",x.text]])}</div>`;
+}
+// 日ごとにまとめて、箇条書きで見せる（2026-11-25 社長）
+const YOUBI="日月火水木金土";
+function hibi(k,xs){
+  const g=new Map();
+  for(const x of xs){const d=/^20\d\d-\d\d-\d\d/.test(x.hi||"")?x.hi.slice(0,10):"";if(!g.has(d))g.set(d,[]);g.get(d).push(x)}
+  const ks=[...g.keys()].sort((a,b)=>!a?1:!b?-1:b.localeCompare(a));
+  return ks.map(d=>{const t=d?new Date(d+"T00:00:00+09:00"):null;
+    const mi=t?`${t.getFullYear()}年${t.getMonth()+1}月${t.getDate()}日（${YOUBI[t.getDay()]}）の更新`:"日付のないもの";
+    return `<div class="hibi"><div class="hibi-h">${mi}<span>${g.get(d).length}つ</span></div><ul>${g.get(d).map(x=>ichi(k,x,1)).join("")}</ul></div>`}).join("");
 }
 M.addEventListener("click",e=>{const b=e.target.closest(".gb");if(!b)return;const c=b.closest(".ichi");b.classList.toggle("on",c.classList.toggle("hiraki"))});
 
@@ -184,7 +204,7 @@ function heya(i,t0,push){
   const draw=()=>{
     M.querySelectorAll(".tabs button").forEach(b=>b.classList.toggle("on",b.dataset.k===tab));
     const xs=(h[tab]||[]).filter(x=>!q||JSON.stringify(x).toLowerCase().includes(q));
-    $("#list").innerHTML=xs.length?xs.map(x=>ichi(tab,x)).join(""):`<div class="kara">まだありません</div>`;
+    $("#list").innerHTML=xs.length?hibi(tab,xs):`<div class="kara">まだありません</div>`;
   };
   M.querySelectorAll(".tabs button").forEach(b=>b.onclick=()=>{if(tab===b.dataset.k)return;tab=b.dataset.k;iku({v:"heya",i,t:tab},1);draw()});
   let t;$(".sagasu").oninput=e=>{clearTimeout(t);t=setTimeout(()=>{q=e.target.value.trim().toLowerCase();draw()},200)};
