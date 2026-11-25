@@ -45,10 +45,11 @@ input.sagasu{width:100%;font:inherit;padding:8px 12px;border-radius:10px;border:
 .kara{color:var(--sub);padding:20px;text-align:center}
 .shita{color:var(--sub);font-size:12px;text-align:center;margin:24px 0}
 .mae{font-size:14px;margin-bottom:8px}
+@media (prefers-color-scheme:dark){header .lg{filter:invert(1) hue-rotate(180deg) brightness(1.6)}}
 </style>
 </head>
 <body>
-<header><b>KAI Lab 社員ページ</b><span class="sp"></span><span id="who" style="font-size:13px;color:var(--sub)"></span><button id="deru" hidden>出る</button></header>
+<header><a href="../" style="display:flex"><img src="../img/kai_logo_s.png" alt="KAI" style="height:30px;width:auto" class="lg"></a><b>社員ページ</b><span class="sp"></span><span id="who" style="font-size:13px;color:var(--sub)"></span><button id="deru" hidden>出る</button></header>
 <main id="m"><div class="kara">ひらいています…</div></main>
 <script>
 "use strict";
