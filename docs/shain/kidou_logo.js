@@ -1,4 +1,4 @@
-/* 起動ロゴの部品 KidouLogo（Web 用・1.2.1・2026-11-26 SE室。ひな型＝言霊 KOTODAMA）
+/* 起動ロゴの部品 KidouLogo（Web 用・1.2.0・2026-11-26 SE室。ひな型＝言霊 KOTODAMA）
    全社の製品が、この1つを写して使う。ほかの物に寄りかからない（読むだけで動く・見た目も中に入っている・外から何も取り寄せない）。
    形：深い色の地に細い線の窓。「ウェーン」と1本の光の線が横に伸び、窓が上下に開く → 文字が一字ずつ走って出る
        （製品の名前と読み＝大／頭文字の正式名＝小／KAI のロゴ＝さらに小・名前の後に「ピラン」と光って上がる）→ 計器の数字と帯が流れる → 相棒が一言名乗る（文字）→ 消える。
@@ -27,7 +27,7 @@
 (function (W) {
   "use strict";
   if (W.KidouLogo) return;
-  var D = W.document, VER = "1.2.1", ID = "mbkKidou", KIOKU = "madbro_kidou_fuun";
+  var D = W.document, VER = "1.2.0", ID = "mbkKidou", KIOKU = "madbro_kidou_fuun";
   var MIRAI = "次の時代へ同期中 ─ CONTINUING";   // 近未来の上の帯の一言（Android の MIRAI と同じ字）
   var NAGASA = 1900;                       // 全部の長さ（ミリ秒）。動きの秒数は全部ここと下の表だけ
   var BAN = {   // 一字ずつ走る所：[始まり, 長さ]（ミリ秒）
