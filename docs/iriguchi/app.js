@@ -4,7 +4,7 @@
 (function () {
   "use strict";
   var KAGI = "iriguchi_settei";          // しまう場所の名前（localStorage と cookie）
-  var BAN = "0.1.0";
+  var BAN = "0.1.2";
   var $ = function (id) { return document.getElementById(id); };
 
   // ── 機械を見分ける ──
@@ -229,6 +229,28 @@
   $("yomi_naosu").addEventListener("click", yomiNaoshi);
   window.addEventListener("hashchange", function () { if (uketoru(location.hash)) zenbu(); });
   document.addEventListener("visibilitychange", function () { if (!document.hidden) yomiNaoshi(); });
+
+  // ── 起動の一瞬（全社の型＝言霊の起動ロゴ 1.1.0）。開いた時の1回だけ・約1.9秒・指はすり抜ける・触れば消える・音なし ──
+  var K = window.KidouLogo;
+  function kidouErabi() {
+    var box = $("kidou_erabi");
+    if (!K || !box) return;
+    var ima = K.kimeru(K.erabareta(), "kinmirai");
+    Array.prototype.slice.call(box.querySelectorAll("button")).forEach(function (b) { box.removeChild(b); });
+    K.fuun.forEach(function (f) {
+      var b = document.createElement("button");
+      b.type = "button"; b.dataset.fuun = f; b.textContent = K.namae[f];
+      b.setAttribute("aria-pressed", f === ima ? "true" : "false");
+      b.title = f === ima ? "選んでいます" : "次に開いた時から変わります";
+      b.addEventListener("click", function () { K.erabu(f); kidouErabi(); });
+      box.appendChild(b);
+    });
+    box.hidden = false;
+  }
+  if (K) {
+    try { K.dasu({ namae: "入口", yomi: "IRIGUCHI", seishiki: "", nanori: "入口、起動。", fuun: "kinmirai" }); } catch (e) {}
+    kidouErabi();
+  }
 
   $("ban").textContent = "版 " + BAN;
   document.body.dataset.kikai = KIKAI;

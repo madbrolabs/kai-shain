@@ -12,19 +12,19 @@
    "windows": {
     "kata": "jibun",
     "url": "iriguchi.exe",
-    "sha256": "5e3c77e2300af9ba28d96f7d5443f82911e07a98b5575bae59ad3d6b42eeb9f3",
+    "sha256": "fb2e7b6955a020b3241d8c2ffc1ca17cd661389c4228eb1688bfb0dcfd3c1d8f",
     "size": 29696,
-    "tsuuban": 2,
-    "ban": "0.1.1"
+    "tsuuban": 3,
+    "ban": "0.1.2"
    },
    "android": {
     "kata": "apk",
     "package": "jp.madbrolab.iriguchi",
     "url": "iriguchi.apk",
-    "sha256": "dc77a69ebc681a5e91ac0a3884164e8fe32b176bdc61f822601914fcc43be8d1",
-    "size": 45459,
-    "tsuuban": 2,
-    "ban": "0.1.1"
+    "sha256": "928e8f352a432a70368f18746e1afe42a31a420b18d1fe423e3a275a75d525a5",
+    "size": 65939,
+    "tsuuban": 3,
+    "ban": "0.1.2"
    },
    "iphone": {
     "kata": "web",
@@ -51,10 +51,10 @@
     "package": "jp.madbro.rokuon",
     "url": "soft/rokuon.apk",
     "settei_link": "rokuon://setup?u={u}&k={k}&d={d}",
-    "sha256": "e76bec390b24b6ba26e1159ce927296bc290853e3e101b8e4cb7acebddc082b5",
-    "size": 981090,
-    "tsuuban": 21,
-    "ban": "0.18.1"
+    "sha256": "4fa292015eeb2b432af6198a5049423d5a72dc61fbf1722ecaaac7598d1fa599",
+    "size": 1001570,
+    "tsuuban": 23,
+    "ban": "0.19.0"
    },
    "iphone": {
     "kata": "web",
@@ -63,7 +63,7 @@
   },
   {
    "id": "tsuuyaku",
-   "namae": "同時通訳",
+   "namae": "リバベル",
    "hitokoto": "外国のお客様と、その場で話せます",
    "fuda": "訳",
    "iro": "#16a085",

@@ -42,4 +42,9 @@ h2 { font-size: 20px; margin: 0 0 8px; }
 .te summary { color: var(--usui); font-size: 15px; }
 textarea { width: 100%; font: inherit; font-size: 16px; border-radius: 10px; border: 1px solid var(--sen);
   background: var(--haikei); color: var(--ji); padding: 8px; margin: 8px 0; }
+.kidou-erabi { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-top: 14px; color: var(--usui); font-size: 14px; }
+.kidou-erabi .kidou-na { margin-right: 4px; }
+.kidou-erabi button { appearance: none; font: inherit; font-size: 14px; color: var(--usui); background: var(--kami);
+  border: 1px solid var(--sen); border-radius: 999px; padding: 6px 12px; min-height: 36px; cursor: pointer; }
+.kidou-erabi button[aria-pressed="true"] { background: var(--usui); color: var(--kami); border-color: var(--usui); font-weight: 700; }
 .ashi { display: flex; justify-content: space-between; align-items: center; margin-top: 22px; color: var(--usui); font-size: 14px; }

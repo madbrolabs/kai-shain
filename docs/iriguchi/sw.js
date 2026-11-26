@@ -1,7 +1,7 @@
 // 電波が無い時のための写し。いつも新しい物を先に取りに行き（版の入れ替えは自動）、取れない時だけ写しを出す。
-var NA = "iriguchi-v1";
+var NA = "iriguchi-v2";
 self.addEventListener("install", function (e) {
-  e.waitUntil(caches.open(NA).then(function (c) { return c.addAll(["./", "index.html", "app.js", "style.css", "manifest.json"]); }));
+  e.waitUntil(caches.open(NA).then(function (c) { return c.addAll(["./", "index.html", "app.js", "style.css", "manifest.json", "kidou_logo.js"]); }));
   self.skipWaiting();
 });
 self.addEventListener("activate", function (e) { e.waitUntil(self.clients.claim()); });
