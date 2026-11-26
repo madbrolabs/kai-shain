@@ -4,7 +4,7 @@
 (function () {
   "use strict";
   var KAGI = "iriguchi_settei";          // しまう場所の名前（localStorage と cookie）
-  var BAN = "0.1.3";
+  var BAN = "0.1.4";
   var $ = function (id) { return document.getElementById(id); };
 
   // ── 機械を見分ける ──
@@ -230,7 +230,7 @@
   window.addEventListener("hashchange", function () { if (uketoru(location.hash)) zenbu(); });
   document.addEventListener("visibilitychange", function () { if (!document.hidden) yomiNaoshi(); });
 
-  // ── 起動の一瞬（全社の型＝言霊の起動ロゴ 1.2.0・下の段に KAI のロゴ）。開いた時の1回だけ・約1.9秒・指はすり抜ける・触れば消える・音なし ──
+  // ── 起動の一瞬（全社の型＝言霊の起動ロゴ 1.2.1・下の段に KAI のロゴ）。開いた時の1回だけ・約1.9秒・指はすり抜ける・触れば消える・音なし ──
   var K = window.KidouLogo;
   function kidouErabi() {
     var box = $("kidou_erabi");
