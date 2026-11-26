@@ -227,7 +227,7 @@ function ichiran(push=1){
   const HJ="0_はじめての人の入口", hj=tb.find(x=>x.id===HJ);
   const yaru=[...tb.filter(x=>x.id!==HJ).map(x=>[`yomu:${x.id}`,x.md.match(/^# (.+)/m)?.[1].split("：")[0]||x.id,(x.md.match(/^# .+：(.+)/m)||[])[1]||""]),
     H.tsutsumi?["tsutsumi","AI に渡す包み",`自分の AI に読ませる1枚（版 ${H.tsutsumi.ban}）`]:null,
-    H.mon?["kousin","届いた更新",H.mon.dare==="shachou"?"仮の更新と参加の希望。採用・見送りはここで":"みんなが出した仮の更新の一覧"]:null,
+    H.mon?["kousin","届いた更新","みんなが出した仮の更新の一覧"]:null,
     ["eigyou","営業用資料","お客様に見せる紹介・プレゼン（開く・保存）"],
     (H.shorui||[]).length?["shorui",H.shorui_midashi||"会社設立へ向けて","いまの準備の書類"]:null].filter(Boolean);
   const ra=H.mon?`<a class="mazu" href="${esc(H.mon.url+"/kai_mon/rokuon_annai/"+encodeURIComponent(H.mon.kagi)+"/")}" target="_blank" rel="noopener"><b>👉 まずはここから：録音君を入れよう</b><span>打ち合わせの声をスマホで録って、会社へ自動で送るアプリです。入れ方と使い方を、本物の画面で順番に</span></a>`:"";
@@ -345,11 +345,11 @@ function sanka(h){
   };
 }
 const JN={kari:"仮",saiyou:"採用済み",miokuri:"見送り"};
+// 見るだけの一覧（どの鍵でも同じ）。採用・見送り・招待は、このPCだけの管理画面で決める（通達 T1795712323）
 async function kousin(push=1){
   iku({v:"kousin"},push);window.scrollTo(0,0);
-  const sha=MON()&&MON().dare==="shachou";
   M.innerHTML=`<div class="mae"><button id="modoru">← 部屋の一覧</button></div><div class="mi"><h1>届いた更新</h1></div>
-  <div class="hk" style="color:var(--sub);margin-bottom:8px">みんなが出した「仮の更新」です。${sha?"社長が「採用」を押すと本物に入ります。":"社長が採用すると本物に入ります。"}</div><div id="list"><div class="kara">読んでいます…</div></div>`;
+  <div class="hk" style="color:var(--sub);margin-bottom:8px">みんなが出した「仮の更新」です。社長が採用すると本物に入ります。</div><div id="list"><div class="kara">読んでいます…</div></div>`;
   $("#modoru").onclick=()=>ichiran(1);
   let j;try{j=await monni("kousin",{})}catch(x){$("#list").innerHTML=`<div class="kara">一覧を読めませんでした（${esc(x.message)}）。少しして、もう一度どうぞ。</div>`;return}
   // 3つに分ける：①主任から社長への相談（札「社長に相談」の PR と、倉庫の無い案件の相談）②みんなの仮の更新 ③主任が入れた済みの物（1件1行）
@@ -367,31 +367,15 @@ async function kousin(push=1){
     <div><span class="fuda ${p.joutai}">${JN[p.joutai]||p.joutai}</span>${p.soudan||p.todoita?`<span class="fuda soudan">社長に相談</span>`:""}${p.kenpin?`<span class="fuda kenpin">主任の検品済み</span>`:""}<b>${esc(p.namae)}</b>：${esc(p.daimei)}${p.dare?`<span class="hi">（${esc(p.dare)}さん）</span>`:""}</div>
     ${p.naiyou||p.yoi||p.abunai?`<div class="mittsu">${p.naiyou?`<b>中身</b><span>${esc(p.naiyou)}</span>`:""}${p.yoi?`<b>良い所</b><span>${esc(p.yoi)}</span>`:""}${p.abunai?`<b>危ない所</b><span>${esc(p.abunai)}</span>`:""}</div>`
       :p.setsumei?`<div class="hi" style="font-size:13px">${esc(p.setsumei.split(/\n/).find(l=>l.trim()&&!l.startsWith("#"))||"")}</div>`:""}
-    <div class="kou">${!p.todoita&&k(p.soft).tameshi==="pc"&&p.joutai==="kari"?`<a class="bt s" href="${esc(tamesu(k(p.soft),p.n))}" target="_blank" rel="noopener">この更新を試す</a>`:""}${p.url?`<a class="bt s" href="${esc(p.url)}" target="_blank" rel="noopener">中身を見る</a>`:""}
-    ${sha&&p.joutai==="kari"?`<button class="bt" data-k="saiyou">採用</button><button class="bt s" data-k="miokuri">見送り</button>`:""}</div><div class="err"></div></div>`;
+    <div class="kou">${!p.todoita&&k(p.soft).tameshi==="pc"&&p.joutai==="kari"?`<a class="bt s" href="${esc(tamesu(k(p.soft),p.n))}" target="_blank" rel="noopener">この更新を試す</a>`:""}${p.url?`<a class="bt s" href="${esc(p.url)}" target="_blank" rel="noopener">中身を見る</a>`:""}</div></div>`;
   let html=`<div id="gfuda"></div>`;
-  if(soudan.length)html+=`<h2 class="kou-h">社長に相談</h2><div class="kou-s">各主任が「社長に決めてほしい」と出した案です。${sha?"採用か見送りを押してください。":""}</div>`+soudan.map(ichi).join("");
+  if(soudan.length)html+=`<h2 class="kou-h">社長に相談</h2><div class="kou-s">各主任が「社長に決めてほしい」と出した案です。</div>`+soudan.map(ichi).join("");
   html+=`<h2 class="kou-h">みんなの仮の更新</h2>`+(rows.length?rows.map(ichi).join("")
     :`<div class="kara">まだ届いていません。最初の1つを出してみませんか？「練習の倉庫」なら何を壊しても大丈夫です。</div>`);
   if(sumi.length)html+=`<h2 class="kou-h">主任が入れた済みの物</h2><div class="kou-s">得しかない改善なので、主任がそのまま入れました。</div><div class="ichi">`+
     sumi.map(x=>`<div class="sumi1"><b>${esc(x.namae)}</b>：${x.url?`<a href="${esc(x.url)}" target="_blank" rel="noopener">${esc(x.naiyou)}</a>`:esc(x.naiyou)}${x.yoi?`<span class="yoi">　良い所：${esc(x.yoi)}</span>`:""}<span class="hi">（${esc(x.hi)}）</span></div>`).join("")+`</div>`;
-  if(sha){
-    const sk=j.sanka||[], JS={machi:"返事待ち",shoutai:"招待済み",miokuri:"見送り"};
-    html+=`<div class="mi" style="margin-top:22px"><h1 style="font-size:19px">参加の希望</h1></div>`+(sk.length?sk.map(x=>`<div class="ichi" data-id="${esc(x.id)}"><span class="hi">${esc(x.hi.replace("T"," "))}</span>
-    <div><span class="fuda ${x.joutai==="machi"?"kari":x.joutai==="shoutai"?"saiyou":"miokuri"}">${JS[x.joutai]||x.joutai}</span><b>${esc(x.namae)}</b>さん（${esc((KH(x.soft)||{}).namae||x.soft)}・AI：${esc(x.ai||"未記入")}${x.github?"・GitHub："+esc(x.github):""}）</div>
-    <div>${esc(x.nani)}</div>${x.renraku?`<div class="hi">連絡先：${esc(x.renraku)}</div>`:""}
-    ${x.joutai==="machi"?`<div class="kou"><button class="bt" data-k="saiyou">招待する</button><button class="bt s" data-k="miokuri">見送り</button></div>`:""}<div class="err"></div></div>`).join(""):`<div class="kara">まだありません</div>`);
-  }
   $("#list").innerHTML=html;
   goikenFuda();
-  $("#list").querySelectorAll("button[data-k]").forEach(b=>b.onclick=async()=>{
-    const c=b.closest(".ichi"), ki=b.dataset.k, sa=!!c.dataset.id;
-    const kak=sa?(ki==="saiyou"?"この人を招待しますか？":"この希望を見送りますか？"):(ki==="saiyou"?"この更新を採用して、本物に入れますか？":"この更新を見送りますか？");
-    if(!confirm(kak))return;
-    c.querySelectorAll("button").forEach(x=>x.disabled=true);
-    try{await monni("kettei",sa?{shurui:"sanka",id:c.dataset.id,kettei:ki}:c.dataset.t?{shurui:"todoita",id:c.dataset.t,kettei:ki}:{soft:c.dataset.s,n:+c.dataset.n,kettei:ki});kousin(0)}
-    catch(x){c.querySelector(".err").textContent="出来ませんでした："+x.message;c.querySelectorAll("button").forEach(x=>x.disabled=false)}
-  });
 }
 // ご意見の札（L6・門番のアドオン goiken_fuda.py）。各ソフトの「改善要望」「バグ報告」に付いた札番号と、今どうなっているかを並べる。
 // 読めない・切りの時は枠ごと出さない（届いた更新の他の所はそのまま）

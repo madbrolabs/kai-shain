@@ -116,14 +116,6 @@ details.shirase div{white-space:pre-wrap;overflow-wrap:anywhere;margin-top:6px}
 .yomu article pre{white-space:pre-wrap;background:var(--card);padding:10px;border-radius:10px}
 .yomu iframe{flex:1;border:0;width:100%;background:#fff}
 /* 社長の入口 */
-.tsukutta{display:grid;gap:10px}
-.tk-sumi{margin-top:10px}.tk-sumi summary{cursor:pointer;color:var(--sub);font-size:14.5px;padding:6px 0}
-.tk{min-width:0;overflow-wrap:anywhere;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px 14px;font-size:15.5px}
-.tk b{font-size:16.5px}
-.tk .r{color:var(--sub);font-size:14px}
-.tk .bt{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap}
-.tk .bt button{border:1px solid var(--acc);background:var(--acc);color:#fff;border-radius:10px;padding:6px 16px}
-.tk .bt button.mi{background:transparent;color:var(--acc)}
 /* 新しく出来た物（成果物台帳の大きな札） */
 .fudas{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(300px,100%),1fr));gap:14px}
 .sf{display:flex;min-width:0;overflow-wrap:anywhere;flex-direction:column;text-decoration:none;color:var(--ink);background:var(--card);border:1px solid var(--line);border-radius:18px;overflow:hidden;transition:box-shadow .2s,border-color .2s}
@@ -182,12 +174,6 @@ details.shirase div{white-space:pre-wrap;overflow-wrap:anywhere;margin-top:6px}
     <p>押すと、この電話に合った入れ方が出ます。入口アプリを1回入れれば、あとは使いたいソフトを押すだけです。</p>
   </section>
   <div class="chuui" id="chuui">このページは<b id="dareno">亀井さん</b>専用です。アドレスは他の人に渡さないでください。</div>
-  <section id="tsukutta-waku" hidden>
-    <h2 id="tsukutta-dai">亀井さんからの案（入れるか待ち）</h2>
-    <p class="r" style="color:var(--sub);font-size:14.5px;margin:-4px 0 10px">「入れて」を押すと、その部屋の主任へ知らせが届き、主任が本番に入れます。</p>
-    <div class="tsukutta" id="tsukutta"></div>
-    <details class="tk-sumi" id="tsukutta-sumi-waku" hidden><summary>入れた・見送りにした物（<span id="tsukutta-sumi-kazu">0</span>）</summary><div class="tsukutta" id="tsukutta-sumi"></div></details>
-  </section>
   <section id="atarashii-waku">
     <h2>新しく出来た物</h2>
     <div class="fudas" id="atarashii"></div>
@@ -367,7 +353,7 @@ function iriguchi(){
     $("kakari-e").hidden = DARE === "shachou";  // 社長のページには出さない
     seikaHyou($("zentai"), j.seika, true);
     fudaHyou($("atarashii"), j.atarashii || [], true);
-    if(DARE === "shachou"){ $("tsukutta-waku").hidden = false; KYAKU_NA = j.kyaku_na || KYAKU_NA; $("tsukutta-dai").textContent = KYAKU_NA.join("・") + "からの案（入れるか待ち）"; tsukuttaYomu(); if(typeof shikumiYomu === "function") shikumiYomu(); }
+    if(DARE === "shachou"){ if(typeof shikumiYomu === "function") shikumiYomu(); }  // 社長のページには覚え書き（見るだけ）。決め事は管理画面だけ（通達 T1795712323）
   });
 }
 
@@ -438,45 +424,6 @@ if(window.matchMedia) try{ matchMedia("(max-width:700px)").addEventListener("cha
   document.querySelectorAll(".sf[data-pc], .se[data-pc]").forEach(function(a){ a.setAttribute("href", SEMAI() ? a.dataset.sp : a.dataset.pc); });
 }); }catch(e){}
 function hiDake(d){ var m = String(d||"").match(/^(\d{4})-(\d{2})-(\d{2})/); return m ? (+m[2])+"月"+(+m[3])+"日" : ""; }
-
-function tsukuttaYomu(){
-  api("tsukutta").then(function(j){
-    if(j._status !== 200) return;
-    // 入れるか待ち＝「試し中」だけ。入れた・見送り・主任へ渡した物は下の「入れた・見送りにした物」へ（社長の【決】で本番に出た物を待ちに残さない 2026-11-25）
-    var machi = j.tsukutta.filter(function(x){ return (x.joutai||"試し中") === "試し中"; });
-    var sumi = j.tsukutta.filter(function(x){ return (x.joutai||"試し中") !== "試し中"; });
-    $("tsukutta-sumi-waku").hidden = !sumi.length; $("tsukutta-sumi-kazu").textContent = sumi.length;
-    tkNaraberu($("tsukutta-sumi"), sumi);
-    var box = $("tsukutta");
-    if(!machi.length){ box.innerHTML = "<div class='tk r'>いま入れるか待ちの物はありません。"+esc(KYAKU_NA.join("・"))+"が部屋に書き込んで、部屋の AI が作ると、ここに並びます。</div>"; return; }
-    var kara = box.querySelector(".r.tk"); if(kara) box.removeChild(kara);
-    tkNaraberu(box, machi);
-  });
-}
-function tkNaraberu(box, list){
-    var keys = {};
-    list.forEach(function(x, i){ keys["i"+x.i] = 1; });
-    Array.prototype.slice.call(box.children).forEach(function(n){ if(n.dataset.key && !keys[n.dataset.key]) box.removeChild(n); });
-    list.forEach(function(x, i){
-      var key = "i"+x.i, d = box.querySelector('[data-key="'+key+'"]');
-      if(!d){ d = document.createElement("div"); d.className = "tk"; d.dataset.key = key; }
-      var html = "<b>"+esc(x.nani)+"</b><div class='r'>"+esc(String(x.heya||"").replace(/^【主任】/,""))+" ・ "+esc(hi(x.at))+" ・ 状態："+esc(x.joutai||"試し中")+"</div>"
-        + (x.tanomi ? "<div>"+esc(x.fuda||"亀井さんの頼み")+"：「"+esc(x.tanomi)+"」</div>" : "")
-        + (x.oki ? "<div class='r'>置き場："+esc(x.oki)+"</div>" : "")
-        + (x.kekka ? "<div class='r'>試した結果："+esc(x.kekka)+"</div>" : "")
-        + ((x.joutai||"試し中") === "試し中" ? "<div class='bt'><button data-i='"+x.i+"' data-k='irete'>入れて</button><button class='mi' data-i='"+x.i+"' data-k='miokuri'>見送り</button></div>" : "");
-      if(d.innerHTML !== html) d.innerHTML = html;
-      if(box.children[i] !== d) box.insertBefore(d, box.children[i] || null);
-    });
-}
-$("tsukutta").addEventListener("click", function(e){
-  var b = e.target.closest("button[data-i]"); if(!b) return;
-  var k = b.dataset.k;
-  if(!confirm(k === "irete" ? "本番に入れるよう、その部屋の主任へ知らせます。よろしいですか？" : "見送りにします。よろしいですか？")) return;
-  b.disabled = true;
-  api("kettei", {method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({i: +b.dataset.i, kettei: k})})
-    .then(function(j){ if(!j.ok) alert("出来ませんでした：" + (j.err||"")); tsukuttaYomu(); });
-});
 
 // ---------- 部屋の中 ----------
 function heyaHiraku(id){

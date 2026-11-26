@@ -1,5 +1,7 @@
 """KAI社員ページの門番（mon）：社員ページから入った人だけを、このPCで動くソフトへ通す。
-あわせて「開発に参加したい」の受け付けと、届いた更新（GitHub のプルリクエスト＝仮の更新）の一覧・社長の採用／見送りを受け持つ。
+あわせて「開発に参加したい」の受け付けと、届いた更新（GitHub のプルリクエスト＝仮の更新）の一覧を受け持つ。
+社長の決め（採用／見送り・招待・亀井さんたちの案）は、みんなの画面には出さず、このPCだけの管理画面（kanri.py）で行う
+（127.0.0.1:KANRI_PORT＝8807 だけで聞く別の口。トンネル・公開の置き場には載せない。通達 T1795712323 2026-11-27）。
 
 使い方: pythonw -I -X utf8 mon.py <内緒の場所>      （窓を出さない。ログは <内緒の場所>/mon.log）
   内緒の場所に置く物: settei.json（kaihatsu＝載せるソフトの表）・secret/mon.json（shain／shachou／cookie の鍵）
@@ -24,7 +26,8 @@ from aiohttp import ClientSession, ClientTimeout, WSMsgType, web
 
 NAISHO = Path(sys.argv[1] if len(sys.argv) > 1 else r"C:\cl\kai_shain_private")
 PORT = int(os.environ.get("KAI_MON_PORT", "8802"))
-GH = r"C:\Users\hiroy\tools\gh\bin\gh.exe"
+KANRI_PORT = int(os.environ.get("KAI_KANRI_PORT", "8807"))  # 管理画面の口（127.0.0.1 だけ）
+GH = os.environ.get("KAI_GH", r"C:\Users\hiroy\tools\gh\bin\gh.exe")  # 試験の時だけ作り物の gh に替える
 OWNER = "madbrolabs"
 NO_WINDOW = 0x08000000 if sys.platform == "win32" else 0
 JST = dt.timezone(dt.timedelta(hours=9))
@@ -101,6 +104,9 @@ def gh(*args: str, timeout: int = 90) -> subprocess.CompletedProcess:
 
 def oshiraseru(text: str) -> None:
     """社長へ：お屋敷に文字で知らせる（夜でも残る。声で起こすかはお屋敷の決まりに任せる）。"""
+    if os.environ.get("KAI_MON_SHIKEN") == "1":  # 試験の時は知らせず、ログにだけ残す
+        log(f"（試験）知らせ：{text}")
+        return
     try:
         sys.path.insert(0, r"C:\cl\meido_cho")
         from meido_cho import kobo
@@ -206,7 +212,7 @@ def atsumeru() -> dict:
     out["mita"] = sorted(mita)
     wj(JOUTAI, out)
     if atarashii:
-        oshiraseru("仮の更新が届きました。社員ページの「届いた更新」で、採用か見送りを決めてください。\n" + "\n".join(atarashii))
+        oshiraseru("仮の更新が届きました。管理画面（デスクトップの近道「KAI 管理画面」）で、採用か見送りを決めてください。\n" + "\n".join(atarashii))
     return out
 
 
@@ -416,10 +422,8 @@ async def api_kousin(req: web.Request) -> web.StreamResponse:
     if not who:
         return jres(req, {"ok": False, "err": "kagi"}, 403)
     j = rj(JOUTAI, {"soft": []})
-    o = {"ok": True, "dare": who, "tsukutta": j.get("tsukutta", ""), "soft": j.get("soft", []),
-         "todoita": j.get("todoita", [])}
-    if who == "shachou":
-        o["sanka"] = sorted((rj(p, {}) for p in SANKA_DIR.glob("*.json")), key=lambda x: x.get("hi", ""), reverse=True)
+    # みんなの画面は一覧を見るだけ（社長の鍵でも同じ中身）。参加の希望の一覧と決めは管理画面だけ（通達 T1795712323）
+    o = {"ok": True, "tsukutta": j.get("tsukutta", ""), "soft": j.get("soft", []), "todoita": j.get("todoita", [])}
     return jres(req, o)
 
 
@@ -442,30 +446,29 @@ async def api_sanka(req: web.Request) -> web.StreamResponse:
         return jres(req, {"ok": False, "err": "tarinai"}, 400)
     wj(SANKA_DIR / f'{x["id"]}.json', x)
     namae = next((s["namae"] for s in kaihatsu() if s["id"] == x["soft"]), x["soft"])
-    await asyncio.to_thread(oshiraseru, f'「開発に参加したい」が届きました：{x["namae"]}さん（{namae}・使うAI {x["ai"] or "未記入"}）\nやりたい事：{x["nani"]}\n社員ページの「届いた更新」の下で、招待するか決めてください。')
+    await asyncio.to_thread(oshiraseru, f'「開発に参加したい」が届きました：{x["namae"]}さん（{namae}・使うAI {x["ai"] or "未記入"}）\nやりたい事：{x["nani"]}\n管理画面（デスクトップの近道「KAI 管理画面」）で、招待するか決めてください。')
     log(f'参加の希望 {x["id"]} {x["soft"]}')
     return jres(req, {"ok": True})
 
 
-async def api_kettei(req: web.Request) -> web.StreamResponse:
-    """社長だけ：採用／見送り。"""
-    try:
-        d = await req.json()
-    except Exception:
-        return jres(req, {"ok": False, "err": "katachi"}, 400)
-    if dare(d.get("k", "")) != "shachou":
-        return jres(req, {"ok": False, "err": "shachou_dake"}, 403)
+def sanka_ichiran() -> list[dict]:
+    """参加の希望（新しい順）。管理画面だけが読む。"""
+    return sorted((rj(p, {}) for p in SANKA_DIR.glob("*.json")), key=lambda x: x.get("hi", ""), reverse=True)
+
+
+async def kettei_suru(d: dict) -> tuple[dict, int]:
+    """採用／見送り・招待（中身は前のまま）。呼ぶのは管理画面（kanri.py・127.0.0.1 の口）だけ。外の道には出さない。"""
     kettei = d.get("kettei")
     if kettei not in ("saiyou", "miokuri"):
-        return jres(req, {"ok": False, "err": "katachi"}, 400)
+        return {"ok": False, "err": "katachi"}, 400
     if d.get("shurui") == "sanka":
         p = SANKA_DIR / f'{Path(str(d.get("id", ""))).name}.json'
         x = rj(p, None)
         if not x:
-            return jres(req, {"ok": False, "err": "nai"}, 404)
+            return {"ok": False, "err": "nai"}, 404
         if kettei == "saiyou":
             if not x.get("github"):
-                return jres(req, {"ok": False, "err": "GitHub の名前が書かれていないので、招待を送れません"}, 400)
+                return {"ok": False, "err": "GitHub の名前が書かれていないので、招待を送れません"}, 400
             repos = [s["repo"] for s in kaihatsu() if s.get("repo") and (s["id"] == x["soft"] or s.get("renshuu"))]
             dame = []
             for r in repos:
@@ -473,29 +476,29 @@ async def api_kettei(req: web.Request) -> web.StreamResponse:
                 if g.returncode:
                     dame.append(f"{r}: {g.stderr.strip()[-120:]}")
             if dame:
-                return jres(req, {"ok": False, "err": "招待を送れませんでした：" + " / ".join(dame)}, 500)
+                return {"ok": False, "err": "招待を送れませんでした：" + " / ".join(dame)}, 500
             x["joutai"], x["kettei_hi"], x["repos"] = "shoutai", ima(), repos
         else:
             x["joutai"], x["kettei_hi"] = "miokuri", ima()
         wj(p, x)
         log(f'参加 {x["id"]} → {x["joutai"]}')
-        return jres(req, {"ok": True, "joutai": x["joutai"]})
+        return {"ok": True, "joutai": x["joutai"]}, 200
     if d.get("shurui") == "todoita":  # 倉庫の無い案件の相談：決めを残し、その主任へ知らせる
         tid = str(d.get("id", ""))
         x = next((t for t in todoita() if t["id"] == tid and not t["sumi"]), None)
         if not x:
-            return jres(req, {"ok": False, "err": "nai"}, 404)
+            return {"ok": False, "err": "nai"}, 404
         kt = rj(TODOITA_KETTEI, {})
         kt[tid] = {"kettei": kettei, "hi": ima()}
         wj(TODOITA_KETTEI, kt)
         log(f"{tid} → {kettei}")
         await asyncio.to_thread(oshiraseru, f'社長が{"採用" if kettei == "saiyou" else "見送り"}にしました：{x["namae"]}の相談「{x["daimei"]}」。' + (f'{x["namae"]}の主任は、入れてから todoita の行を "sumi": true にしてください。' if kettei == "saiyou" else "行はそのままで構いません。"))
         await asyncio.to_thread(atsumeru)
-        return jres(req, {"ok": True})
+        return {"ok": True}, 200
     s = next((x for x in kaihatsu() if x["id"] == d.get("soft")), None)
     n = str(d.get("n", ""))
     if not s or not s.get("repo") or not n.isdigit():
-        return jres(req, {"ok": False, "err": "nai"}, 404)
+        return {"ok": False, "err": "nai"}, 404
     R = f'{OWNER}/{s["repo"]}'
     if kettei == "saiyou":
         g = await asyncio.to_thread(gh, "pr", "merge", n, "--repo", R, "--merge")
@@ -503,12 +506,16 @@ async def api_kettei(req: web.Request) -> web.StreamResponse:
         g = await asyncio.to_thread(gh, "pr", "close", n, "--repo", R, "--comment",
                                     "社長の判断で、今回は見送りになりました。出してくださって、ありがとうございました。")
     if g.returncode:
-        return jres(req, {"ok": False, "err": g.stderr.strip()[-200:]}, 500)
+        return {"ok": False, "err": g.stderr.strip()[-200:]}, 500
     log(f"{R}#{n} → {kettei}")
     if kettei == "saiyou":
         await asyncio.to_thread(oshiraseru, f'社長が採用しました：{s["namae"]} の仮の更新 #{n}。GitHub の本線（{R}）に入りました。{s["namae"]}の主任は、作業場へ取り込んでください。')
     await asyncio.to_thread(atsumeru)
-    return jres(req, {"ok": True})
+    return {"ok": True}, 200
+
+
+async def kanri_dake(req):
+    return jres(req, {"ok": False, "err": "kanri_gamen_dake"}, 403)
 
 
 async def preflight(req):
@@ -525,7 +532,8 @@ def main() -> None:
     app.router.add_get("/t/{soft}", t_iriguchi)
     app.router.add_post("/kai_mon/kousin", api_kousin)
     app.router.add_post("/kai_mon/sanka", api_sanka)
-    app.router.add_post("/kai_mon/kettei", api_kettei)
+    app.router.add_route("*", "/kai_mon/kettei", kanri_dake)  # 決めの口は外の道では断る（管理画面だけ・通達 T1795712323）
+    app.router.add_route("*", "/kai_mon/kanri{x:.*}", kanri_dake)
     app.router.add_route("OPTIONS", "/kai_mon/{x}", preflight)
     sys.path.insert(0, str(Path(__file__).resolve().parent))
     os.environ.setdefault("KAI_NAISHO", str(NAISHO))
@@ -569,6 +577,16 @@ def main() -> None:
     async def hajime(a):
         a["t1"] = asyncio.create_task(atsume_loop())
         a["t2"] = asyncio.create_task(tameshi_soji())
+        try:  # 管理画面（kanri.py）：同じ門番の中で、別の口 127.0.0.1:KANRI_PORT だけで聞く。外の入口（トンネル）には載せない
+            import kanri
+            r = web.AppRunner(kanri.tsukuru(KANRI_PORT, log=log, kousin_yomu=lambda: rj(JOUTAI, {"soft": []}),
+                                            sanka_yomu=sanka_ichiran, kettei_suru=kettei_suru, atsumeru=atsumeru))
+            await r.setup()
+            await web.TCPSite(r, "127.0.0.1", KANRI_PORT).start()
+            a["kanri"] = r
+            log(f"管理画面の口を開いた（127.0.0.1:{KANRI_PORT}）")
+        except Exception as e:
+            log(f"管理画面の口を開けませんでした {e!r}")
     app.on_startup.append(hajime)
     log(f"門番を起こした（{PORT}）")
     web.run_app(app, host="127.0.0.1", port=PORT, print=None, access_log=None)

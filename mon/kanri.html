@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>KAI 管理画面</title><link rel="icon" href="/kanri.ico">
+<style>
+:root{--bg:#f4f3ef;--card:#fff;--ink:#1d1f24;--sub:#5f6470;--line:#e2e0da;--acc:#1f4e79;--ok:#2e7d4f;--warn:#a0521a;--mi:#8a8f99}
+@media (prefers-color-scheme:dark){:root{--bg:#15171b;--card:#1f2228;--ink:#eceae4;--sub:#a3a8b3;--line:#33373f;--acc:#7fb0e0;--ok:#6cc08f;--warn:#e0a070;--mi:#8a8f99}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.7 system-ui,-apple-system,"Hiragino Sans","Yu Gothic UI",sans-serif}
+.waku{max-width:980px;margin:0 auto;padding:18px 16px 60px}
+header{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:6px}
+.kai{display:inline-flex;align-items:center;justify-content:center;border:2.5px solid var(--ink);border-radius:50%;width:86px;height:40px;font-weight:800;letter-spacing:.08em;font-size:19px}
+h1{font-size:23px;margin:0}
+.chuui{color:var(--sub);font-size:14.5px;margin:2px 0 14px}
+.ue{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:6px;color:var(--sub);font-size:14px}
+button{font:inherit;cursor:pointer;border-radius:10px;border:1px solid var(--acc);background:var(--acc);color:#fff;padding:6px 16px}
+button.s{background:transparent;color:var(--acc)}
+button:disabled{opacity:.5;cursor:default}
+h2{font-size:19px;margin:26px 0 4px;display:flex;align-items:center;gap:8px}
+h2 .kazu{font-size:13px;background:var(--warn);color:#fff;border-radius:99px;padding:1px 9px}
+h2 .kazu.zero{background:var(--mi)}
+.setsu{color:var(--sub);font-size:14px;margin:0 0 10px}
+.ichi{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin-bottom:10px;min-width:0;overflow-wrap:anywhere}
+.ichi .hi{color:var(--sub);font-size:13px}
+.ichi b.dai{font-size:16.5px}
+.fuda{display:inline-block;font-size:12.5px;border-radius:6px;padding:0 7px;margin-right:6px;border:1px solid var(--line);color:var(--sub)}
+.fuda.kari,.fuda.machi{border-color:var(--warn);color:var(--warn)}
+.fuda.saiyou,.fuda.shoutai,.fuda.irete{border-color:var(--ok);color:var(--ok)}
+.mittsu{display:grid;grid-template-columns:auto 1fr;gap:2px 10px;font-size:14.5px;margin:6px 0}
+.mittsu b{color:var(--sub);font-weight:600}
+.kou{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;align-items:center}
+.kou a{font-size:14.5px;color:var(--acc)}
+.err{color:#c0392b;font-size:14px}
+.kara{color:var(--sub);font-size:14.5px;padding:8px 2px}
+details{margin-top:6px}summary{cursor:pointer;color:var(--sub);font-size:14.5px;padding:4px 0}
+.yomenai{background:#fdecea;color:#8a1c12;border-radius:10px;padding:10px 14px}
+</style></head>
+<body><div class="waku">
+<header><span class="kai" aria-label="KAI">KAI</span><h1>管理画面</h1></header>
+<p class="chuui">社長の決め事（採用・見送り・招待・お客の案）は、ここだけで行います。このPCの中だけで開く画面で、外の道や社員ページからは開けません。</p>
+<div class="ue"><button class="s" id="yominaosu">GitHub から読み直す</button><span id="toki"></span></div>
+<div id="naka"><div class="kara">読んでいます…</div></div>
+</div>
+<script>
+"use strict";
+var TOKEN = "__KANRI_TOKEN__";
+function $(s){ return document.querySelector(s); }
+function esc(s){ return String(s == null ? "" : s).replace(/[&<>"']/g, function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]; }); }
+function api(p, body){
+  return fetch("/api/" + p, body ? {method:"POST", headers:{"Content-Type":"application/json","X-Kanri":TOKEN}, body:JSON.stringify(body)}
+                               : {headers:{"X-Kanri":TOKEN}, cache:"no-store"})
+    .then(function(r){ return r.json().catch(function(){ return {ok:false, err:"答えが読めません（" + r.status + "）"}; }); });
+}
+var JN = {kari:"仮", saiyou:"採用済み", miokuri:"見送り"}, JS = {machi:"返事待ち", shoutai:"招待済み", miokuri:"見送り"};
+var J = null;
+function mittsu(p){
+  if(!(p.naiyou || p.yoi || p.abunai)) return p.setsumei ? "<div class='hi'>" + esc((String(p.setsumei).split(/\n/).filter(function(l){ return l.trim() && l.indexOf("#") !== 0; })[0]) || "") + "</div>" : "";
+  return "<div class='mittsu'>" + (p.naiyou ? "<b>中身</b><span>" + esc(p.naiyou) + "</span>" : "") + (p.yoi ? "<b>良い所</b><span>" + esc(p.yoi) + "</span>" : "")
+    + (p.abunai ? "<b>危ない所</b><span>" + esc(p.abunai) + "</span>" : "") + "</div>";
+}
+function botan(data, oshi, miokuri){
+  return "<div class='kou'>" + (data.url ? "<a href='" + esc(data.url) + "' target='_blank' rel='noopener'>中身を見る（GitHub）</a>" : "")
+    + (oshi ? "<button data-k='" + oshi[0] + "'>" + oshi[1] + "</button><button class='s' data-k='miokuri'>" + (miokuri || "見送り") + "</button>" : "")
+    + "</div><div class='err'></div>";
+}
+function dan(id, dai, setsu, machi, sumi, ichi){
+  return "<section id='" + id + "'><h2>" + dai + " <span class='kazu" + (machi.length ? "" : " zero") + "'>決め待ち " + machi.length + "</span></h2>"
+    + "<p class='setsu'>" + setsu + "</p>"
+    + (machi.length ? machi.map(ichi).join("") : "<div class='kara'>いま決める物はありません。</div>")
+    + (sumi.length ? "<details><summary>決めた物・済んだ物（" + sumi.length + "）</summary>" + sumi.map(ichi).join("") + "</details>" : "")
+    + "</section>";
+}
+function kaku(){
+  var j = J, rows = [], soudan = [];
+  var na = {}; (j.soft || []).forEach(function(s){ na[s.id] = s.namae; });
+  (j.soft || []).forEach(function(s){ (s.prs || []).forEach(function(p){
+    var x = Object.assign({}, p, {soft:s.id, namae:s.namae, shurui:"pr"});
+    if(p.ireta && p.joutai === "saiyou") return;   // 主任が入れた済みの物は決め事ではない
+    (p.soudan ? soudan : rows).push(x);
+  }); });
+  (j.todoita || []).forEach(function(t){ if(!t.sumi) soudan.push(Object.assign({}, t, {shurui:"todoita", joutai:t.kettei || "kari"})); });
+  var jun = function(a, b){ return String(b.hi).localeCompare(String(a.hi)); };
+  rows.sort(jun); soudan.sort(jun);
+  var prIchi = function(p){
+    var d = p.shurui === "todoita" ? "data-shurui='todoita' data-id='" + esc(p.id) + "'" : "data-shurui='pr' data-soft='" + esc(p.soft) + "' data-n='" + p.n + "'";
+    return "<div class='ichi' " + d + "><span class='hi'>" + esc(p.hi) + "</span><div><span class='fuda " + esc(p.joutai) + "'>" + esc(JN[p.joutai] || p.joutai) + "</span>"
+      + (p.kenpin ? "<span class='fuda saiyou'>主任の検品済み</span>" : "") + "<b class='dai'>" + esc(p.namae) + "：" + esc(p.daimei) + "</b>"
+      + (p.dare ? " <span class='hi'>（" + esc(p.dare) + "さん）</span>" : p.shunin ? " <span class='hi'>（" + esc(p.shunin) + "）</span>" : "") + "</div>"
+      + mittsu(p) + botan(p, p.joutai === "kari" ? ["saiyou", "採用"] : null) + "</div>";
+  };
+  var sk = j.sanka || [];
+  var skIchi = function(x){
+    return "<div class='ichi' data-shurui='sanka' data-id='" + esc(x.id) + "'><span class='hi'>" + esc(String(x.hi || "").replace("T", " ")) + "</span><div><span class='fuda " + esc(x.joutai) + "'>" + esc(JS[x.joutai] || x.joutai) + "</span>"
+      + "<b class='dai'>" + esc(x.namae) + "さん</b> <span class='hi'>（" + esc(na[x.soft] || x.soft) + "・使うAI：" + esc(x.ai || "未記入") + (x.github ? "・GitHub：" + esc(x.github) : "") + "）</span></div>"
+      + "<div>" + esc(x.nani) + "</div>" + (x.renraku ? "<div class='hi'>連絡先：" + esc(x.renraku) + "</div>" : "")
+      + botan({}, x.joutai === "machi" ? ["saiyou", "招待する"] : null) + "</div>";
+  };
+  var kt = j.kamei, html = "";
+  html += dan("d-kousin", "届いた更新（仮の更新）", "みんなが出した仮の更新です。「採用」で GitHub の本線に入り、そのソフトの主任へ知らせが届きます。",
+              rows.filter(function(p){ return p.joutai === "kari"; }), rows.filter(function(p){ return p.joutai !== "kari"; }), prIchi);
+  html += dan("d-soudan", "主任からの相談", "各主任が「社長に決めてほしい」と出した案です。",
+              soudan.filter(function(p){ return p.joutai === "kari"; }), soudan.filter(function(p){ return p.joutai !== "kari"; }), prIchi);
+  html += dan("d-sanka", "開発に参加したい人", "「招待する」で、その人の GitHub へ会社の倉庫の招待が届きます。",
+              sk.filter(function(x){ return x.joutai === "machi"; }), sk.filter(function(x){ return x.joutai !== "machi"; }), skIchi);
+  if(kt){
+    var kIchi = function(x){
+      var mt = (x.joutai || "試し中") === "試し中";
+      return "<div class='ichi' data-shurui='kamei' data-i='" + x.i + "'><span class='hi'>" + esc(String(x.at || "").replace("T", " ").slice(0, 16)) + " ・ " + esc(String(x.heya || "").replace(/^【主任】/, "")) + "</span>"
+        + "<div><span class='fuda " + (mt ? "machi" : "irete") + "'>" + esc(x.joutai || "試し中") + "</span><b class='dai'>" + esc(x.nani) + "</b></div>"
+        + (x.tanomi ? "<div>" + esc(x.fuda || "亀井さんの頼み") + "：「" + esc(x.tanomi) + "」</div>" : "")
+        + (x.oki ? "<div class='hi'>置き場：" + esc(x.oki) + "</div>" : "") + (x.kekka ? "<div class='hi'>試した結果：" + esc(x.kekka) + "</div>" : "")
+        + botan({}, mt ? ["irete", "入れて"] : null) + "</div>";
+    };
+    html += dan("d-kamei", esc((j.kyaku_na || []).join("・") || "お客") + "からの案（入れるか待ち）", "「入れて」で、その部屋の主任へ知らせが届き、主任が本番に入れます。",
+                kt.filter(function(x){ return (x.joutai || "試し中") === "試し中"; }), kt.filter(function(x){ return (x.joutai || "試し中") !== "試し中"; }), kIchi);
+  }
+  $("#naka").innerHTML = html;
+  $("#toki").textContent = j.tsukutta ? "GitHub から最後に読んだ時刻：" + String(j.tsukutta).replace("T", " ") : "";
+}
+function yomu(){
+  return api("ichiran").then(function(j){
+    if(!j.ok){ $("#naka").innerHTML = "<div class='yomenai'>読めませんでした（" + esc(j.err || "") + "）。門番が動いているか、近道から開き直してください。</div>"; return; }
+    J = j; kaku();
+  }).catch(function(){ $("#naka").innerHTML = "<div class='yomenai'>門番につながりません。デスクトップの近道「KAI 管理画面」から開き直してください。</div>"; });
+}
+var KAKU = {pr:{saiyou:"この更新を採用して、本物に入れますか？", miokuri:"この更新を見送りますか？"},
+            todoita:{saiyou:"この相談を採用にしますか？（主任へ知らせが届きます）", miokuri:"この相談を見送りますか？"},
+            sanka:{saiyou:"この人を招待しますか？（GitHub の招待が届きます）", miokuri:"この希望を見送りますか？"},
+            kamei:{irete:"本番に入れるよう、その部屋の主任へ知らせます。よろしいですか？", miokuri:"見送りにします。よろしいですか？"}};
+$("#naka").addEventListener("click", function(e){
+  var b = e.target.closest("button[data-k]"); if(!b) return;
+  var c = b.closest(".ichi"), s = c.dataset.shurui, k = b.dataset.k;
+  if(!confirm((KAKU[s] || {})[k] || "よろしいですか？")) return;
+  var body = {shurui:s, kettei:k};
+  if(s === "pr"){ body.soft = c.dataset.soft; body.n = +c.dataset.n; } else if(s === "kamei"){ body.i = +c.dataset.i; } else { body.id = c.dataset.id; }
+  c.querySelectorAll("button").forEach(function(x){ x.disabled = true; });
+  api("kettei", body).then(function(j){
+    if(!j.ok){ c.querySelector(".err").textContent = "出来ませんでした：" + (j.err || ""); c.querySelectorAll("button").forEach(function(x){ x.disabled = false; }); return; }
+    yomu();
+  });
+});
+$("#yominaosu").onclick = function(){
+  var b = this; b.disabled = true; b.textContent = "読んでいます…";
+  api("yomi_naoshi", {}).then(function(){ return yomu(); }).then(function(){ b.disabled = false; b.textContent = "GitHub から読み直す"; });
+};
+yomu();
+</script>
+</body></html>

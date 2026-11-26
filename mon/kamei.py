@@ -6,7 +6,7 @@
   届いたかは、その部屋の会話の記録（jsonl）に受付番号が出たかで確かめる。届かない時は見張りフック kamei_mihari.py が次の一言で差し込む。
 部屋＝係長相談室＋亀部屋名簿（【亀部屋】）＋主任名簿（【主任】）。名簿が増えれば一覧も増える。
 新しく出来た物＝成果物台帳（seika.py・内緒の場所/seikabutsu/daichou.jsonl）を読んで大きな札で出す。権利まもりは亀井さんには出さない。
-作った物の一覧＝内緒の場所/kamei/tsukutta.jsonl（部屋の AI が `python kamei.py tsuika …` で1行足す）。社長の入口で見て「入れて／見送り」。
+作った物の一覧＝内緒の場所/kamei/tsukutta.jsonl（部屋の AI が `python kamei.py tsuika …` で1行足す）。「入れて／見送り」は、このPCだけの管理画面（kanri.py・127.0.0.1）で決める（亀井ページには出さない）。
 罠メモ：部屋の記録は 30MB を超える＝読んだ所（pos）を覚えて足された分だけ読む。伏せはここで済ませてから外へ出す。
 """
 from __future__ import annotations
@@ -1231,11 +1231,6 @@ def tsukeru(app) -> None:
         if koe_iri():  # 門番と一緒に起こしておく（最初の1回も待たせない）
             await asyncio.to_thread(koe_okosu)
 
-    async def tsukutta_api(req):
-        if mon(req) != "shachou" or not iri():
-            return web.Response(status=404, text="404 Not Found")
-        return jr({"tsukutta": list(reversed(await asyncio.to_thread(tsukutta)))})
-
     async def shikumi_api(req):  # §28 社長ページだけ
         if mon(req) != "shachou" or not iri():
             return web.Response(status=404, text="404 Not Found")
@@ -1245,16 +1240,6 @@ def tsukeru(app) -> None:
             fu = lambda v: [fuseru(x) for x in v] if isinstance(v, list) else fuseru(v)
             return [{k: fu(v) for k, v in o.items()} for o in shikumi.ichiran()]
         return jr({"shikumi": await asyncio.to_thread(tsukuru)})
-
-    async def kettei_api(req):
-        if mon(req) != "shachou" or not iri():
-            return web.Response(status=404, text="404 Not Found")
-        try:
-            d = await req.json()
-            ok, e = await asyncio.to_thread(kettei, int(d.get("i")), str(d.get("kettei")))
-        except Exception:
-            ok, e = False, "形が違います"
-        return jr({"ok": ok, "err": e}, 200 if ok else 400)
 
     async def mawari(a):
         async def loop():
@@ -1278,9 +1263,8 @@ def tsukeru(app) -> None:
         r.add_get(f"/{m}/{{k}}/api/e/{{fid}}", e_api)
         r.add_post(f"/{m}/{{k}}/api/heya/{{hid}}/kaku", kaku)
         r.add_post(f"/{m}/{{k}}/api/heya/{{hid}}/koe", koe_api)
-        r.add_get(f"/{m}/{{k}}/api/tsukutta", tsukutta_api)
         r.add_get(f"/{m}/{{k}}/api/shikumi", shikumi_api)
-        r.add_post(f"/{m}/{{k}}/api/kettei", kettei_api)
+        # 入れるか待ちの一覧（tsukutta）と決め（kettei）は、このPCだけの管理画面（kanri.py・127.0.0.1）にだけある。外の道には出さない（通達 T1795712323）
         r.add_route("*", f"/{m}/{{k}}/{{tail:.*}}", nai)
         r.add_route("*", f"/{m}", nai)
     if os.environ.get("KAI_KAMEI_HAITATSU", "1") == "1":
