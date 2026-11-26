@@ -286,7 +286,7 @@ function heya(i,t0,push){
   <div class="tabs">${kinds.map(([k,n])=>`<button data-k="${k}">${n} ${KZ(h,k)}</button>`).join("")}</div>
   <input class="sagasu" placeholder="この部屋の中をさがす"><div id="list"></div>`;
   $("#modoru").onclick=()=>ichiran(1);
-  const sb=$("#sanka");if(sb)sb.onclick=()=>sanka(h);
+  const sb=$("#sanka");if(sb)sb.onclick=async()=>{const m=MON();if(m&&await uchiKa(m))return monHe(m);sanka(h)};  // 書く前に開き直す（書いた字を失わせない）
   const draw=()=>{
     M.querySelectorAll(".tabs button").forEach(b=>b.classList.toggle("on",b.dataset.k===tab));
     const xs=(h[tab]||[]).filter(x=>!q||JSON.stringify(x).toLowerCase().includes(q));
@@ -317,8 +317,28 @@ function dekiru(id){
     :`<button class="bt" disabled>試す（用意しています）</button>`;
   return `<div class="dekiru">${t}${MON()?`<button class="bt s" id="sanka">開発に参加したい</button>`:""}<span class="s">${esc(k.setsumei||"")}</span></div>`;
 }
+// このPC（Tailscale の内側）では、門番の住所が内側の番地に引かれ、公開の置き場のページから門番を呼ぶと Chrome が
+// 「ローカルの相手」として止める（Local Network Access）。targetAddressSpace:"public" の試しは、内側なら知らせの窓を出さずに
+// すぐ外れるので、それで見分ける。内側なら、同じページを門番の住所（/kai_mon/pages/shain/）で開き直す＝同じ所からの呼び出しになる。
+let UCHI=null;
+async function uchiKa(m){
+  if(UCHI!==null)return UCHI;
+  UCHI=false;
+  try{
+    if(new URL(m.url).origin===location.origin)return UCHI;
+    const p=await navigator.permissions.query({name:"local-network-access"});  // この止めを持つブラウザだけ見分ける
+    if(p.state==="granted")return UCHI;
+    try{await fetch(m.url+"/kai_mon/genki",{mode:"no-cors",cache:"no-store",targetAddressSpace:"public"})}catch(e){UCHI=true}
+  }catch(e){}
+  return UCHI;
+}
+function monHe(m,hash){
+  const a=get(LS), h=(hash??location.hash).replace(/^#/,"");
+  location.replace(m.url+"/kai_mon/pages/shain/#"+(a?"k="+encodeURIComponent(a)+(h?"&":""):"")+h);
+}
 async function monni(path,body){
   const m=MON();if(!m)throw new Error("入口がありません");
+  if(await uchiKa(m)){monHe(m);throw new Error("このPCでは門番の住所で開き直しています…")}
   const r=await fetch(m.url+"/kai_mon/"+path,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({k:m.kagi,...body})});
   const j=await r.json().catch(()=>({ok:false,err:"返事を読めませんでした"}));
   if(!j.ok)throw new Error(j.err||"うまくいきませんでした");return j;
@@ -504,7 +524,9 @@ async function eigyou(push=1){
 }
 
 $("#deru").onclick=()=>{put(LS,null);D=null;mon("出ました。")};
-function hashKara(){const m=location.hash.match(/k=([^&]+)/);if(!m)return false;const k=decodeURIComponent(m[1]);history.replaceState(null,"",location.pathname);hairu(k);return true}
+function hashKara(){const m=location.hash.match(/k=([^&]+)/);if(!m)return false;const k=decodeURIComponent(m[1]);
+  const nokori=location.hash.replace(/^#/,"").split("&").filter(x=>x&&!x.startsWith("k=")).join("&");  // 合言葉だけ消し、開いていた画面（v=・h=）は残す
+  history.replaceState(null,"",location.pathname+(nokori?"#"+nokori:""));hairu(k);return true}
 addEventListener("hashchange",hashKara);
 if(!hashKara()){const s=get(LS); s?hairu(s):mon();}
 </script>

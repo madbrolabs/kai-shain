@@ -514,6 +514,43 @@ async def kettei_suru(d: dict) -> tuple[dict, int]:
     return {"ok": True}, 200
 
 
+PAGES = os.environ.get("KAI_PAGES", "https://madbrolabs.github.io/kai-shain")
+PAGES_MAE = "/kai_mon/pages"
+
+
+async def pages(req: web.Request) -> web.StreamResponse:
+    """公開の置き場（GitHub Pages）の社員ページを、門番の住所でもそのまま見せる（中身は公開の物と同じ・毎回取りに行く）。
+    わけ：このPC（Tailscale の内側）では門番の住所が内側の番地に引かれ、公開のページから門番を呼ぶと Chrome が
+    「ローカルの相手」として止める（Local Network Access）。同じ住所のページからの呼び出しなら止められない。"""
+    tail = req.match_info.get("tail", "")
+    if any(p in ("..", ".") for p in tail.split("/")) or "\\" in tail:
+        return web.Response(status=404, text="404 Not Found")
+    try:
+        async with ClientSession(timeout=ClientTimeout(total=40)) as cs:
+            async with cs.get(f"{PAGES}/{tail}", params=req.rel_url.query, allow_redirects=False,
+                              headers={"Accept-Encoding": "identity"}) as r:
+                if r.status in (301, 302, 307, 308):
+                    to = r.headers.get("Location", "")
+                    michi = "/" + PAGES.split("://", 1)[-1].partition("/")[2]  # 例 /kai-shain
+                    for mae in (PAGES, michi):  # 置き場の外へ飛ばす答えは通さない
+                        if to == mae or to.startswith(mae + "/"):
+                            return web.HTTPFound(PAGES_MAE + to[len(mae):])
+                    return web.Response(status=404, text="404 Not Found")
+                body = await r.read()
+                res = web.Response(body=body, status=r.status)
+                res.headers["Content-Type"] = r.headers.get("Content-Type", "application/octet-stream")
+                res.headers["Cache-Control"] = "no-cache"
+                res.headers["X-Content-Type-Options"] = "nosniff"
+                return res
+    except Exception as e:
+        log(f"公開の置き場を取りに行けませんでした {tail} {e!r}")
+        return web.Response(status=502, text="公開の置き場を読めませんでした。少しして、もう一度どうぞ。")
+
+
+async def pages_mae(req):
+    return web.HTTPFound(PAGES_MAE + "/")
+
+
 async def kanri_dake(req):
     return jres(req, {"ok": False, "err": "kanri_gamen_dake"}, 403)
 
@@ -534,6 +571,8 @@ def main() -> None:
     app.router.add_post("/kai_mon/sanka", api_sanka)
     app.router.add_route("*", "/kai_mon/kettei", kanri_dake)  # 決めの口は外の道では断る（管理画面だけ・通達 T1795712323）
     app.router.add_route("*", "/kai_mon/kanri{x:.*}", kanri_dake)
+    app.router.add_get(PAGES_MAE, pages_mae)  # 社員ページの写し（このPCの Chrome 用・中身は公開の置き場のまま）
+    app.router.add_get(PAGES_MAE + "/{tail:.*}", pages)
     app.router.add_route("OPTIONS", "/kai_mon/{x}", preflight)
     sys.path.insert(0, str(Path(__file__).resolve().parent))
     os.environ.setdefault("KAI_NAISHO", str(NAISHO))
