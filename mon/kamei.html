@@ -169,7 +169,7 @@ details.shirase div{white-space:pre-wrap;overflow-wrap:anywhere;margin-top:6px}
 
 <main id="iriguchi" class="wrap" hidden>
   <a class="mazu" id="rokuon-annai" href="./rokuon_annai/" target="_blank" rel="noopener"><b>👉 まずはここから：録音君を入れよう</b><span>打ち合わせの声をスマホで録って、会社へ自動で送るアプリです。入れ方と使い方を、本物の画面で順番に</span></a>
-  <a class="mazu kakari-e" id="kakari-e" href="#heya-ichiran" hidden><b>👉 まず最初に、係長の部屋で『亀井です、よろしく』と書き込んでください</b><span>押すと係長の部屋のチャットが開きます</span></a>
+  <a class="mazu kakari-e" id="kakari-e" href="#heya-ichiran" hidden><b>👉 まず最初に、課長の部屋で『亀井です、よろしく』と書き込んでください</b><span>押すと課長の部屋のチャットが開きます</span></a>
   <nav class="dekai" aria-label="大きな入口">
     <a href="https://madbrolabs.github.io/kai-shain/shain/" target="_blank" rel="noopener">社員ページ<span>を開く</span></a>
     <a class="kou" href="https://madbrolabs.github.io/kai-shain/" target="_blank" rel="noopener">公式ページ<span>を開く</span></a>
@@ -357,10 +357,10 @@ function iriguchi(){
       var a = box.querySelector('[data-key="'+h.id+'"]');
       if(!a){ a = document.createElement("a"); a.className = "heya" + (h.kakari ? " kakari" : "") + (h.kame ? " kame" : ""); a.dataset.key = h.id; a.href = "#/h/" + h.id + (h.kakari ? "/kaku" : ""); box.appendChild(a); }
       var ima = h.ugoki && (Date.now() - new Date(h.ugoki)) < 90000;
-      var html = "<b>"+esc(h.dai.replace(/^【主任】/,""))+(h.kakari?"":"<span style='font-weight:400;font-size:14px;color:var(--sub)'> の部屋</span>")+(ima?"<span class='ima'>いま作業中</span>":"")+"</b>"
+      var html = "<b>"+esc(heyaKao(h.dai))+(h.kakari?"":"<span style='font-weight:400;font-size:14px;color:var(--sub)'> の部屋</span>")+(ima?"<span class='ima'>いま作業中</span>":"")+"</b>"
         + "<span class='s'>"+(h.ugoki ? "最後に動いた " + esc(hi(h.ugoki)) : "まだ記録がありません")+"</span>"
         + (h.saigo ? "<span class='s hk'>"+esc(h.saigo)+"</span>" : "")
-        + (h.kakari ? "<span class='kakikomu'>係長に書き込む →</span>" : "");
+        + (h.kakari ? "<span class='kakikomu'>"+esc(kakariNa(h.dai))+"に書き込む →</span>" : "");
       if(a.innerHTML !== html) a.innerHTML = html;
       if(h.kakari) $("kakari-e").href = "#/h/" + h.id + "/kaku";  // 最初の案内札＝係長の部屋の書き込みへ
     });
@@ -393,7 +393,10 @@ function seikaHyou(ul, list, heyaMo){
 // 新しく出来た物の札（data-key で変わった札だけ直す・並びは新しい順）
 var IRO = ["#1f6f5c","#2f5fb3","#9a4b16","#7a3fa0","#b0354a","#2b7f99","#5c6b1f","#8a5a12"];
 function iro(s){ var h = 0; s = String(s||""); for(var i=0;i<s.length;i++) h = (h*31 + s.charCodeAt(i)) >>> 0; return IRO[h % IRO.length]; }
-function heyaNa(s){ return String(s||"").replace(/^【(主任|係長|[^】]{1,8}部屋)】/, function(m, a){ return a === "係長" ? "係長" : a === "主任" ? "" : a + " "; }); }
+// 部屋の題の頭（役職の段＝課長・係長・主任）を、人に見える呼び名に。前の「【係長】相談室」は今の課長相談室（2026-11-26 課長→係長→主任→SE）
+function heyaNa(s){ s = String(s||"").replace(/^【係長】相談室/, "【課長】相談室"); return s.replace(/^【(主任|課長|係長|[^】]{1,8}部屋)】/, function(m, a){ return a === "課長" ? "課長" : a === "係長" ? "係長 " : a === "主任" ? "" : a + " "; }); }
+function heyaKao(s){ return String(s||"").replace(/^【係長】相談室/, "【課長】相談室").replace(/^【主任】/, "").replace(/^【課長】/, "課長").replace(/^【係長】/, "係長 "); }
+function kakariNa(s){ return /^【係長】(?!相談室)/.test(String(s||"")) ? "係長" : "課長"; }
 function fudaHyou(box, list, heyaMo){
   if(!list.length){ if(!box.children.length) box.innerHTML = "<div class='kara'>まだありません。出来上がった物は、作った部屋が台帳に足すとここに並びます。</div>"; return; }
   var kara = box.querySelector(".kara"); if(kara) box.removeChild(kara);
@@ -411,7 +414,7 @@ function fudaHyou(box, list, heyaMo){
     var html = "<div class='mi'>" + (e ? "<img loading='lazy' alt='' src='"+esc(e)+"'>" : "<div class='iro' style='background:"+iro(x.heya)+"'><b>"+esc(x.dai)+"</b><span>"+esc(heyaNa(x.heya))+"</span></div>") + "</div>"
       + "<div class='ue'><div class='dai2'>"+esc(x.dai)+"</div>"
       + (x.hitokoto ? "<div class='hk'>"+esc(x.hitokoto)+"</div>" : "")
-      + "<div class='r2'>" + (x.kakunin ? "<span class='sumi'>係長確認済み</span>" : "") + (x.naoshita ? "<span class='naoshi'>"+esc(hiDake(x.naoshita))+" 直しました</span>" : "")
+      + "<div class='r2'>" + (x.kakunin ? "<span class='sumi'>課長確認済み</span>" : "") + (x.naoshita ? "<span class='naoshi'>"+esc(hiDake(x.naoshita))+" 直しました</span>" : "")
       + (heyaMo ? "<span>"+esc(heyaNa(x.heya) || x.busho)+"</span>" : "") + "<span>"+esc(hiDake(x.dekita))+" 出来た</span></div>"
       + (ki ? "<div class='r2 ni'><span class='oshi' data-u='"+esc(ki + (x.sumaho || x.hiraku))+"'>スマホ用</span><span class='oshi' data-u='"+esc(ki + x.hiraku)+"'>パソコン用</span></div>" : "")
       + (x.eigyou ? "<div class='r2'><span class='sumi'>営業用資料</span><span>"+(x.karui ? "軽い版の PDF が開きます（そのまま保存もできます）" : "そのまま開けます・保存もできます")+"</span></div>" : "")
@@ -513,10 +516,11 @@ function itemNode(x){
   return d;
 }
 
-// 届け先の部屋の書き手の呼び名（係長相談室＝係長、【主任】○○＝○○の主任）
+// 届け先の部屋の書き手の呼び名（課長相談室＝課長、【係長】○○＝係長、【主任】○○＝○○の主任）
 var UGOKU = false;
 function kakiteNa(){
   var d = NAMAE[HEYA] || "";
+  if(/^【課長】|^【係長】相談室/.test(d)) return "課長";
   if(/^【係長】/.test(d)) return "係長";
   if(/^【主任】/.test(d)) return d.replace(/^【主任】/, "") + "の主任";
   return (d.replace(/^【[^】]*】/, "") || "部屋") + "の係";

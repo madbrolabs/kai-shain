@@ -179,7 +179,7 @@ def kotoba(g: str = "kamei") -> dict:
     if not y:
         return {**w, "yobi": san, "atama": f"【{san}から（社員ページ経由）】", "tanomi": f"{san}の頼み",
                 "henji": f"{san}への返事", "aisatsu": f"{san}、お越しいただきありがとうございます",
-                "yakushoku_nashi": f"{san}を役職で呼ばない（「{san}」と呼ぶ。役職は係長が辞令で決める）。"}
+                "yakushoku_nashi": f"{san}を役職で呼ばない（「{san}」と呼ぶ。役職は課長が辞令で決める）。"}
     return {**w, "yobi": y, "atama": f"【{y}（{san}）から（社員ページ経由）】", "tanomi": f"{y}（{san}）の頼み",
             "henji": f"{y}への返事", "aisatsu": f"{y}、お越しいただきありがとうございます", "yakushoku_nashi": ""}
 
@@ -328,8 +328,8 @@ def heya_ichiran(who: str | None = None) -> list[dict]:
     out = []
     kk = m.get("kakarichou") or {}
     if kk.get("session_id"):
-        out.append({"id": kk["session_id"][:8], "sid": kk["session_id"], "dai": kk.get("dai") or "【係長】相談室",
-                    "namae": "係長相談室", "basho": "", "kakari": True})
+        out.append({"id": kk["session_id"][:8], "sid": kk["session_id"], "dai": kk.get("dai") or "【課長】相談室",
+                    "namae": "課長相談室", "basho": "", "kakari": True})
     for g, k in KYAKU.items():
         if who not in (None, "shachou", g):
             continue
