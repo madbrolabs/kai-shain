@@ -1,7 +1,8 @@
-/* MadbroLab 起動ロゴの部品 KidouLogo（Web 用・1.2.0・2026-11-26 SE室。ひな型＝言霊 KOTODAMA）
+/* 起動ロゴの部品 KidouLogo（Web 用・1.2.1・2026-11-26 SE室。ひな型＝言霊 KOTODAMA）
    全社の製品が、この1つを写して使う。ほかの物に寄りかからない（読むだけで動く・見た目も中に入っている・外から何も取り寄せない）。
    形：深い色の地に細い線の窓。「ウェーン」と1本の光の線が横に伸び、窓が上下に開く → 文字が一字ずつ走って出る
-       （製品の名前と読み＝大／頭文字の正式名＝小／MadbroLab＝さらに小）→ 計器の数字と帯が流れる → 相棒が一言名乗る（文字）→ 消える。
+       （製品の名前と読み＝大／頭文字の正式名＝小／KAI のロゴ＝さらに小・名前の後に「ピラン」と光って上がる）→ 計器の数字と帯が流れる → 相棒が一言名乗る（文字）→ 消える。
+       名前は何字でも1行（はみ出す時だけ窓の幅に合わせて小さくする・2字は大きいまま）。
        全部で約1.9秒。押さなくても消える。
    雰囲気（fuun）は増やせる（1.2.0・今は5つ）。下の表 FUUN に1項目足すだけで、選ぶ所にも自動で並ぶ。動きの順・秒数・3段の並びは全部同じ：
      kinmirai  ＝近未来（既定）。少し先の未来の機械の起動画面。青白い光。
@@ -10,7 +11,8 @@
      kodai_tou ＝古代の塔。石の地・金の光。石の段が下から積み上がり、積んだ縁が光り、最後に塔の頂が光る。
      sawayaka  ＝さわやか。白い地・藍の字・細い線1本。頭文字が縦に並び、右の言葉が1つずつ灯る（kotoba）。
    守る事：アプリを起こした時の1回だけ（同じページで2回呼んでも1回）／指は全部すり抜けて下の画面（録音の丸など）に届く／
-          どこかに触れた・キーを押したら、その場で消える／音は出さない／絵は使わない（文字と線と光だけ）／端末に元からある書体だけ。
+          どこかに触れた・キーを押したら、その場で消える／音は出さない／絵は KAI のロゴ1つだけ（下の KAI に入っている・外から取り寄せない。ほかは文字と線と光）／端末に元からある書体だけ。
+   KAI のロゴ：暗い地の雰囲気は白（shiro）、明るい地（さわやか）はふつうの色（iro）。元の絵は kai/ の2枚、ここへは kai/web_no_e.py で入れる（描き直さない）。
    呼び方（製品ごとに変えるのは、名前・読み・正式名・名乗り・色1つ。雰囲気は fuun の1語）：
      KidouLogo.dasu({namae:"言霊", yomi:"KOTODAMA",
                      seishiki:"Keyword-Oriented Transcription & Output Document Automated Management Archive",
@@ -25,12 +27,14 @@
 (function (W) {
   "use strict";
   if (W.KidouLogo) return;
-  var D = W.document, VER = "1.2.0", ID = "mbkKidou", KIOKU = "madbro_kidou_fuun";
+  var D = W.document, VER = "1.2.1", ID = "mbkKidou", KIOKU = "madbro_kidou_fuun";
   var MIRAI = "次の時代へ同期中 ─ CONTINUING";   // 近未来の上の帯の一言（Android の MIRAI と同じ字）
   var NAGASA = 1900;                       // 全部の長さ（ミリ秒）。動きの秒数は全部ここと下の表だけ
   var BAN = {   // 一字ずつ走る所：[始まり, 長さ]（ミリ秒）
-    mei: [300, 260], yomi: [380, 380], sei: [480, 520], lab: [700, 260], nanori: [1060, 300], hed: [140, 220]
+    mei: [300, 260], yomi: [380, 380], sei: [480, 520], nanori: [1060, 300], hed: [140, 220]
   };
+  var KAI_DE = [600, 420];   // KAI のロゴ：名前が出きった後（0.56秒）に「ピラン」と光って上がる [始まり, 長さ]（ミリ秒）
+  var KAI = /*KAI*/{"iro": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAHAAAABABAMAAAAwtO7VAAAAMFBMVEUNJ0MNJ0MNJ0MNJ0MNJ0MNJ0MNJ0MNJ0MNJ0MNJ0MNJ0MNJ0MNJ0MNJ0MNJ0MNJ0P1tUuEAAAAEHRSTlMAESIzRFVmd4iZqrvM3e7/dpUBFQAAA4ZJREFUeNrNl1tIFFEYgOfiZd1VcBUfuiibFAVBjGi+pSvSS1FZSRkJKwoTBKEEhVleKKR9sg2KwMTsSSy1JQgxsvQhQmtNIxJ0dyUtTWvdh/VSWv6dM7M7s3PZ3Zk3z8PO/Oecb//z3845QxBbp5mzUTPrY8iD17pdHq8HNffIg9OpGrHddS7fyO3S4uxdadl5Z2q7ve7OIg1YRpuvv0qig8p/6B0+GQOjrvs6GWU3fdHbZ4nG7R19x6iP0Dd+XY7MnY82uHf0RSRf1i8w0ZZDt0+o+pdsmIjhd7J+Xm1Gw9vYLi+fV/Yd+6Ilxpc+y3u2/9aWHS2PpXKcm9EGUqNWidxYozWPEyVLM37TXgHHO8L87LLoKB23GJOdQ3qKzjQuvH7QV67CdOO4PjAzZGW1YGGc3V6Bzai12zlDKLv9Fj+SYLcLcaDWgs8V4b+SAJzosQNgLST/5UeSARzCNBuvyST61wCABPINQAUnHwCAEn4S+JvE6Dm5xwlLOOjkFK7y8h3gl4BBEEFqmXv0EzJQUEj5EbisBIk2bjQgA02CQiROw4YKWIgXmTgoA5+FFCITNw8BWJVgMk5tU5MUNAoKkYnrhqCRUtCA+1JKJGCHqJD0QwCZuawE48fQTxYjAV+GYoiMwNoe8UZKQXoGG2KRgKhtBNM/EwexEIBRgJQ6CMGMaMRpY+RFFTDLqgD5IienYZU0xwEElEv9ip1TIQVXPwa9kwDwDx10AOvqzjE5pGBJQTBbMiHUGDmYhMORMCYBvxPxSBO2u1oAO+RgCk4Aalaeq40AQ5yJm/hM9nJGSsECzqFP5GASZxYycdaMWto0/JGDT/mMZWQgLo8asXQbYdMiKyu+LoyDskLGblkhbHzkcar7HVIwmQ80OSffOmhUh9ZQQeHOAAZF74c2KZuwVppluXTIZ9kilq0M5jrLVhFxLCvOCm1Shhl922OWoLsnVQ9HToqb+idd+7FTfO9ltHP0YphgWNUO2hzhUvVdrdy2OekJ7bJq4xRnfuKiprOV6lWc+ft/aIgJ2fJc5fITmyTVL1HlCzGCQrdHuHwd/Rn1OpvxOtL1kdjnuReZO+K5GXkwvneyUn1kT89iSVTzz3mHT6lgbb77sVxH13mnmnPCe9LLBnx9WpKZKhtYcnddLS3Ozc07fKHVtTTVrPnilX629ZWHa++7ruTo/kZCbQt9shH/AYwUxuNq3KMwAAAAAElFTkSuQmCC", "shiro": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAHAAAABABAMAAAAwtO7VAAAAMFBMVEX///////////////////////////////////////////////////////////////9Or7hAAAAAEHRSTlMAESIzRFVmd4iZqrvM3e7/dpUBFQAAA4ZJREFUeNrNl1tIFFEYgOfiZd1VcBUfuiibFAVBjGi+pSvSS1FZSRkJKwoTBKEEhVleKKR9sg2KwMTsSSy1JQgxsvQhQmtNIxJ0dyUtTWvdh/VSWv6dM7M7s3PZ3Zk3z8PO/Oecb//z3845QxBbp5mzUTPrY8iD17pdHq8HNffIg9OpGrHddS7fyO3S4uxdadl5Z2q7ve7OIg1YRpuvv0qig8p/6B0+GQOjrvs6GWU3fdHbZ4nG7R19x6iP0Dd+XY7MnY82uHf0RSRf1i8w0ZZDt0+o+pdsmIjhd7J+Xm1Gw9vYLi+fV/Yd+6Ilxpc+y3u2/9aWHS2PpXKcm9EGUqNWidxYozWPEyVLM37TXgHHO8L87LLoKB23GJOdQ3qKzjQuvH7QV67CdOO4PjAzZGW1YGGc3V6Bzai12zlDKLv9Fj+SYLcLcaDWgs8V4b+SAJzosQNgLST/5UeSARzCNBuvyST61wCABPINQAUnHwCAEn4S+JvE6Dm5xwlLOOjkFK7y8h3gl4BBEEFqmXv0EzJQUEj5EbisBIk2bjQgA02CQiROw4YKWIgXmTgoA5+FFCITNw8BWJVgMk5tU5MUNAoKkYnrhqCRUtCA+1JKJGCHqJD0QwCZuawE48fQTxYjAV+GYoiMwNoe8UZKQXoGG2KRgKhtBNM/EwexEIBRgJQ6CMGMaMRpY+RFFTDLqgD5IienYZU0xwEElEv9ip1TIQVXPwa9kwDwDx10AOvqzjE5pGBJQTBbMiHUGDmYhMORMCYBvxPxSBO2u1oAO+RgCk4Aalaeq40AQ5yJm/hM9nJGSsECzqFP5GASZxYycdaMWto0/JGDT/mMZWQgLo8asXQbYdMiKyu+LoyDskLGblkhbHzkcar7HVIwmQ80OSffOmhUh9ZQQeHOAAZF74c2KZuwVppluXTIZ9kilq0M5jrLVhFxLCvOCm1Shhl922OWoLsnVQ9HToqb+idd+7FTfO9ltHP0YphgWNUO2hzhUvVdrdy2OekJ7bJq4xRnfuKiprOV6lWc+ft/aIgJ2fJc5fITmyTVL1HlCzGCQrdHuHwd/Rn1OpvxOtL1kdjnuReZO+K5GXkwvneyUn1kT89iSVTzz3mHT6lgbb77sVxH13mnmnPCe9LLBnx9WpKZKhtYcnddLS3Ozc07fKHVtTTVrPnilX629ZWHa++7ruTo/kZCbQt9shH/AYwUxuNq3KMwAAAAAElFTkSuQmCC"}/*KAI*/;   // KAI のロゴ（iro＝ふつうの色・shiro＝白）。kai/web_no_e.py が作る。手で書き換えない
   var TOU = [60, 85, 200, 10], TOU_HIKARI = [1030, 300];   // 古代の塔：[1段目の始まり, 段ごとのずれ, 1段の長さ, 段の数]・頂の光 [始まり, 長さ]
   var SAWA = [300, 700, 200, 100, 400];   // さわやか：[言葉が灯る始まり, 最後の言葉までの幅, 1つが灯る長さ, 線の始まり, 線が伸びる長さ]
   function r(n) { return Math.floor(Math.random() * n); }
@@ -131,7 +135,7 @@
         "@keyframes mbk-tou-i{0%{opacity:0;transform:translate(-50%,-50%) scale(.4)}100%{opacity:1;transform:translate(-50%,-50%) scale(1)}}"]); } },
     // さわやか（2026-11-26 社長「もっとさわやかで　シンプルなほうが俺好み」）：白い地・藍の字・細い線1本。窓は使わない（kata＝自分の並び）。
     // 頭文字の名前（例 E.N.I.S.H.I）は dasu の kotoba に頭文字ごとの言葉を並べる → 頭文字が縦に大きく並び、右の言葉が1つずつ灯る。kotoba が無ければ名前を静かに1行
-    sawayaka: { namae: "さわやか", iro: "#2B4C8C", mae: "", chira: "·",
+    sawayaka: { namae: "さわやか", iro: "#2B4C8C", mae: "", chira: "·", kai: "iro",   // 明るい地なので KAI のロゴはふつうの色
       kata: function (root, o) {
         var w = mk("div", "mbk-sw"), n = o.kotoba.length, z, i, p, sp;
         if (n > 1) {
@@ -145,7 +149,7 @@
         } else { p = mk("div", "mbk-sw-ichi", o.namae); if (o.yomi) p.appendChild(mk("small", "", o.yomi)); w.appendChild(p); }
         w.appendChild(mk("div", "mbk-sw-sen"));
         var sh = mk("div", "mbk-sw-shita"), na = mk("span");
-        sh.appendChild(na); sh.appendChild(mk("span", "", "MadbroLab")); w.appendChild(sh);
+        sh.appendChild(na); sh.appendChild(kaiE()); w.appendChild(sh);
         o.hashiru(na, o.nanori, BAN.nanori);
         root.appendChild(w);
       },
@@ -154,9 +158,9 @@
         S + " .mbk-sw p{display:flex;align-items:baseline;line-height:1.08;white-space:nowrap}",
         S + " .mbk-sw b{width:1.05em;font-size:var(--z);font-weight:600;color:rgba(var(--mbk),1);animation:mbk-sw-b 300ms 80ms ease-out both}",
         S + " .mbk-sw p span{display:inline-block;font-size:calc(var(--z) * .42);font-weight:300;letter-spacing:.06em;animation:mbk-sw-w " + SAWA[2] + "ms ease-out both}",
-        S + " .mbk-sw-ichi{font-size:26px;font-weight:500;letter-spacing:.14em;animation:mbk-sw-b 300ms 80ms ease-out both}" + S + " .mbk-sw-ichi small{font-size:11px;letter-spacing:.4em;margin-left:14px;opacity:.7}",
+        S + " .mbk-sw-ichi{font-size:26px;font-weight:500;letter-spacing:.14em;white-space:nowrap;animation:mbk-sw-b 300ms 80ms ease-out both}" + S + " .mbk-sw-ichi small{font-size:11px;letter-spacing:.4em;margin-left:14px;opacity:.7}",
         S + " .mbk-sw-sen{align-self:stretch;height:1px;margin:14px 0 8px;background:rgba(var(--mbk),.7);transform-origin:left;animation:mbk-sw-sen " + SAWA[4] + "ms " + SAWA[3] + "ms ease-out both}",
-        S + " .mbk-sw-shita{align-self:stretch;display:flex;justify-content:space-between;gap:16px;font-size:11px;letter-spacing:.14em;color:rgba(31,58,110,.75)}",
+        S + " .mbk-sw-shita{align-self:stretch;display:flex;justify-content:space-between;align-items:center;gap:16px;font-size:11px;letter-spacing:.14em;color:rgba(31,58,110,.75)}",
         "@keyframes mbk-de2{0%{opacity:0}6%{opacity:1}82%{opacity:1}100%{opacity:0}}@keyframes mbk-sw-b{0%{opacity:0}100%{opacity:1}}",
         "@keyframes mbk-sw-w{0%{opacity:0;transform:translateX(-6px)}100%{opacity:1;transform:none}}@keyframes mbk-sw-sen{0%{transform:scaleX(0)}100%{transform:scaleX(1)}}"]; } }
   };
@@ -190,11 +194,15 @@
     "  letter-spacing:.12em;color:rgba(var(--mbk),.8);padding-bottom:8px;border-bottom:1px solid rgba(var(--mbk),.18)}",
     P + " .mbk-hikaru{text-shadow:0 0 6px rgba(var(--mbk),.85),0 0 18px rgba(var(--mbk),.45)}",
     P + " .mbk-mei{font-family:" + MIN + ";font-weight:600;",
-    "  font-size:clamp(52px,20vw,96px);line-height:1.1;letter-spacing:.12em;padding-left:.12em;margin-top:10px}",
+    "  font-size:clamp(52px,20vw,96px);line-height:1.1;letter-spacing:.12em;padding-left:.12em;margin-top:10px;white-space:nowrap}",
     P + " .mbk-yomi{font-size:clamp(14px,4.4vw,19px);font-weight:600;letter-spacing:.6em;padding-left:.6em;margin-top:2px;",
     "  animation:mbk-hirogaru 700ms 380ms cubic-bezier(.2,.8,.2,1) both}",
     P + " .mbk-sei{font-size:clamp(8.5px,2.5vw,10.5px);line-height:1.5;letter-spacing:.04em;color:rgba(234,247,255,.78);margin:10px auto 0;max-width:30em}",
-    P + " .mbk-lab{font-size:8px;letter-spacing:.42em;padding-left:.42em;color:rgba(var(--mbk),.75);margin-top:9px}",
+    P + " .mbk-lab{position:relative;display:inline-block;height:20px;margin-top:9px;vertical-align:middle}",
+    P + " .mbk-lab img{display:block;height:100%;width:auto;animation:mbk-kai " + KAI_DE[1] + "ms " + KAI_DE[0] + "ms cubic-bezier(.2,.8,.2,1) both}",
+    P + " .mbk-lab i{position:absolute;right:-7px;top:-6px;font:normal 11px/1 serif;color:rgba(var(--mbk),1);text-shadow:0 0 6px rgba(var(--mbk),1);opacity:0;",
+    "  animation:mbk-kirari 380ms " + (KAI_DE[0] + 60) + "ms ease-out both}",
+    P + " .mbk-sw-shita .mbk-lab{height:18px;margin:0}",
     P + " .mbk-gauge{position:relative;height:2px;margin:12px 0 7px;background:rgba(var(--mbk),.15)}",
     P + " .mbk-gauge b{position:absolute;left:0;top:0;bottom:0;width:100%;background:rgba(var(--mbk),.95);box-shadow:0 0 6px rgba(var(--mbk),.9);",
     "  animation:mbk-gauge 1000ms 260ms cubic-bezier(.4,.1,.3,1) both}",
@@ -213,10 +221,21 @@
     "@keyframes mbk-obi-de2{0%{opacity:0;transform:scaleY(0)}100%{opacity:.9;transform:scaleY(1)}}",
     "@keyframes mbk-nagare{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}",
     "@keyframes mbk-tenmetsu{0%{opacity:1}50%{opacity:0}}",
+    "@keyframes mbk-kai{0%{opacity:0;transform:translateY(8px) scale(.9);filter:none}28%{opacity:1;transform:translateY(5px) scale(1);filter:brightness(2.2) drop-shadow(0 0 5px rgba(var(--mbk),1))}100%{opacity:1;transform:none;filter:none}}",
+    "@keyframes mbk-kirari{0%{opacity:0;transform:scale(0) rotate(0)}40%{opacity:1;transform:scale(1.3) rotate(45deg)}100%{opacity:0;transform:scale(.4) rotate(90deg)}}",
     "@media (prefers-reduced-motion:reduce){" + P + "," + P + " *{animation:none !important}}"
   ].concat(Object.keys(FUUN).map(function (f) { return FUUN[f].css(P + ".f-" + f).join("\n"); })).join("\n");   // 雰囲気ごとの見た目（表から）
 
   function mk(tag, cls, text) { var e = D.createElement(tag); if (cls) e.className = cls; if (text) e.textContent = text; return e; }
+  // KAI のロゴ（下の段の字を絵に替えた・29通目）：絵＋「ピラン」の光の印。暗い地は白、明るい地（表の kai:"iro"）はふつうの色
+  function kaiE() { var b = mk("span", "mbk-lab"), g = mk("img"); g.src = KAI[F.kai || "shiro"]; g.alt = ""; b.appendChild(g); b.appendChild(mk("i", "", "✦")); return b; }
+  // 名前は必ず1行（30・32通目）：はみ出す時だけ、窓（さわやかは画面の9割）の幅に合わせて字を小さくする。2字の名前は今の大きさのまま
+  function osameru(r) {
+    [].forEach.call(r.querySelectorAll(".mbk-mei,.mbk-sw-ichi"), function (e) {
+      var w = e.scrollWidth, c = Math.min(e.clientWidth || 1e9, (W.innerWidth || 360) * 0.9);
+      if (w > c) e.style.fontSize = (parseFloat(W.getComputedStyle(e).fontSize) * c / w * 0.98).toFixed(1) + "px";
+    });
+  }
   function rgb(hex) {
     var m = /^#?([0-9a-f]{6})$/i.exec(String(hex || "").trim());
     var n = parseInt(m ? m[1] : "8FD8FF", 16);
@@ -293,7 +312,7 @@
     ["mbk-k mbk-k1", "mbk-k mbk-k2", "mbk-k mbk-k3", "mbk-k mbk-k4"].forEach(function (c) { mado.appendChild(mk("i", c)); });
     var hed = mk("div", "mbk-hed"), hl = mk("span"), hr = mk("span", "", F.kei());
     hed.appendChild(hl); hed.appendChild(hr); mado.appendChild(hed); kei = hr;
-    var mei = mk("div", "mbk-mei mbk-hikaru"), yo = mk("div", "mbk-yomi mbk-hikaru"), se = mk("div", "mbk-sei"), lab = mk("div", "mbk-lab");
+    var mei = mk("div", "mbk-mei mbk-hikaru"), yo = mk("div", "mbk-yomi mbk-hikaru"), se = mk("div", "mbk-sei"), lab = mk("div");
     mado.appendChild(mei); if (yomi) mado.appendChild(yo); if (sei) mado.appendChild(se); mado.appendChild(lab);
     var g = mk("div", "mbk-gauge"); g.appendChild(mk("b")); mado.appendChild(g);
     var s2 = mk("div", "mbk-shita2"), na = mk("div", "mbk-nanori mbk-hikaru"), nat = mk("span"), ka = mk("span", "", "100%");
@@ -302,11 +321,13 @@
     root.appendChild(mado);
     root.appendChild(mk("div", "mbk-sen"));   // 光の線は窓の外（窓は開くまで切り抜かれていて、中だと見えない）
     var moji = [[hl, F.hed(yomi || namae), BAN.hed], [mei, namae, BAN.mei], [yo, yomi, BAN.yomi], [se, sei, BAN.sei],
-                [lab, "MadbroLab", BAN.lab], [nat, nanori, BAN.nanori]];
+                [nat, nanori, BAN.nanori]];
+    lab.appendChild(kaiE());   // 下の段＝KAI のロゴ（字ではなく絵）
     moji.forEach(function (m) { hashiru(m[0], m[1], m[2]); });
     if (reduce) { kazu = kei = null; }
     }
     D.body.appendChild(root);
+    osameru(root);
     W.addEventListener("pointerdown", kesu, true);   // どこかに触れたら消える（消すだけ。触った事は止めない＝下の画面にそのまま届く）
     W.addEventListener("touchstart", kesu, { capture: true, passive: true });
     W.addEventListener("keydown", kesu, true);

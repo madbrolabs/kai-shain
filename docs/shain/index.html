@@ -126,14 +126,15 @@ a.bt.s,button.bt.s{background:var(--card);color:var(--acc)}
 .tsutsumi-b{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:14px}.tsutsumi-b button{padding:10px 14px;border-radius:8px;border:1px solid var(--line,#ccc);background:transparent;color:inherit;font-size:15px}.tsutsumi-b .shu{background:#2563eb;color:#fff;border-color:#2563eb;font-weight:bold}#kopi-k{color:var(--sub);font-size:14px}
 .kopi-blk{position:relative;margin:10px 0}.kopi-blk pre{white-space:pre-wrap;word-break:break-word;background:rgba(127,127,127,.12);border:1px solid rgba(127,127,127,.3);border-radius:8px;padding:44px 12px 12px;font-size:14px;line-height:1.7;margin:0}.kopi-b{position:absolute;top:8px;left:8px;padding:6px 14px;border-radius:6px;border:0;background:#2563eb;color:#fff;font-weight:bold;font-size:14px}.kopi-k{position:absolute;top:12px;left:90px;font-size:13px;color:var(--sub)}
 .tsutsumi-n{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:0 0 10px}.tsutsumi-n label{font-weight:bold}.tsutsumi-n input{flex:1;min-width:0;max-width:260px;padding:10px 12px;font-size:16px;border-radius:8px;border:1px solid rgba(127,127,127,.5);background:transparent;color:inherit}
+.kidou-kuchi{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;align-items:center;margin:-12px 0 24px;font-size:12px;color:var(--sub)}.kidou-kuchi button.bt{padding:4px 10px;font-size:12.5px;border-radius:99px}
 </style>
 </head>
 <body>
 <header><a href="../" style="display:flex"><img src="../img/kai_logo_s.png" alt="KAI" style="height:30px;width:auto" class="lg"></a><b>社員ページ</b><span class="sp"></span><span id="who" style="font-size:13px;color:var(--sub)"></span><button id="deru" hidden>出る</button></header>
 <main id="m"><div class="kara">ひらいています…</div></main>
-<!-- 起動の一瞬（全社の型＝起動ロゴ 1.2.0。正本から写した物・中は書き換えない。名前は部品が1行に収める版になるまで「社員」・その後「社員ページ」に戻す） -->
+<!-- 起動の一瞬（全社の型＝起動ロゴ 1.2.0。正本 C:\cl\gijiroku\kidou_logo\web\kidou_logo.js から写した物・中は書き換えない。名前は部品が自分で1行に収める。雰囲気を選ぶ口＝部屋の一覧の下の「起動の画面」） -->
 <script src="kidou_logo.js"></script>
-<script>try{KidouLogo.dasu({namae:"社員",yomi:"KAI STAFF",seishiki:"",nanori:"社員ページ、起動。",fuun:"kinmirai"})}catch(e){}</script>
+<script>try{KidouLogo.dasu({namae:"社員ページ",yomi:"KAI STAFF",seishiki:"",nanori:"社員ページ、起動。",fuun:"kinmirai"})}catch(e){}</script>
 <script>
 "use strict";
 const $=s=>document.querySelector(s), M=$("#m");
@@ -186,6 +187,15 @@ const KIND=[["susumi","進み"],["houkoku","出来た事"],["dameshi","ダメ出
 function iku(st,push){const u=location.pathname+(st.v==="heya"?`#h=${st.i}&t=${st.t||""}`:st.v!=="ichiran"?`#v=${st.v}${st.i?"&i="+encodeURIComponent(st.i):""}`:"");push?history.pushState(st,"",u):history.replaceState(st,"",u)}
 function miseru(st){if(!D)return;const v=st&&st.v;v==="heya"?heya(st.i,st.t,0):v==="kousin"?kousin(0):v==="yomu"?yomu(st.i,0):v==="tsutsumi"?tsutsumi(0):v==="shorui"?shorui(st.i,0):v==="eigyou"?eigyou(0):ichiran(0)}
 addEventListener("popstate",e=>miseru(e.state));
+// 起動の画面を選ぶ口（全社の型 2.5）：ボタンの数と名前は部品から取る。選んだ物は端末が覚え、次に開いた時から変わる
+function kidouKuchi(){
+  const K=window.KidouLogo, el=$("#kidou-kuchi");
+  if(!el)return;
+  if(!K||!K.fuun||!K.erabu){el.hidden=true;return}
+  const ima=K.erabareta()||"kinmirai";
+  el.innerHTML=`<span>起動の画面</span>`+K.fuun.map(f=>`<button class="bt${f===ima?"":" s"}" data-f="${esc(f)}" aria-pressed="${f===ima}">${esc((K.namae&&K.namae[f])||f)}</button>`).join("");
+  el.querySelectorAll("button").forEach(b=>b.onclick=()=>{K.erabu(b.dataset.f);kidouKuchi()});
+}
 function ichiran(push=1){
   iku({v:"ichiran"},push);
   window.scrollTo(0,0);
@@ -205,7 +215,9 @@ function ichiran(push=1){
   M.innerHTML=`${ra}${hj?`<a class="mazu" href="#" data-y="yomu:${esc(HJ)}"><b>👉 まずここを見てください</b><span>はじめての人の入口：AI を入れて、会社の部屋に参加するまでの5つの段</span></a>`:""}<div class="yaru">${yaru.map(([k,n,t])=>`<a href="#" data-y="${esc(k)}"><b>${esc(n)}</b><span>${esc(t)}</span></a>`).join("")}</div>
   <p style="color:var(--sub);margin-top:0">ソフトごとの開発部屋です。進み・出来た事・工事日誌が、毎日の仕事から自動でたまっていきます。どの部屋からも「試す」「開発に参加したい」ができます。</p>
   <div class="heya">${rooms}${D.lab_dameshi.length?`<div class="card" data-i="lab"><h2>ラボ全体の心得</h2><p class="hk">どのソフトにも通じる、ダメ出しから学んだ決まり</p><div class="kazu"><span>心得 ${D.lab_dameshi.length}</span></div></div>`:""}</div>
-  <div class="shita">最後に集めた時刻：${esc(D.tsukutta.replace("T"," "))}</div>`;
+  <div class="shita">最後に集めた時刻：${esc(D.tsukutta.replace("T"," "))}</div>
+  <div class="kidou-kuchi" id="kidou-kuchi"></div>`;
+  kidouKuchi();
   M.querySelectorAll(".card").forEach(c=>c.onclick=()=>heya(c.dataset.i,null,1));
   M.querySelectorAll("[data-y]").forEach(a=>a.onclick=e=>{e.preventDefault();const y=a.dataset.y;
     y==="tsutsumi"?tsutsumi(1):y==="kousin"?kousin(1):y==="shorui"?shorui("",1):y==="eigyou"?eigyou(1):yomu(y.slice(5),1)});
