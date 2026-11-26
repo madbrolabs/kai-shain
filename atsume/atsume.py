@@ -264,6 +264,15 @@ def hoka_no_mono(settei: dict) -> dict:
                              "md": fuseji(fp.read_text(encoding="utf-8"), [])}
         except Exception:
             pass
+    yr = settei.get("yaritai")  # 「やりたい人がいたら進めてね」の札の表（内緒の場所の JSON・札は fuda に1項目足すだけで増える）
+    if yr:
+        try:
+            t = json.loads(Path(yr).read_text(encoding="utf-8"))
+            if t.get("fuda"):
+                o["yaritai"] = {"midashi": t.get("midashi", "やりたい人がいたら進めてね"), "hitokoto": t.get("hitokoto", ""),
+                                "fuda": [f for f in t["fuda"] if f.get("daimei")]}
+        except Exception:
+            pass
     mon = settei.get("mon")
     if mon:
         k = json.loads(Path(mon["kagi"]).read_text(encoding="utf-8"))

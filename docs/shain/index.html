@@ -126,6 +126,13 @@ a.bt.s,button.bt.s{background:var(--card);color:var(--acc)}
 .tsutsumi-b{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:14px}.tsutsumi-b button{padding:10px 14px;border-radius:8px;border:1px solid var(--line,#ccc);background:transparent;color:inherit;font-size:15px}.tsutsumi-b .shu{background:#2563eb;color:#fff;border-color:#2563eb;font-weight:bold}#kopi-k{color:var(--sub);font-size:14px}
 .kopi-blk{position:relative;margin:10px 0}.kopi-blk pre{white-space:pre-wrap;word-break:break-word;background:rgba(127,127,127,.12);border:1px solid rgba(127,127,127,.3);border-radius:8px;padding:44px 12px 12px;font-size:14px;line-height:1.7;margin:0}.kopi-b{position:absolute;top:8px;left:8px;padding:6px 14px;border-radius:6px;border:0;background:#2563eb;color:#fff;font-weight:bold;font-size:14px}.kopi-k{position:absolute;top:12px;left:90px;font-size:13px;color:var(--sub)}
 .tsutsumi-n{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:0 0 10px}.tsutsumi-n label{font-weight:bold}.tsutsumi-n input{flex:1;min-width:0;max-width:260px;padding:10px 12px;font-size:16px;border-radius:8px;border:1px solid rgba(127,127,127,.5);background:transparent;color:inherit}
+.yaritai{margin:26px 0 0}.yaritai h2.ym{font-size:19px;margin:0 0 2px}.yaritai .ys{color:var(--sub);font-size:14px;margin:0 0 10px}
+.yfuda{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px}
+.yf{background:var(--card);border:1px solid var(--line);border-left:4px solid var(--warn);border-radius:14px;padding:16px;font-size:14.5px;line-height:1.7;min-width:0;overflow-wrap:anywhere}
+.yf h3{font-size:18px;margin:0 0 4px}.yf .yh{margin:0 0 10px}.yf .yd{font-size:12.5px;font-weight:700;color:var(--sub);margin:12px 0 2px}
+.yf .ykk{display:grid;grid-template-columns:auto 1fr;gap:2px 8px;margin:0}.yf .ykk dt{font-weight:700;white-space:nowrap}.yf .ykk dd{margin:0}
+.yf ul{margin:0;padding-left:1.2em}.yf .ydan{display:inline-block;background:var(--acc2);color:var(--acc);border-radius:99px;padding:1px 10px;font-size:13px;font-weight:700}
+.yf .ydare{margin-top:12px;border-top:1px dashed var(--line);padding-top:10px}
 .kidou-kuchi{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;align-items:center;margin:-12px 0 24px;font-size:12px;color:var(--sub)}.kidou-kuchi button.bt{padding:4px 10px;font-size:12.5px;border-radius:99px}
 </style>
 </head>
@@ -196,6 +203,18 @@ function kidouKuchi(){
   el.innerHTML=`<span>起動の画面</span>`+K.fuun.map(f=>`<button class="bt${f===ima?"":" s"}" data-f="${esc(f)}" aria-pressed="${f===ima}">${esc((K.namae&&K.namae[f])||f)}</button>`).join("");
   el.querySelectorAll("button").forEach(b=>b.onclick=()=>{K.erabu(b.dataset.f);kidouKuchi()});
 }
+// 「やりたい人がいたら進めてね」の段（社長が置いた種の札。札は内緒の場所の表 yaritai.json に1項目足すだけで増える）
+function yaritaiDan(Y){
+  const fs=(Y&&Y.fuda)||[];
+  if(!fs.length)return "";
+  const fuda=f=>`<div class="yf" data-id="${esc(f.id)}"><h3>${esc(f.daimei)}</h3><p class="yh">${esc(f.hitokoto)}</p>
+    ${f.imamade||f.korekara?`<div class="yd">今まで → これから</div><dl class="ykk">${f.imamade?`<dt>今まで</dt><dd>${esc(f.imamade)}</dd>`:""}${f.korekara?`<dt>これから</dt><dd>${esc(f.korekara)}</dd>`:""}</dl>`:""}
+    ${(f.dekiru||[]).length?`<div class="yd">出来る事（はじめの形）</div><ul>${f.dekiru.map(x=>`<li>${esc(x)}</li>`).join("")}</ul>`:""}
+    ${f.okane_zero||f.okane_kakeru?`<div class="yd">お金</div><dl class="ykk">${f.okane_zero?`<dt>0円の道</dt><dd>${esc(f.okane_zero)}</dd>`:""}${f.okane_kakeru?`<dt>かける時</dt><dd>${esc(f.okane_kakeru)}</dd>`:""}</dl>`:""}
+    ${f.dankai?`<div class="yd">今の段階</div><span class="ydan">${esc(f.dankai)}</span>${f.dankai_shousai?` <span class="hk">${esc(f.dankai_shousai)}</span>`:""}`:""}
+    ${f.dare?`<div class="ydare">やりたい人は <b>${esc(f.dare)}</b> へ一声。${esc(f.dare_hitokoto||"")}</div>`:""}</div>`;
+  return `<section class="yaritai"><h2 class="ym">${esc(Y.midashi||"やりたい人がいたら進めてね")}</h2>${Y.hitokoto?`<p class="ys">${esc(Y.hitokoto)}</p>`:""}<div class="yfuda">${fs.map(fuda).join("")}</div></section>`;
+}
 function ichiran(push=1){
   iku({v:"ichiran"},push);
   window.scrollTo(0,0);
@@ -215,6 +234,7 @@ function ichiran(push=1){
   M.innerHTML=`${ra}${hj?`<a class="mazu" href="#" data-y="yomu:${esc(HJ)}"><b>👉 まずここを見てください</b><span>はじめての人の入口：AI を入れて、会社の部屋に参加するまでの5つの段</span></a>`:""}<div class="yaru">${yaru.map(([k,n,t])=>`<a href="#" data-y="${esc(k)}"><b>${esc(n)}</b><span>${esc(t)}</span></a>`).join("")}</div>
   <p style="color:var(--sub);margin-top:0">ソフトごとの開発部屋です。進み・出来た事・工事日誌が、毎日の仕事から自動でたまっていきます。どの部屋からも「試す」「開発に参加したい」ができます。</p>
   <div class="heya">${rooms}${D.lab_dameshi.length?`<div class="card" data-i="lab"><h2>ラボ全体の心得</h2><p class="hk">どのソフトにも通じる、ダメ出しから学んだ決まり</p><div class="kazu"><span>心得 ${D.lab_dameshi.length}</span></div></div>`:""}</div>
+  ${yaritaiDan(H.yaritai)}
   <div class="shita">最後に集めた時刻：${esc(D.tsukutta.replace("T"," "))}</div>
   <div class="kidou-kuchi" id="kidou-kuchi"></div>`;
   kidouKuchi();
