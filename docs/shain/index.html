@@ -273,6 +273,7 @@ function heya(i,t0,push){
   // 創始者の思いはタブに入れず、名前の右に大きく出す（2026-11-25 社長「進みと同じ所はどうか」）
   const kinds=lab?[["dameshi","心得"]]:KIND.filter(([k])=>k!=="omoi"&&h[k].length);
   let tab=kinds.some(([k])=>k===t0)?t0:kinds[0]?.[0], q="";
+  const sankaHe=/&sanka=1/.test(location.hash);  // 門番の住所で開き直した印（下の iku で消える）
   iku({v:"heya",i,t:tab},push);
   window.scrollTo(0,0);
   // 大きく出すのは「〜_小話」の短い思い（社員にも見せてよい形）。無い時だけ全部
@@ -286,7 +287,8 @@ function heya(i,t0,push){
   <div class="tabs">${kinds.map(([k,n])=>`<button data-k="${k}">${n} ${KZ(h,k)}</button>`).join("")}</div>
   <input class="sagasu" placeholder="この部屋の中をさがす"><div id="list"></div>`;
   $("#modoru").onclick=()=>ichiran(1);
-  const sb=$("#sanka");if(sb)sb.onclick=async()=>{const m=MON();if(m&&await uchiKa(m))return monHe(m);sanka(h)};  // 書く前に開き直す（書いた字を失わせない）
+  const sb=$("#sanka");if(sb)sb.onclick=async()=>{const m=MON();if(m&&await uchiKa(m))return monHe(m,location.hash+"&sanka=1");sanka(h)};  // 書く前に開き直す（書いた字を失わせない）
+  if(sb&&sankaHe)sanka(h);  // 開き直した後は、書く枠をそのまま出す
   const draw=()=>{
     M.querySelectorAll(".tabs button").forEach(b=>b.classList.toggle("on",b.dataset.k===tab));
     const xs=(h[tab]||[]).filter(x=>!q||JSON.stringify(x).toLowerCase().includes(q));
