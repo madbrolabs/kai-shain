@@ -15,6 +15,9 @@ from pathlib import Path
 
 ID = re.compile(r"[a-z0-9_-]{1,40}")
 REL = re.compile(r"[A-Za-z0-9_.-]+(/[A-Za-z0-9_.-]+)*")
+KATA = {".html": "text/html; charset=utf-8", ".txt": "text/plain; charset=utf-8", ".csv": "text/csv; charset=utf-8",
+        ".md": "text/plain; charset=utf-8", ".xlsx": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"}
+HOZON = {".xlsx"}  # 押すと保存になる物
 
 
 def naisho() -> Path:
@@ -71,6 +74,11 @@ def tsukeru(app) -> None:
         if not p:
             return nai()
         r = web.FileResponse(p)
+        su = p.suffix.lower()
+        if su in KATA:  # 字の物は utf-8 と言って渡す（スマホで文字化けしない）・xlsx は保存できる形で渡す
+            r.headers["Content-Type"] = KATA[su]
+        if su in HOZON:
+            r.headers["Content-Disposition"] = f'attachment; filename="{p.name}"'
         r.headers["Cache-Control"] = "private, no-cache"
         r.headers["Referrer-Policy"] = "no-referrer"
         r.headers["X-Robots-Tag"] = "noindex"
