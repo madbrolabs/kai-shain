@@ -1055,7 +1055,7 @@ def koe_uketsukeru(hid: str, data: bytes, gamen: str, who: str, mae: str = "") -
 
 # ---------- 門番へつなぐ ----------
 MICHI = ("kamei", "kyaku")  # 専用URLの頭。hajimete.py・kaisha.py も同じ2つを付ける
-URL_MOTO = "https://galleria.tail26f071.ts.net:8443"  # 門番の外の入口（tailscale funnel）
+URL_MOTO = "https://galleria.tail26f071.ts.net"  # 門番の外の入口（tailscale funnel 443番の /kamei・/kyaku。:8443 も残してある）
 def tsukeru(app) -> None:
     from aiohttp import web
 
