@@ -97,8 +97,14 @@
     "url": "{url}"
    },
    "android": {
-    "kata": "web",
-    "url": "{url}"
+    "kata": "apk",
+    "package": "jp.madbrolab.enything",
+    "url": "soft/enything.apk",
+    "settei_link": "enything://setup?url={url}",
+    "sha256": "408687d30d1ed0704d251453298b7e6ff3322e4e1da0ee83863f6a597d9794f1",
+    "size": 3178705,
+    "tsuuban": 1,
+    "ban": "1.0.0"
    },
    "iphone": {
     "kata": "web",
