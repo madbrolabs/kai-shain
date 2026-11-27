@@ -172,7 +172,7 @@ var TSUKE = {chat:[], sure:[], hen:[]};
 var MEN = "chat", SURE = "";
 var TANMATSU = "";
 var MADO = /[?&]mado=1(&|$)/.test(location.search) && window.parent !== window;
-if(MADO) document.documentElement.classList.add("mado");
+if(MADO){ document.documentElement.classList.add("mado"); try{ window.parent.postMessage({kai_kyo:"hiraita"}, "https://madbrolabs.github.io"); }catch(e){} }
 var SAIGO = null;  // 小窓の時：最後に見たチャットの番号（新しい物が来たら社員ページの丸に赤い点）
 function yomuLS(k){ try{ return localStorage.getItem(k) || ""; }catch(e){ return ""; } }
 function kakuLS(k, v){ try{ localStorage.setItem(k, v); }catch(e){} }
