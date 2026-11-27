@@ -183,6 +183,7 @@ const ub=b=>Uint8Array.from(atob(b),c=>c.charCodeAt(0));
 const LS="kai_shain_aikotoba";
 // ID とパスワードの入口（門番の /kai/shain/・2026-11-27 社長「普通にIDとPASSで入る方式に」）。門番がこの1行を true にして出す
 const IDMODE=false;
+const SHIN="";  // 前のアドレスで ID の入口に来た時だけ、門番が新しい住所（…/kai/）を入れて出す（2026-11-28 新しい住所へ）
 let ORE=null;  // ID の形で入っている人（名前・見える箱・初めのパスワードのままか）
 const get=k=>{try{return localStorage.getItem(k)}catch(e){return null}};
 const put=(k,v)=>{try{v==null?localStorage.removeItem(k):localStorage.setItem(k,v)}catch(e){}};
@@ -212,7 +213,7 @@ function mon(msg){
   if(IDMODE){
     M.innerHTML=`<div class="mon"><h1>社員の入口</h1><p>社長から届いた ID とパスワードを入れてください。この端末では、「ログアウト」を押すまで入ったままです。</p>
     <input id="kid" autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="ID" value="${esc(KID)}" style="margin-bottom:10px">
-    <input id="aik" autocomplete="current-password" type="password" placeholder="パスワード"><button id="go">入る</button><div class="err">${esc(msg||"")}</div></div>`;
+    <input id="aik" autocomplete="current-password" type="password" placeholder="パスワード"><button id="go">入る</button><div class="err">${esc(msg||"")}</div>${SHIN?`<p style="margin-top:14px;font-size:13px;color:var(--sub)">🔑 住所が新しくなりました。これからは <a href="${esc(SHIN)}">${esc(SHIN)}</a> から入ってください（このアドレスも、しばらくは使えます）。</p>`:""}</div>`;
     const go=async()=>{const i=$("#kid").value.trim(),p=$("#aik").value;if(!i||!p)return;KID=i;$("#go").textContent="ひらいています…";$("#go").disabled=true;
       let j={};
       try{const r=await fetch("/kai/api/login",{method:"POST",headers:{"Content-Type":"application/json","X-KAI":"1"},body:JSON.stringify({id:i,pw:p})});j=await r.json().catch(()=>({}))}
@@ -291,7 +292,7 @@ function ichiran(push=1){
     ["eigyou","営業用資料","お客様に見せる紹介・プレゼン（開く・保存）"],
     (H.shorui||[]).length?["shorui",H.shorui_midashi||"会社設立へ向けて","いまの準備の書類"]:null].filter(Boolean);
   // 入口が新しくなった案内（前の合言葉の形で入った時だけ）。住所は門番の住所（中身の箱の中にある）から作る＝公開の倉庫には書かない
-  let shin="";try{if(!IDMODE&&H.mon)shin="https://"+new URL(H.mon.url).hostname+"/kai/"}catch(e){}
+  let shin=SHIN;try{if(!IDMODE&&H.mon)shin="https://"+new URL(H.mon.url).hostname+"/kai/"}catch(e){}
   M.innerHTML=`${IDMODE&&ORE&&ORE.shoki?`<a class="mazu" href="#" data-y="pw"><b>🔑 初めのパスワードのままです</b><span>押して、自分だけのパスワードに変えてください</span></a>`:""}
   ${shin?`<a class="mazu shin" href="${esc(shin)}"><b>🔑 入口が新しくなりました</b><span>これからは、みんな共通の入口 <i>${esc(shin)}</i> で、社長から届いた ID とパスワードで入れます。</span></a>`:""}
   ${hj?`<a class="mazu" href="#" data-y="yomu:${esc(HJ)}"><b>👉 はじめての人は、ここを上から順に</b><span>① 入口に入る　② あいさつ　③ 課金　④ アプリを入れる　⑤ 会社に参加</span></a>`:""}<div class="yaru">${yaru.map(([k,n,t,u])=>u?`<a href="${esc(u)}" target="_blank" rel="noopener"><b>${esc(n)}</b><span>${esc(t)}</span></a>`:`<a href="#" data-y="${esc(k)}"><b>${esc(n)}</b><span>${esc(t)}</span></a>`).join("")}</div>

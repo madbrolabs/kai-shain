@@ -35,6 +35,7 @@ import sys
 import threading
 import time
 from pathlib import Path
+from urllib.parse import urlsplit
 
 HERE = Path(__file__).resolve().parent
 DOCS = HERE.parent / "docs"
@@ -92,6 +93,15 @@ def ses_p() -> Path:
 
 def shoki_p() -> Path:
     return naisho() / "secret" / "kai_id_shoki.json"
+
+
+def shin_juusho() -> str:
+    """みんなに配る住所（settei.json の mon.url の名前・番号抜き）。例 https://shain.kailab.co.jp。読めなければ空。"""
+    try:
+        h = urlsplit(str((_rj(naisho() / "settei.json", {}).get("mon") or {}).get("url", ""))).hostname or ""
+    except ValueError:
+        return ""
+    return "https://" + h if h else ""
 
 
 def iri() -> bool:
@@ -502,6 +512,9 @@ def tsukeru(app) -> None:
         if not req.path.endswith("/"):
             raise web.HTTPFound("/kai/shain/")
         t = (DOCS / "shain" / "index.html").read_text(encoding="utf-8").replace("const IDMODE=false;", "const IDMODE=true;", 1)
+        shin = shin_juusho()
+        if shin and req.host.split(":")[0].lower() != urlsplit(shin).hostname:  # 前のアドレス（tailnet）で来た人に、新しい住所を見せる
+            t = t.replace('const SHIN="";', "const SHIN=" + json.dumps(shin + "/kai/") + ";", 1)
         r = web.Response(text=t, content_type="text/html")
         kabuse(r)
         r.headers["Content-Security-Policy"] = "frame-ancestors 'self'; base-uri 'none'; form-action 'none'"
