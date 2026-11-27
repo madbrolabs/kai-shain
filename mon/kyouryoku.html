@@ -100,7 +100,7 @@ h3{font-size:16px;margin:16px 0 6px}
 /* 社員ページの端の小窓（?mado=1）：看板・説明・知らせ・足は出さない */
 .mado header.top,.mado .setsumei,.mado .shirase,.mado .ashi{display:none!important}
 .mado main.wrap{padding-top:8px}
-.mado #chat-log{height:calc(100vh - 150px);height:calc(100dvh - 150px);min-height:120px}
+.mado #chat-log{height:calc(100vh - 185px);height:calc(100dvh - 185px);min-height:120px}
 #ookii button{position:absolute;top:10px;right:12px;border:0;background:rgba(255,255,255,.18);color:#fff;border-radius:999px;padding:4px 14px;font-size:16px}
 </style>
 </head>
@@ -173,7 +173,7 @@ var MEN = "chat", SURE = "";
 var TANMATSU = "";
 var MADO = /[?&]mado=1(&|$)/.test(location.search) && window.parent !== window;
 if(MADO){ document.documentElement.classList.add("mado"); try{ window.parent.postMessage({kai_kyo:"hiraita"}, "https://madbrolabs.github.io"); }catch(e){} }
-var SAIGO = null;  // 小窓の時：最後に見たチャットの番号（新しい物が来たら社員ページの丸に赤い点）
+var SAIGO = null, MITA = false;  // 小窓の時：最後に見たチャットの番号（新しい物が来たら社員ページの丸に赤い点）
 function yomuLS(k){ try{ return localStorage.getItem(k) || ""; }catch(e){ return ""; } }
 function kakuLS(k, v){ try{ localStorage.setItem(k, v); }catch(e){} }
 TANMATSU = yomuLS("kai_kyou_tan");
@@ -213,15 +213,15 @@ function egaku(){ $("watashi").textContent = S.na || ""; kinouMiseru(); egakuCha
 function egakuChat(){
   var box = $("chat-log"), shita = box.scrollHeight - box.scrollTop - box.clientHeight < 80;
   box.textContent = "";
-  if(!S.chat.length){ box.appendChild(el("div", "kara", "まだ書き込みはありません。最初のひとことをどうぞ")); return; }
+  if(!S.chat.length){ box.appendChild(el("div", "kara", "まだ書き込みはありません。最初のひとことをどうぞ")); SAIGO = null; MITA = true; return; }
   S.chat.forEach(function(m){
     var d = el("div", "hatsu" + (m.jibun ? " jibun" : ""));
     d.appendChild(ue(m, m.id)); if(m.bun) d.appendChild(el("p", "", m.bun)); tf(d, m); box.appendChild(d);
   });
   if(shita || egakuChat.hajime !== true){ box.scrollTop = box.scrollHeight; egakuChat.hajime = true; }
   var ato = S.chat[S.chat.length - 1];
-  if(MADO && ato && SAIGO !== null && ato.id !== SAIGO && !ato.jibun){ try{ window.parent.postMessage({kai_kyo:"atarashii"}, "https://madbrolabs.github.io"); }catch(e){} }
-  if(ato) SAIGO = ato.id;
+  if(MADO && MITA && ato && ato.id !== SAIGO && !ato.jibun){ try{ window.parent.postMessage({kai_kyo:"atarashii"}, "https://madbrolabs.github.io"); }catch(e){} }
+  SAIGO = ato ? ato.id : null; MITA = true;
 }
 
 function egakuIta(){
