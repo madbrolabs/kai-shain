@@ -563,8 +563,21 @@ async def genki(req):
     return jres(req, {"ok": True, "toki": ima()})
 
 
+@web.middleware
+async def https_he(req, handler):
+    """新しい住所（Cloudflare のトンネル）に http で来た人を https へ回す（パスワードを暗号なしで流さない）。https の時は HSTS も付ける。
+    Cloudflare は Cf-Ray と、来た人の形（X-Forwarded-Proto）を付けて渡す。前のアドレス（tailscale）は https だけなので、ここは通らない。"""
+    cf = bool(req.headers.get("Cf-Ray"))
+    if cf and req.headers.get("X-Forwarded-Proto") == "http":
+        raise web.HTTPPermanentRedirect("https://" + req.host + req.path_qs)
+    res = await handler(req)
+    if cf and req.headers.get("X-Forwarded-Proto") == "https" and not res.prepared:
+        res.headers.setdefault("Strict-Transport-Security", "max-age=31536000")
+    return res
+
+
 def main() -> None:
-    app = web.Application(client_max_size=50 * 1024 * 1024)
+    app = web.Application(client_max_size=50 * 1024 * 1024, middlewares=[https_he])
     app.router.add_get("/kai_mon/genki", genki)
     app.router.add_get("/t/{soft}", t_iriguchi)
     app.router.add_post("/kai_mon/kousin", api_kousin)
