@@ -24,8 +24,7 @@ header.top h1{font-size:18px;margin:0;flex:1;min-width:0;white-space:nowrap;over
 .tabs button{flex:1;border:2px solid var(--line);background:var(--card);border-radius:12px;padding:8px 4px;font-weight:700;font-size:17px}
 .tabs button[aria-selected="true"]{border-color:var(--acc);background:var(--acc2);color:var(--acc)}
 .setsumei{color:var(--sub);font-size:14.5px;margin:0 0 10px}
-.namae{display:flex;align-items:center;gap:8px;margin:0 0 12px;font-size:15px;flex-wrap:wrap}
-.namae input{flex:1;min-width:0;max-width:260px;border:1px solid var(--line);background:var(--card);border-radius:10px;padding:6px 10px}
+.setsumei b{color:var(--ink)}
 .kara{color:var(--sub);text-align:center;padding:24px 8px;font-size:15px}
 /* チャット */
 #chat-log{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:10px 12px;height:calc(100vh - 330px);height:calc(100dvh - 330px);min-height:260px;overflow-y:auto}
@@ -80,8 +79,7 @@ h3{font-size:16px;margin:16px 0 6px}
     <button role="tab" id="tab-chat" aria-selected="true">💬 チャット</button>
     <button role="tab" id="tab-ita" aria-selected="false">📋 掲示板</button>
   </div>
-  <p class="setsumei">ここは KAI の協力者だけが入れる場所です。このアドレスを知っている人だけが見られます。</p>
-  <div class="namae"><label for="na">書く時の名前</label><input id="na" maxlength="20" placeholder="例：山田" autocomplete="nickname"></div>
+  <p class="setsumei">ここは KAI の協力者だけが入れる場所です。書き込みには、あなたの名前が自動で付きます（<b id="watashi">…</b>）。</p>
 
   <section id="men-chat">
     <div id="chat-log" aria-live="polite"><div class="kara">読み込み中…</div></div>
@@ -128,10 +126,6 @@ function yomuLS(k){ try{ return localStorage.getItem(k) || ""; }catch(e){ return
 function kakuLS(k, v){ try{ localStorage.setItem(k, v); }catch(e){} }
 TANMATSU = yomuLS("kai_kyou_tan");
 if(!TANMATSU){ TANMATSU = Math.random().toString(36).slice(2, 12); kakuLS("kai_kyou_tan", TANMATSU); }
-var JIBUN = {};  // 自分が書いた物の id（色を変えるだけ）
-try{ JIBUN = JSON.parse(yomuLS("kai_kyou_jibun") || "{}") || {}; }catch(e){ JIBUN = {}; }
-$("na").value = yomuLS("kai_kyou_na");
-$("na").addEventListener("input", function(){ kakuLS("kai_kyou_na", $("na").value.trim()); });
 
 function el(tag, cls, txt){ var e = document.createElement(tag); if(cls) e.className = cls; if(txt != null) e.textContent = txt; return e; }
 function hi(t){ var d = new Date(t); if(isNaN(d)) return ""; var n = new Date();
@@ -151,7 +145,6 @@ function post(shu, o){
     .then(function(r){ return r.json().catch(function(){ return {ok:false, naze:"送れませんでした（" + r.status + "）"}; }); })
     .catch(function(){ return {ok:false, naze:"送れませんでした。電波を確かめてください"}; });
 }
-function namae(nz){ var n = $("na").value.trim(); if(!n){ $(nz).textContent = "上の「書く時の名前」を入れてください"; $("na").focus(); return ""; } return n; }
 function kesu(id){ if(!confirm("この書き込みを消しますか？（みんなの画面から消えます）")) return; post("kesu", {moto:id}).then(function(j){ if(!j.ok) alert(j.naze || "消せませんでした"); }); }
 
 // ---------- 読む（変わるまで待つ読み） ----------
@@ -163,14 +156,14 @@ function yomu(){
     .catch(function(){ yomiChuu = false; setTimeout(yomu, 4000); });
 }
 
-function egaku(){ egakuChat(); egakuIta(); }
+function egaku(){ $("watashi").textContent = S.na || ""; egakuChat(); egakuIta(); }
 
 function egakuChat(){
   var box = $("chat-log"), shita = box.scrollHeight - box.scrollTop - box.clientHeight < 80;
   box.textContent = "";
   if(!S.chat.length){ box.appendChild(el("div", "kara", "まだ書き込みはありません。最初のひとことをどうぞ")); return; }
   S.chat.forEach(function(m){
-    var d = el("div", "hatsu" + (JIBUN[m.id] ? " jibun" : ""));
+    var d = el("div", "hatsu" + (m.jibun ? " jibun" : ""));
     d.appendChild(ue(m, m.id)); d.appendChild(el("p", "", m.bun)); box.appendChild(d);
   });
   if(shita || egakuChat.hajime !== true){ box.scrollTop = box.scrollHeight; egakuChat.hajime = true; }
@@ -207,14 +200,13 @@ function egakuSure(){
 
 // ---------- 書く ----------
 function okuru(shu, o, btn, nz, owari){
-  var na = namae(nz); if(!na) return; o.na = na; $(nz).textContent = ""; btn.disabled = true;
+  $(nz).textContent = ""; btn.disabled = true;
   post(shu, o).then(function(j){ btn.disabled = false;
     if(!j.ok){ $(nz).textContent = j.naze || "送れませんでした"; return; }
-    JIBUN[j.id] = 1; var ks = Object.keys(JIBUN); if(ks.length > 500) ks.slice(0, ks.length - 500).forEach(function(k){ delete JIBUN[k]; });
-    kakuLS("kai_kyou_jibun", JSON.stringify(JIBUN)); owari(); });
+    owari(); });
 }
 $("chat-okuru").onclick = function(){ var b = $("chat-bun").value.trim(); if(!b) return;
-  okuru("chat", {bun:b}, $("chat-okuru"), "chat-naze", function(){ $("chat-bun").value = ""; var box = $("chat-log"); egakuChat.hajime = false; }); };
+  okuru("chat", {bun:b}, $("chat-okuru"), "chat-naze", function(){ $("chat-bun").value = ""; egakuChat.hajime = false; }); };
 $("chat-bun").addEventListener("keydown", function(e){ if(e.key === "Enter" && (e.ctrlKey || e.metaKey)){ e.preventDefault(); $("chat-okuru").click(); } });
 $("sure-hiraku").onclick = function(){ $("sure-form").hidden = false; $("sure-hiraku").hidden = true; $("sure-dai").focus(); };
 $("sure-yameru").onclick = function(){ $("sure-form").hidden = true; $("sure-hiraku").hidden = false; };

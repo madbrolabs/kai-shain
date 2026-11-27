@@ -1,19 +1,19 @@
 """アドオン：協力者の広場（門番 mon.py のアドオン）＝協力者だけが入れる、クローズドなチャットと掲示板。
 
-入口（合言葉なし・当てずっぽうでは当たらない長い鍵のアドレス・違えば 404）：
-  /kyouryoku/<協力者の鍵>/  … 協力者みんなで使う1つのアドレス（鍵＝内緒の場所/secret/kyouryoku.json の kagi）
-  /kamei/<鍵>/kyouryoku/・/kyaku/<鍵>/kyouryoku/ … 社長・亀井さん・岩田さん・勝山さんの専用ページから入る道（鍵＝secret/kamei.json）。
-    社長の鍵の時だけ、書き込みを消す・掲示板のピン留め（お知らせ）ができる。
+入口（合言葉なし・当てずっぽうでは当たらない長い鍵のアドレス・違えば 404）＝一人ずつのアドレス：
+  /kamei/<鍵>/kyouryoku/・/kyaku/<鍵>/kyouryoku/ … 社長・亀井さん・岩田くん・勝山さんの専用ページの鍵（secret/kamei.json）。
+  専用ページの札「💬 協力者の広場」から入る。新しい協力者は、専用ページを作れば（kamei.py の KYAKU に1行＋鍵）広場にも自動で入れる。
+  みんなで共通の鍵のアドレス（/kyouryoku/<鍵>/）は 2026-11-27 社長の言葉で止めた（404）。
+名前：入ったアドレスの鍵で決まる（名前の欄は無い）。社長の鍵＝「社長」、ほかは専用ページの呼び方（KYAKU の san）。
+  呼び方を替える時は 内緒の場所/kyouryoku.json の namae（例 {"iwata": "岩田くん"}）。「社長」の札は社長の鍵から書いた物だけ。
+  社長の鍵の時だけ、書き込みを消す・掲示板のピン留め（お知らせ）ができる。
 中身：①チャット（みんなで話す。新しい書き込みは待ち受け（長く待つ読み）ですぐ出る）②掲示板（題をつけて投稿→返信。お知らせはピン留め）。
-  書き込む時に名前を入れる（端末が覚える）。名前の横の「社長」の札は、社長の鍵から書いた物だけに付く（名前を真似されても札は付かない）。
 書き込みの置き場＝内緒の場所/kyouryoku/kaki.jsonl（1行1件・足すだけ。消した物も行は残し「消した」の行を足す＝画面から消える）。
 入/切＝内緒の場所/kyouryoku.json の iri（無ければ入）。切れば全部の道が 404。
-外の道＝443番の入口に /kyouryoku の道（tailscale funnel --set-path=/kyouryoku → 127.0.0.1:8802/kyouryoku）。:8443 でも開く。
-鍵を作る：python kyouryoku.py kagi（もう有れば作り直さない。--tsukurinaoshi で作り直し＝前のアドレスは 404 になる）。
+外の道＝443番の入口の /kamei・/kyaku の道（亀井ページと同じ）。
 """
 from __future__ import annotations
 
-import argparse
 import asyncio
 import datetime as dt
 import hmac
@@ -21,7 +21,6 @@ import json
 import os
 import re
 import secrets
-import sys
 import threading
 import time
 from pathlib import Path
@@ -53,17 +52,24 @@ def ima() -> str:
     return dt.datetime.now(JST).isoformat(timespec="seconds")
 
 
-def kagi_p() -> Path:
-    return naisho() / "secret" / "kyouryoku.json"
-
-
 def kaki_p() -> Path:
     return naisho() / "kyouryoku" / "kaki.jsonl"
 
 
-def kyouryoku_kagi_ok(k: str) -> bool:
-    v = _rj(kagi_p()).get("kagi", "")
-    return bool(KAGI_KATACHI.fullmatch(k or "")) and bool(KAGI_KATACHI.fullmatch(v)) and hmac.compare_digest(k, v)
+def namae(who: str) -> str:
+    """書き込みに付ける名前（入ったアドレスの鍵で決まる）。"""
+    n = _rj(naisho() / "kyouryoku.json").get("namae") or {}
+    if isinstance(n.get(who), str) and n[who].strip():
+        return n[who].strip()[:20]
+    if who == "shachou":
+        return "社長"
+    try:
+        import kamei
+        if who in kamei.KYAKU:
+            return kamei.KYAKU[who]["san"]
+    except Exception:
+        pass
+    return "協力者"
 
 
 def senyou_dare(k: str) -> str | None:
@@ -115,7 +121,8 @@ class Chou:
             ev.set()
         return o
 
-    def katachi(self, shachou: bool) -> dict:
+    def katachi(self, who: str) -> dict:
+        shachou = who == "shachou"
         kieta = {g["moto"] for g in self.gyou if g.get("shu") == "kesu"}
         pin: dict[str, bool] = {}
         for g in self.gyou:
@@ -126,6 +133,8 @@ class Chou:
             o = {"id": g["id"], "t": g["t"], "na": g.get("na", ""), "bun": g.get("bun", "")}
             if g.get("dare") == "shachou":
                 o["shachou"] = True
+            if g.get("dare") == who:
+                o["jibun"] = True
             return o
 
         chat = [mise(g) for g in self.gyou if g.get("shu") == "chat" and g["id"] not in kieta][-CHAT_MISERU:]
@@ -143,7 +152,7 @@ class Chou:
                 sure[i]["pin"] = p
         ita = sorted(sure.values(), key=lambda s: s["ato"], reverse=True)  # 新しく動いた順
         ita.sort(key=lambda s: not s["pin"])  # お知らせ（ピン留め）を上に
-        return {"v": self.v, "chat": chat, "ita": ita, "shachou": shachou}
+        return {"v": self.v, "chat": chat, "ita": ita, "shachou": shachou, "na": namae(who)}
 
 
 CHOU: Chou | None = None
@@ -201,10 +210,7 @@ def tsukeru(app) -> None:
         """入ってよい人なら who（shachou／kamei／iwata／katsuyama／kyouryoku）。ダメなら None。"""
         if not iri():
             return None
-        k = req.match_info.get("k", "")
-        if not req.path.startswith("/kyouryoku/"):  # /kamei/<鍵>/kyouryoku/・/kyaku/<鍵>/kyouryoku/
-            return senyou_dare(k)
-        return "kyouryoku" if kyouryoku_kagi_ok(k) else None
+        return senyou_dare(req.match_info.get("k", ""))
 
     async def page(req):
         if not dare(req):
@@ -230,8 +236,7 @@ def tsukeru(app) -> None:
                 await asyncio.wait_for(c.kawatta.wait(), 25)
             except asyncio.TimeoutError:
                 pass
-        o = c.katachi(who == "shachou")
-        o["dare"] = who
+        o = c.katachi(who)
         return jres(o)
 
     async def kaku(req):
@@ -260,10 +265,8 @@ def tsukeru(app) -> None:
             return jres({"ok": True, "v": c.v})
         if shu not in ("chat", "sure", "hen"):
             return nai()
-        na = kirei(x.get("na"), NAGASA["na"]).replace("\n", " ")
+        na = namae(who)  # 名前は入ったアドレスの鍵で決まる（送られて来た名前は使わない）
         bun = kirei(x.get("bun"), NAGASA["bun"])
-        if not na:
-            return jres({"ok": False, "naze": "名前を入れてください"}, 400)
         if not bun:
             return jres({"ok": False, "naze": "中身を入れてください"}, 400)
         if not renda_ok(hito):
@@ -285,30 +288,8 @@ def tsukeru(app) -> None:
 
     r = app.router
     # 頭の言葉は決まった字で書く（頭を「{m}」の形にすると、門番の振り分けが亀井ページの「その他は404」（/kamei/{k}/{tail}）を先に当ててしまう）
-    for atama in ("/kyouryoku/{k}", "/kamei/{k}/kyouryoku", "/kyaku/{k}/kyouryoku"):
+    for atama in ("/kamei/{k}/kyouryoku", "/kyaku/{k}/kyouryoku"):
         r.add_get(atama, page)
         r.add_get(atama + "/", page)
         r.add_get(atama + "/api/yomu", yomu)
         r.add_post(atama + "/api/{shu}", kaku)
-
-
-# ---------- 鍵を作る（このPCで1回） ----------
-def kagi_tsukuru(tsukurinaoshi: bool = False) -> None:
-    p = kagi_p()
-    o = _rj(p)
-    if o.get("kagi") and not tsukurinaoshi:
-        print("もう鍵があります（作り直す時は --tsukurinaoshi）")
-        return
-    o.update({"kagi": secrets.token_urlsafe(32), "tsukutta": ima()})
-    p.parent.mkdir(parents=True, exist_ok=True)
-    p.write_text(json.dumps(o, ensure_ascii=False, indent=1), encoding="utf-8")
-    print("鍵を作りました（値は表に出しません）：", p)
-
-
-if __name__ == "__main__":
-    ap = argparse.ArgumentParser()
-    ap.add_argument("shigoto", choices=["kagi"])
-    ap.add_argument("--tsukurinaoshi", action="store_true")
-    a = ap.parse_args()
-    if a.shigoto == "kagi":
-        kagi_tsukuru(a.tsukurinaoshi)
