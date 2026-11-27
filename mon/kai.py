@@ -34,6 +34,7 @@ import secrets
 import sys
 import threading
 import time
+import unicodedata
 from pathlib import Path
 from urllib.parse import urlsplit
 
@@ -149,6 +150,36 @@ def shoki_pw() -> str:
 def hyou() -> dict:
     h = _rj(id_p(), {}).get("id")
     return h if isinstance(h, dict) else {}
+
+
+KEISHOU = ("さん", "くん", "君", "さま", "様", "ちゃん", "氏")
+
+
+def _id_narasu(s: str) -> str:
+    """打った ID をそろえる：全角→半角・大文字→小文字・空白を抜く。"""
+    return "".join(unicodedata.normalize("NFKC", str(s or "")).split()).lower()
+
+
+def _keishou_nuku(s: str) -> str:
+    for k in KEISHOU:
+        if len(s) > len(k) and s.endswith(k):
+            return s[: -len(k)]
+    return s
+
+
+def id_yomu(utta: str) -> str:
+    """ID 欄に打たれた物を、表の ID に直す。英字の ID はそのまま。日本語の呼び名（表の名前・「さん」「くん」抜きも）でも同じ人に。
+    呼び名の表は kai_id.json の各人の名前から毎回作る（人が増えれば自動で効く）。2人に当たる呼び名は使わない（取り違えない）。"""
+    i = _id_narasu(utta)[:40]
+    h = hyou()
+    if i in h:
+        return i
+    na = {k: _id_narasu(a.get("namae", "") if isinstance(a, dict) else "") for k, a in h.items()}
+    atari = [k for k, v in na.items() if v and v == i]  # 名前そのまま（「岩田くん」）が先
+    if not atari:
+        moto = _keishou_nuku(i)
+        atari = [k for k, v in na.items() if v and moto in (v, _keishou_nuku(v))]
+    return atari[0] if len(atari) == 1 else i
 
 
 def hyou_kaku(h: dict) -> None:
@@ -551,7 +582,7 @@ def tsukeru(app) -> None:
             x = await req.json()
         except Exception:
             return jres({"ok": False, "naze": "形が違います"}, 400)
-        i = str(x.get("id", "")).strip().lower()[:40]
+        i = id_yomu(str(x.get("id", ""))[:80])
         pw = str(x.get("pw", ""))[:PW_MAX]
         k_id, k_doko = "id:" + i, "doko:" + doko(req)
         nokori = tomari(k_id, 5, 900, 600) or tomari(k_doko, 30, 900, 900)

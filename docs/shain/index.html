@@ -211,7 +211,7 @@ let KID="";
 function mon(msg){
   $("#deru").hidden=true;kyoKesu();$("#who").textContent="";
   if(IDMODE){
-    M.innerHTML=`<div class="mon"><h1>社員の入口</h1><p>社長から届いた ID とパスワードを入れてください。この端末では、「ログアウト」を押すまで入ったままです。</p>
+    M.innerHTML=`<div class="mon"><h1>社員の入口</h1><p>社長から届いた ID（例：社長、または shachou）とパスワードを入れてください。この端末では、「ログアウト」を押すまで入ったままです。</p>
     <input id="kid" autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="ID" value="${esc(KID)}" style="margin-bottom:10px">
     <input id="aik" autocomplete="current-password" type="password" placeholder="パスワード"><button id="go">入る</button><div class="err">${esc(msg||"")}</div>${SHIN?`<p style="margin-top:14px;font-size:13px;color:var(--sub)">🔑 住所が新しくなりました。これからは <a href="${esc(SHIN)}">${esc(SHIN)}</a> から入ってください（このアドレスも、しばらくは使えます）。</p>`:""}</div>`;
     const go=async()=>{const i=$("#kid").value.trim(),p=$("#aik").value;if(!i||!p)return;KID=i;$("#go").textContent="ひらいています…";$("#go").disabled=true;
