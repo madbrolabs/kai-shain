@@ -5,7 +5,7 @@
 
 使い方: pythonw -I -X utf8 mon.py <内緒の場所>      （窓を出さない。ログは <内緒の場所>/mon.log）
   内緒の場所に置く物: settei.json（kaihatsu＝載せるソフトの表）・secret/mon.json（shain／shachou／cookie の鍵）
-外からの道: Tailscale Funnel 8443 → 127.0.0.1:8802（同時通訳が 443 を使っているので別の口）。
+外からの道: https://shain.kailab.co.jp（Cloudflare のトンネル・mon/tonneru.py）→ 127.0.0.1:8802。前のアドレス Tailscale Funnel 8443（と 443 の /kai・/kamei・/kyaku）も同じ所へ（しばらく残す）。
 罠メモ: gh は read:org の無い鍵しか無い → `gh auth login` は通らない。GH_TOKEN に git の保存済みの鍵を入れて動かす。
 """
 from __future__ import annotations
