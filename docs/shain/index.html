@@ -729,6 +729,9 @@ function kyoBasho(){const w=$("#kyo"),j=kyoJ(),W=innerWidth,Hh=innerHeight;
 function kyoMiseru(){const j=kyoJ();$("#kyo").hidden=j.chiisai;$("#kyo-maru").hidden=!j.chiisai;if(!j.chiisai){kyoBasho();$("#kyo-ten").hidden=true}}
 const kyoU=()=>IDMODE?location.origin+"/kai/kyouryoku/":kyoKata(get(KYO));
 function kyoNaka(){const u=kyoU(),n=$("#kyo-naka"),oo=$("#kyo-oo");
+  // このPC（Tailscale の内側）では、公開の置き場から内側の番地の広場を枠に入れると Chrome が「ローカルネットワーク」で止める。
+  // 枠を作る前に見分けて、内側なら社員ページごと門番の住所で開き直す（広場のアドレスは #kyo= で渡す）＝許可を聞かれない
+  if(u&&!IDMODE&&MON()&&UCHI!==false){if(n.dataset.u!=="?"){n.dataset.u="?";uchiKa(MON()).then(x=>{if(x)monHe(MON(),location.hash.replace(/^#/,"")+"&kyo="+encodeURIComponent(u));else kyoNaka()})}return}
   if(u){if(n.dataset.u!==u){n.dataset.u=u;n.innerHTML="";const f=document.createElement("iframe");f.title="チャット部屋";f.src=u+"?mado=1";f.allow="camera; local-network-access; local-network";n.appendChild(f);
       // 開けたら広場が知らせてくる。来なければ（電波・端末の守りで断られた等）別の画面で開く道を出す
       clearTimeout(kyoNaka.t);kyoNaka.hiraita=false;kyoNaka.t=setTimeout(()=>{if(kyoNaka.hiraita||n.dataset.u!==u)return;const d=document.createElement("div");d.id="kyo-dame";

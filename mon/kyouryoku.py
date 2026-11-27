@@ -417,6 +417,12 @@ def tsukeru(app) -> None:
                 return None
         return senyou_dare(req.match_info.get("k", ""))
 
+    def oya_mon(req) -> str:
+        """このPC（Tailscale の内側）では、社員ページを門番の住所（同じ名前の別の口 /kai_mon/pages/）で開き直して小窓を出す。
+        その親も許す（同じ名前のサイトだけ。Chrome の「ローカルネットワーク」の許可を聞かせないため）。"""
+        h = req.host.rsplit(":", 1)[0] if not req.host.startswith("[") else ""
+        return f" https://{h}:*" if re.fullmatch(r"[A-Za-z0-9.-]+", h or "") and "." in h else ""
+
     async def page(req):
         if not dare(req):
             if req.path.startswith("/kai/") and iri():  # ID の入口で、まだ入っていない時は入る画面へ
@@ -427,7 +433,8 @@ def tsukeru(app) -> None:
         r = web.Response(text=(HERE / "kyouryoku.html").read_text(encoding="utf-8"), content_type="text/html")
         r.headers["Content-Security-Policy"] = ("default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; "
                                                 "connect-src 'self'; img-src 'self' data: blob:; manifest-src 'self'; worker-src 'self'; "
-                                                "base-uri 'none'; form-action 'none'; frame-ancestors 'self' https://madbrolabs.github.io")
+                                                "base-uri 'none'; form-action 'none'; frame-ancestors 'self' https://madbrolabs.github.io"
+                                                + oya_mon(req))
         kabuse(r)
         del r.headers["X-Frame-Options"]  # 社員ページ（madbrolabs.github.io）の端の小窓に出す（2026-11-27 社長）。他のサイトは上の frame-ancestors で断る
         return r

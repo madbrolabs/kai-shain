@@ -54,6 +54,8 @@ a.mazu span{display:block;font-size:15.5px;line-height:1.55;margin-top:2px}
 a.mazu.shin{background:#dbeafe;border-color:#2563eb;color:#0b2a5b;box-shadow:none}a.mazu.shin i{font-style:normal;font-weight:bold;word-break:break-all}
 a.mazu:hover,a.mazu:focus{border-color:#b37f00}
 a.mazu[hidden]{display:none}
+a.mazu.hiroba{background:#fff;border-color:#3b6ea5;color:#0b2a5b;box-shadow:none}a.mazu.hiroba b{font-size:20px}
+.soft-ireru a.ireru.rokuon{margin-top:12px;background:#fff;color:#3b6ea5;border:2px solid #3b6ea5;box-shadow:none;font-size:18px}
 a.kakari-e{margin:0 0 14px;background:#ffe36e;border-width:4px}
 a.kakari-e b{font-size:24px}
 .soft-ireru{margin:0 0 12px;padding:12px 16px 14px;border-radius:16px;background:#eef3fb;border:2px solid #3b6ea5}
@@ -162,19 +164,20 @@ details.shirase div{white-space:pre-wrap;overflow-wrap:anywhere;margin-top:6px}
 
 <main id="iriguchi" class="wrap" hidden>
   <a class="mazu shin" id="shin-iriguchi" href="/kai/" hidden><b>🔑 入口が新しくなりました</b><span>これからは、みんな共通の入口 <i id="shin-url">/kai/</i> で、社長から届いた ID とパスワードで入れます。このページも、しばらくはこのまま使えます。</span></a>
-  <a class="mazu" id="rokuon-annai" href="./rokuon_annai/" target="_blank" rel="noopener"><b>👉 まずはここから：録音君を入れよう</b><span>打ち合わせの声をスマホで録って、会社へ自動で送るアプリです。入れ方と使い方を、本物の画面で順番に</span></a>
+  <!-- 黄色い札は1枚だけ＝社員ページと同じ「はじめての人の入口」（2026-11-27 社長「録音君　トップにいらん」「これ解りにくい」）。録音君は下の「会社のソフトを入れる」へ -->
+  <a class="mazu" id="mazu" href="./hajimete/" hidden><b>👉 はじめての人は、ここを上から順に</b><span>① 入口に入る　② あいさつ　③ 課金　④ アプリを入れる　⑤ 会社に参加</span></a>
   <a class="mazu kakari-e" id="kakari-e" href="#heya-ichiran" hidden><b>👉 まず最初に、課長の部屋で『亀井です、よろしく』と書き込んでください</b><span>押すと課長の部屋のチャットが開きます</span></a>
   <nav class="dekai" aria-label="大きな入口">
     <a id="shain-link" href="https://madbrolabs.github.io/kai-shain/shain/" target="_blank" rel="noopener">社員ページ<span>を開く</span></a>
     <a class="kou" href="https://madbrolabs.github.io/kai-shain/" target="_blank" rel="noopener">公式ページ<span>を開く</span></a>
   </nav>
-  <a class="mazu" id="kyouryoku" href="./kyouryoku/" target="_blank" rel="noopener" hidden><b>💬 協力者の広場</b><span>協力者だけのチャットと掲示板。みんなで話す・お知らせを見る</span></a>
-  <a class="mazu" id="mazu" href="./hajimete/" hidden><b>👉 まずここを見てください</b><span>はじめての人の入口：AI を入れて、会社の部屋に参加するまでの5つの段</span></a>
+  <a class="mazu hiroba" id="kyouryoku" href="./kyouryoku/" target="_blank" rel="noopener" hidden><b>💬 チャット部屋（協力者の広場）</b><span>協力者だけのチャットと掲示板。みんなで話す・お知らせを見る</span></a>
   <section class="soft-ireru" aria-label="会社のソフトを入れる">
     <h2>🔧 会社のソフトを入れる</h2>
     <!-- 行き先は今は招待なし。招待リンク（#i=…）は会社のつなぎ先が入るので、ここ（倉庫）には書かない。差し込みは門番が内緒の場所から読む形で後から -->
     <a class="ireru" id="iriguchi-link" href="https://madbrolabs.github.io/kai-shain/iriguchi/" target="_blank" rel="noopener">入口アプリを入れる<span>（スマホ・パソコン）</span></a>
     <p>押すと、この電話に合った入れ方が出ます。入口アプリを1回入れれば、あとは使いたいソフトを押すだけです。</p>
+    <a class="ireru rokuon" id="rokuon-annai" href="./rokuon_annai/" target="_blank" rel="noopener">録音君を入れる<span>（打ち合わせの声をスマホで録って、会社へ送るアプリ）</span></a>
   </section>
   <div class="chuui" id="chuui">このページは<b id="dareno">亀井さん</b>専用です。アドレスは他の人に渡さないでください。</div>
   <section id="atarashii-waku">
@@ -353,7 +356,7 @@ function iriguchi(){
       if(a.innerHTML !== html) a.innerHTML = html;
       if(h.kakari) $("kakari-e").href = "#/h/" + h.id + "/kaku";  // 最初の案内札＝係長の部屋の書き込みへ
     });
-    $("kakari-e").hidden = DARE === "shachou";  // 社長のページには出さない
+    $("kakari-e").hidden = true;  // 上の黄色い札は「はじめての人の入口」1枚だけ。あいさつは入口の②（チャット部屋）へ（2026-11-27 社長）
     seikaHyou($("zentai"), j.seika, true);
     fudaHyou($("atarashii"), j.atarashii || [], true);
     if(DARE === "shachou"){ if(typeof shikumiYomu === "function") shikumiYomu(); }  // 社長のページには覚え書き（見るだけ）。決め事は管理画面だけ（通達 T1795712323）
@@ -771,7 +774,7 @@ window.addEventListener("hashchange", michi);
 document.addEventListener("visibilitychange", function(){ if(!document.hidden){ if(HEYA) chat(false); } });
 // 入口に戻った時の札を最新に
 setInterval(function(){ if(!HEYA && !document.hidden) iriguchi(); }, 30000);
-// 「まずここを見てください」は、はじめての人の入口が開ける時だけ出す（アドオンを外せば札も消える）
+// 「はじめての人は、ここを上から順に」は、はじめての人の入口が開ける時だけ出す（アドオンを外せば札も消える）
 // 「協力者の広場」は、広場のアドオンが入っている時だけ出す
 // 入口が新しくなった（2026-11-27 社長「普通にIDとPASSで入る方式にできないの？」）：ID の入口が開いていれば案内を出し、社員ページの札もそちらへ
 var KAI_ID = false;

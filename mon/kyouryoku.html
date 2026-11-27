@@ -177,8 +177,12 @@ var MEN = "chat", SURE = "";
 var TANMATSU = "";
 var MADO = /[?&]mado=1(&|$)/.test(location.search) && window.parent !== window;
 // 小窓の親＝ID の入口（/kai/）なら同じ住所、前の形なら公開の置き場の社員ページ
+//   このPCで門番の住所（同じ名前の別の口）に開き直した社員ページの時は、その親にも知らせる（同じ名前のサイトだけ）
 var OYA = location.pathname.indexOf("/kai/") === 0 ? location.origin : "https://madbrolabs.github.io";
-if(MADO){ document.documentElement.classList.add("mado"); try{ window.parent.postMessage({kai_kyo:"hiraita"}, OYA); }catch(e){} }
+var OYAS = [OYA];
+try{ var ao = location.ancestorOrigins && location.ancestorOrigins[0]; if(ao && ao !== OYA && new URL(ao).hostname === location.hostname && /^https:/.test(ao)) OYAS.push(ao); }catch(e){}
+function oyaE(m){ OYAS.forEach(function(o){ try{ window.parent.postMessage(m, o); }catch(e){} }); }
+if(MADO){ document.documentElement.classList.add("mado"); oyaE({kai_kyo:"hiraita"}); }
 // 前の一人ずつのアドレスで開いた時は、新しい入口を案内する（このアドレスもしばらく使える）
 if(!MADO && location.pathname.indexOf("/kai/") !== 0){
   fetch("/kai/api/ore", {cache:"no-store"}).then(function(r){ if(r.status === 401 || r.ok){ var a = document.getElementById("shin-iriguchi");
@@ -231,7 +235,7 @@ function egakuChat(){
   });
   if(shita || egakuChat.hajime !== true){ box.scrollTop = box.scrollHeight; egakuChat.hajime = true; }
   var ato = S.chat[S.chat.length - 1];
-  if(MADO && MITA && ato && ato.id !== SAIGO && !ato.jibun){ try{ window.parent.postMessage({kai_kyo:"atarashii"}, OYA); }catch(e){} }
+  if(MADO && MITA && ato && ato.id !== SAIGO && !ato.jibun){ oyaE({kai_kyo:"atarashii"}); }
   SAIGO = ato ? ato.id : null; MITA = true;
 }
 
