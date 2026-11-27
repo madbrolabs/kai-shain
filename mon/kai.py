@@ -477,7 +477,8 @@ def tsukeru(app) -> None:
         return kabuse(web.json_response(o, status=status, dumps=lambda v: json.dumps(v, ensure_ascii=False)))
 
     def doko(req) -> str:
-        return (req.headers.get("X-Forwarded-For") or req.remote or "").split(",")[0].strip()[:60]
+        # トンネル（Tailscale）は来た所を X-Forwarded-For の最後に足す。先頭は相手が勝手に書けるので、最後を使う
+        return (req.headers.get("X-Forwarded-For") or req.remote or "").split(",")[-1].strip()[:60]
 
     def shirushi(req) -> bool:
         return req.headers.get("X-KAI") == "1"  # よそのページから押させない（この印はよそからは付けられない）
