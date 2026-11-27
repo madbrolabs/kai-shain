@@ -379,20 +379,28 @@ def fairu_basho(fid: str) -> Path | None:
 
 
 def _shunin_heya(soft: dict):
-    """その感想を届ける主任の部屋（行の shunin＝主任名簿の案件名。無い・見つからない時は KAI社員ページの主任）。"""
+    """その感想を届ける主任の部屋（行の shunin＝主任名簿の案件名。無い・見つからない時は KAI社員ページの主任）。
+    主任名簿をそのまま読む（亀井ページの部屋の一覧は、外に見せない部屋＝nozoku を抜いてあるので使わない。
+    例：入口アプリの担当は【主任】総務部で、その部屋は外の一覧には出ない 2026-11-27 主任）。"""
     try:
         if str(HERE) not in sys.path:
             sys.path.insert(0, str(HERE))
         import kamei
-        hs = [h for h in kamei.heya_ichiran() if not h.get("kakari") and not h.get("kame")]
+        m = json.loads(Path(kamei.MEIBO).read_text(encoding="utf-8"))
+        hs = [{"sid": s["session_id"], "id": s["session_id"][:8], "dai": s.get("dai") or f'【主任】{s.get("anken", "")}',
+               "namae": s.get("anken", ""), "kyuu_mei": s.get("kyuu_mei", "")}
+              for s in m.get("shunin", []) if s.get("session_id")]
     except Exception as e:
         log(f"主任の部屋の名簿を読めません {e!r}")
         return None
     for na in (soft.get("shunin"), soft.get("namae"), "KAI社員ページ"):
         if not na:
             continue
-        h = next((h for h in hs if h.get("namae") == na), None) or next((h for h in hs if na in (h.get("dai") or "")), None)
+        h = (next((h for h in hs if na in (h.get("namae"), h.get("kyuu_mei"))), None)
+             or next((h for h in hs if na in (h.get("dai") or "")), None))
         if h:
+            if na != soft.get("shunin") and soft.get("shunin"):
+                log(f"感想の届け先 {soft.get('shunin')} が主任名簿に無いので {h['dai']} へ")
             return h
     return None
 
