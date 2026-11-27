@@ -202,7 +202,7 @@ def tsukeru(app) -> None:
         if not iri():
             return None
         k = req.match_info.get("k", "")
-        if req.match_info.get("m"):  # /kamei/<鍵>/kyouryoku/・/kyaku/<鍵>/kyouryoku/
+        if not req.path.startswith("/kyouryoku/"):  # /kamei/<鍵>/kyouryoku/・/kyaku/<鍵>/kyouryoku/
             return senyou_dare(k)
         return "kyouryoku" if kyouryoku_kagi_ok(k) else None
 
@@ -284,7 +284,8 @@ def tsukeru(app) -> None:
         return jres({"ok": True, "id": g["id"], "v": c.v})
 
     r = app.router
-    for atama in ("/kyouryoku/{k}", "/{m:kamei|kyaku}/{k}/kyouryoku"):
+    # 頭の言葉は決まった字で書く（頭を「{m}」の形にすると、門番の振り分けが亀井ページの「その他は404」（/kamei/{k}/{tail}）を先に当ててしまう）
+    for atama in ("/kyouryoku/{k}", "/kamei/{k}/kyouryoku", "/kyaku/{k}/kyouryoku"):
         r.add_get(atama, page)
         r.add_get(atama + "/", page)
         r.add_get(atama + "/api/yomu", yomu)
