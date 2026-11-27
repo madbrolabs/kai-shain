@@ -147,6 +147,23 @@ body.kyo-ari #m{padding-bottom:96px}.sanka-n{font-size:13px;color:var(--sub);mar
 .yf .ykk{display:grid;grid-template-columns:auto 1fr;gap:2px 8px;margin:0}.yf .ykk dt{font-weight:700;white-space:nowrap}.yf .ykk dd{margin:0}
 .yf ul{margin:0;padding-left:1.2em}.yf .ydan{display:inline-block;background:var(--acc2);color:var(--acc);border-radius:99px;padding:1px 10px;font-size:13px;font-weight:700}
 .yf .ydare{margin-top:12px;border-top:1px dashed var(--line);padding-top:10px}
+a.mazu.shin{background:#dbeafe;border-color:#2563eb;color:#0b2a5b;box-shadow:none}a.mazu.shin b{font-size:20px}a.mazu.shin i{font-style:normal;font-weight:bold;word-break:break-all}
+/* テスト中のアプリ・感想・パスワード（2026-11-27 社長「スマホしかない人は アプリのテストをしてもらう」） */
+.ts-l{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px}
+.ts{background:var(--card);border:1px solid var(--line);border-left:5px solid var(--acc);border-radius:14px;padding:14px 16px;min-width:0;overflow-wrap:anywhere}
+.ts h3{font-size:19px;margin:0 0 2px}.ts .hk{color:var(--sub);font-size:14.5px;margin:0 0 10px}
+.ts .bt2{display:flex;flex-wrap:wrap;gap:8px}.ts .bt2 a,.ts .bt2 button{display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:8px 16px;border-radius:10px;font:inherit;font-weight:bold;font-size:15px;text-decoration:none;cursor:pointer}
+.ts .ire{background:var(--acc);color:#fff;border:1px solid var(--acc)}.ts .kan{background:transparent;color:var(--acc);border:2px solid var(--acc)}
+.ts .ch{font-size:13px;color:var(--sub);margin-top:8px}
+.kf textarea{width:100%;min-height:150px;font:inherit;font-size:16px;padding:10px 12px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--ink)}
+.kf .fu2{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0}.kf .fu2 button{font:inherit;padding:8px 14px;border-radius:10px;border:1px solid var(--line);background:var(--card);color:var(--ink);cursor:pointer}
+.kf .okuru{font:inherit;font-weight:bold;font-size:17px;padding:10px 28px;border-radius:10px;border:0;background:var(--acc);color:#fff;cursor:pointer}
+.kf .err{color:#d33;font-size:14px;min-height:1.3em;margin-top:6px}.kf .yoi{color:var(--acc);font-weight:bold;margin-top:6px}
+.chips{display:flex;flex-direction:column;gap:6px}.chip{display:flex;align-items:center;gap:8px;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:6px 8px;font-size:14px}
+.chip img{width:44px;height:44px;object-fit:cover;border-radius:6px}.chip.dame{border-color:#d33}.chip .cn{overflow-wrap:anywhere}.chip .cj{font-size:12.5px;color:var(--sub)}.chip .cx{margin-left:auto;border:0;background:transparent;color:var(--sub);font-size:18px;cursor:pointer}
+.kj{border-top:1px dashed var(--line);padding:8px 0;font-size:14.5px}.kj .hi{color:var(--sub);font-size:13px}.kj div{white-space:pre-wrap}
+.pwf{max-width:420px}.pwf label{display:block;font-size:14px;margin:12px 0 4px}.pwf input{width:100%;font:inherit;font-size:16px;padding:10px 12px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--ink)}
+.pwf button{margin-top:14px;font:inherit;font-weight:bold;padding:10px 24px;border-radius:10px;border:0;background:var(--acc);color:#fff;cursor:pointer}
 .kidou-kuchi{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;align-items:center;margin:-12px 0 24px;font-size:12px;color:var(--sub)}.kidou-kuchi button.bt{padding:4px 10px;font-size:12.5px;border-radius:99px}
 </style>
 </head>
@@ -164,11 +181,15 @@ const $=s=>document.querySelector(s), M=$("#m");
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const ub=b=>Uint8Array.from(atob(b),c=>c.charCodeAt(0));
 const LS="kai_shain_aikotoba";
+// ID とパスワードの入口（門番の /kai/shain/・2026-11-27 社長「普通にIDとPASSで入る方式に」）。門番がこの1行を true にして出す
+const IDMODE=false;
+let ORE=null;  // ID の形で入っている人（名前・見える箱・初めのパスワードのままか）
 const get=k=>{try{return localStorage.getItem(k)}catch(e){return null}};
 const put=(k,v)=>{try{v==null?localStorage.removeItem(k):localStorage.setItem(k,v)}catch(e){}};
 let D=null;
 
 async function hiraku(aik){
+  if(IDMODE){const r=await fetch("/kai/api/hako",{cache:"no-store"});if(r.status===401)return null;if(!r.ok)throw new Error("hako "+r.status);return await r.json()}
   const r=await fetch("data.enc.json?t="+Date.now(),{cache:"no-store"});
   const box=await r.json();
   const base=await crypto.subtle.importKey("raw",new TextEncoder().encode(aik.normalize("NFKC").trim()),"PBKDF2",false,["deriveKey"]);
@@ -185,8 +206,21 @@ async function hiraku(aik){
   return null;
 }
 
+let KID="";
 function mon(msg){
-  $("#deru").hidden=true;kyoKesu();
+  $("#deru").hidden=true;kyoKesu();$("#who").textContent="";
+  if(IDMODE){
+    M.innerHTML=`<div class="mon"><h1>社員の入口</h1><p>社長から届いた ID とパスワードを入れてください。この端末では、「ログアウト」を押すまで入ったままです。</p>
+    <input id="kid" autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="ID" value="${esc(KID)}" style="margin-bottom:10px">
+    <input id="aik" autocomplete="current-password" type="password" placeholder="パスワード"><button id="go">入る</button><div class="err">${esc(msg||"")}</div></div>`;
+    const go=async()=>{const i=$("#kid").value.trim(),p=$("#aik").value;if(!i||!p)return;KID=i;$("#go").textContent="ひらいています…";$("#go").disabled=true;
+      let j={};
+      try{const r=await fetch("/kai/api/login",{method:"POST",headers:{"Content-Type":"application/json","X-KAI":"1"},body:JSON.stringify({id:i,pw:p})});j=await r.json().catch(()=>({}))}
+      catch(e){return mon("つながりませんでした。電波を確かめて、もう一度どうぞ。")}
+      if(!j.ok)return mon(j.naze||"入れませんでした。");
+      ORE={namae:j.namae,kubun:j.kubun,shoki:j.shoki};KID="";await hairu("")};
+    $("#go").onclick=go;$("#kid").onkeydown=$("#aik").onkeydown=e=>{if(e.key==="Enter")go()};(KID?$("#aik"):$("#kid")).focus();
+    return}
   M.innerHTML=`<div class="mon"><h1>社員の入口</h1><p>KAI Lab の社員だけが読めるページです。配られた合言葉を入れてください。この機械では次から入れなくて済みます。</p>
   <input id="aik" autocomplete="current-password" type="password" placeholder="合言葉"><button id="go">入る</button><div class="err">${esc(msg||"")}</div></div>`;
   const go=async()=>{const v=$("#aik").value;if(!v)return;$("#go").textContent="ひらいています…";await hairu(v)};
@@ -196,8 +230,11 @@ function mon(msg){
 async function hairu(aik){
   let d=null;
   try{d=await hiraku(aik)}catch(e){return mon("ページを読めませんでした。電波を確かめて、もう一度どうぞ。")}
-  if(!d){put(LS,null);return mon("合言葉が違うようです。")}
-  put(LS,aik);D=d;$("#deru").hidden=false;kyoDasu();
+  if(!d){if(IDMODE)return mon("");put(LS,null);return mon("合言葉が違うようです。")}
+  if(IDMODE){if(!ORE){try{const j=await (await fetch("/kai/api/ore",{cache:"no-store"})).json();if(j.ok)ORE=j}catch(e){}}
+    $("#who").textContent=ORE?"👤 "+ORE.namae:"";$("#deru").textContent="ログアウト"}
+  else put(LS,aik);
+  D=d;$("#deru").hidden=false;kyoDasu();
   const m=location.hash.match(/h=([^&]+)&t=([^&]*)/), v=location.hash.match(/v=([^&]+)(?:&i=([^&]*))?/);
   m?heya(decodeURIComponent(m[1]),m[2],0):v?miseru({v:v[1],i:decodeURIComponent(v[2]||"")}):ichiran(0);
 }
@@ -208,8 +245,12 @@ const KIND=[["susumi","進み"],["houkoku","出来た事"],["dameshi","ダメ出
 
 // 画面の移り変わりを履歴に積む＝マウスやブラウザの「戻る」で前の画面へ
 function iku(st,push){const u=location.pathname+(st.v==="heya"?`#h=${st.i}&t=${st.t||""}`:st.v!=="ichiran"?`#v=${st.v}${st.i?"&i="+encodeURIComponent(st.i):""}`:"");push?history.pushState(st,"",u):history.replaceState(st,"",u)}
-function miseru(st){if(!D)return;const v=st&&st.v;v==="heya"?heya(st.i,st.t,0):v==="kousin"?kousin(0):v==="yomu"?yomu(st.i,0):v==="tsutsumi"?tsutsumi(0):v==="shorui"?shorui(st.i,0):v==="eigyou"?eigyou(0):ichiran(0)}
-addEventListener("popstate",e=>miseru(e.state));
+function miseru(st){if(!D)return;const v=st&&st.v;v==="heya"?heya(st.i,st.t,0):v==="kousin"?kousin(0):v==="yomu"?yomu(st.i,0):v==="tsutsumi"?tsutsumi(0):v==="shorui"?shorui(st.i,0):v==="eigyou"?eigyou(0)
+  :v==="tesuto"?tesuto(0):v==="kansou"?kansou(st.i,0):v==="pw"?pwKaeru(0):ichiran(0)}
+// アドレスの # から画面を読む（文の中の「#v=tesuto」のリンクを押した時など、履歴に画面が無い時）
+function hashSt(){const h=location.hash.match(/h=([^&]+)&t=([^&]*)/),v=location.hash.match(/v=([a-z]+)(?:&i=([^&]*))?/);
+  return h?{v:"heya",i:decodeURIComponent(h[1]),t:h[2]}:v?{v:v[1],i:decodeURIComponent(v[2]||"")}:null}
+addEventListener("popstate",e=>miseru(e.state||hashSt()));
 // 起動の画面を選ぶ口（全社の型 2.5）：ボタンの数と名前は部品から取る。選んだ物は端末が覚え、次に開いた時から変わる
 function kidouKuchi(){
   const K=window.KidouLogo, el=$("#kidou-kuchi");
@@ -242,12 +283,18 @@ function ichiran(push=1){
   const H=D.hoka||{}, tb=H.tebiki||[];
   const HJ="0_はじめての人の入口", hj=tb.find(x=>x.id===HJ);
   const yaru=[...tb.filter(x=>x.id!==HJ).map(x=>[`yomu:${x.id}`,x.md.match(/^# (.+)/m)?.[1].split("：")[0]||x.id,(x.md.match(/^# .+：(.+)/m)||[])[1]||""]),
+    ["tesuto","テスト中のアプリ","スマホで試して、感想を送る"],
+    IDMODE?["pw","パスワードを変える","自分だけのパスワードに替える"]:null,
     H.mon?["rokuon","録音君を入れる","打ち合わせの声をスマホで録って、会社へ送るアプリ",H.mon.url+"/kai_mon/rokuon_annai/"+encodeURIComponent(H.mon.kagi)+"/"]:null,
     H.tsutsumi?["tsutsumi","AI に渡す包み",`自分の AI に読ませる1枚（版 ${H.tsutsumi.ban}）`]:null,
     H.mon?["kousin","届いた更新","みんなが出した仮の更新の一覧"]:null,
     ["eigyou","営業用資料","お客様に見せる紹介・プレゼン（開く・保存）"],
     (H.shorui||[]).length?["shorui",H.shorui_midashi||"会社設立へ向けて","いまの準備の書類"]:null].filter(Boolean);
-  M.innerHTML=`${hj?`<a class="mazu" href="#" data-y="yomu:${esc(HJ)}"><b>👉 はじめての人は、ここを上から順に</b><span>① アドレスを開く　② あいさつ　③ 課金　④ アプリを入れる　⑤ 会社に参加</span></a>`:""}<div class="yaru">${yaru.map(([k,n,t,u])=>u?`<a href="${esc(u)}" target="_blank" rel="noopener"><b>${esc(n)}</b><span>${esc(t)}</span></a>`:`<a href="#" data-y="${esc(k)}"><b>${esc(n)}</b><span>${esc(t)}</span></a>`).join("")}</div>
+  // 入口が新しくなった案内（前の合言葉の形で入った時だけ）。住所は門番の住所（中身の箱の中にある）から作る＝公開の倉庫には書かない
+  let shin="";try{if(!IDMODE&&H.mon)shin="https://"+new URL(H.mon.url).hostname+"/kai/"}catch(e){}
+  M.innerHTML=`${IDMODE&&ORE&&ORE.shoki?`<a class="mazu" href="#" data-y="pw"><b>🔑 初めのパスワードのままです</b><span>押して、自分だけのパスワードに変えてください</span></a>`:""}
+  ${shin?`<a class="mazu shin" href="${esc(shin)}"><b>🔑 入口が新しくなりました</b><span>これからは、みんな共通の入口 <i>${esc(shin)}</i> で、社長から届いた ID とパスワードで入れます。</span></a>`:""}
+  ${hj?`<a class="mazu" href="#" data-y="yomu:${esc(HJ)}"><b>👉 はじめての人は、ここを上から順に</b><span>① 入口に入る　② あいさつ　③ 課金　④ アプリを入れる　⑤ 会社に参加</span></a>`:""}<div class="yaru">${yaru.map(([k,n,t,u])=>u?`<a href="${esc(u)}" target="_blank" rel="noopener"><b>${esc(n)}</b><span>${esc(t)}</span></a>`:`<a href="#" data-y="${esc(k)}"><b>${esc(n)}</b><span>${esc(t)}</span></a>`).join("")}</div>
   <p style="color:var(--sub);margin-top:0">ソフトごとの開発部屋です。進み・出来た事・工事日誌が、毎日の仕事から自動でたまっていきます。どの部屋からも「試す」「開発に参加したい」ができます。</p>
   <div class="heya">${rooms}${D.lab_dameshi.length?`<div class="card" data-i="lab"><h2>ラボ全体の心得</h2><p class="hk">どのソフトにも通じる、ダメ出しから学んだ決まり</p><div class="kazu"><span>心得 ${D.lab_dameshi.length}</span></div></div>`:""}</div>
   ${yaritaiDan(H.yaritai)}
@@ -256,7 +303,7 @@ function ichiran(push=1){
   kidouKuchi();
   M.querySelectorAll(".card").forEach(c=>c.onclick=()=>heya(c.dataset.i,null,1));
   M.querySelectorAll("[data-y]").forEach(a=>a.onclick=e=>{e.preventDefault();const y=a.dataset.y;
-    y==="tsutsumi"?tsutsumi(1):y==="kousin"?kousin(1):y==="shorui"?shorui("",1):y==="eigyou"?eigyou(1):yomu(y.slice(5),1)});
+    y==="tsutsumi"?tsutsumi(1):y==="kousin"?kousin(1):y==="shorui"?shorui("",1):y==="eigyou"?eigyou(1):y==="tesuto"?tesuto(1):y==="pw"?pwKaeru(1):yomu(y.slice(5),1)});
 }
 
 // 読みやすく直した文（yasashi）を先に出す。原文は「原文」ボタンで同じ札の中に開く（行を増やさない）
@@ -280,6 +327,7 @@ function hibi(k,xs){
     const mi=t?`${t.getFullYear()}年${t.getMonth()+1}月${t.getDate()}日（${YOUBI[t.getDay()]}）の更新`:"日付のないもの";
     return `<div class="hibi"><div class="hibi-h">${mi}<span>${g.get(d).length}つ</span></div><ul>${g.get(d).map(x=>ichi(k,x,1)).join("")}</ul></div>`}).join("");
 }
+M.addEventListener("click",e=>{const a=e.target.closest("a[data-v]");if(!a)return;e.preventDefault();miseru({v:a.dataset.v})});
 M.addEventListener("click",e=>{const b=e.target.closest(".gb");if(!b)return;const c=b.closest(".ichi");b.classList.toggle("on",c.classList.toggle("hiraki"))});
 
 function heya(i,t0,push){
@@ -342,6 +390,7 @@ let UCHI=null;
 async function uchiKa(m){
   if(UCHI!==null)return UCHI;
   UCHI=false;
+  if(IDMODE)return UCHI;
   try{
     if(new URL(m.url).origin===location.origin)return UCHI;
     const p=await navigator.permissions.query({name:"local-network-access"});  // この止めを持つブラウザだけ見分ける
@@ -483,7 +532,8 @@ function tsutsumi(push=1){
 // ---------- 読み物（手引き・紹介・会社設立の書類） ----------
 function md(t){
   const il=s=>esc(s).replace(/!\[([^\]]*)\]\(([^)\s]+)\)/g,(m,a,u)=>/^(\.\.\/|https:)/.test(u)?`<img src="${u}" alt="${a}" loading="lazy">`:"")
-    .replace(/\[([^\]]+)\]\((https:[^)\s]+)\)/g,'<a href="$2" target="_blank" rel="noopener">$1</a>').replace(/\*\*(.+?)\*\*/g,"<b>$1</b>").replace(/`([^`]+)`/g,"<code>$1</code>");
+    .replace(/\[([^\]]+)\]\((https:[^)\s]+)\)/g,'<a href="$2" target="_blank" rel="noopener">$1</a>').replace(/\[([^\]]+)\]\(#v=([a-z]+)\)/g,'<a href="#v=$2" data-v="$2">$1</a>')
+    .replace(/\*\*(.+?)\*\*/g,"<b>$1</b>").replace(/`([^`]+)`/g,"<code>$1</code>");
   const L=t.replace(/\r/g,"").split("\n"), o=[];let i=0;
   while(i<L.length){
     const l=L[i];
@@ -544,7 +594,117 @@ async function eigyou(push=1){
   if(nai)T.insertAdjacentHTML("afterend",`<div class="shita">${esc(nai)}</div>`);
 }
 
-$("#deru").onclick=()=>{put(LS,null);D=null;mon("出ました。")};
+// ---------- テスト中のアプリ（2026-11-27 社長「スマホしかない人は 開発は難しいから アプリのテストをしてもらう。テスト中のアプリを一覧で並べておいてほしいな。あと、感想欄みたいなやつも欲しい。」） ----------
+// 一覧＝入口アプリの一覧表（../iriguchi/ichiran.json）の tesuto の行。増やす時は表に1行足すだけ。入れる所は公開の置き場の入口アプリ（招待もそこに覚えている）
+const IRIG="https://madbrolabs.github.io/kai-shain/iriguchi/";
+const KIKI=()=>/iPhone|iPad|iPod/.test(navigator.userAgent)||(navigator.platform==="MacIntel"&&navigator.maxTouchPoints>1)?"iphone":/Android/.test(navigator.userAgent)?"android":"windows";
+const KIKI_NA={iphone:"iPhone",android:"Android",windows:"パソコン（Windows）"};
+let TESUTO=null;
+async function tesutoYomu(){if(TESUTO)return TESUTO;const r=await fetch("../iriguchi/ichiran.json",{cache:"no-cache"});const j=await r.json();
+  TESUTO=(j.soft||[]).filter(s=>s.tesuto&&!s.jumbi);return TESUTO}
+function ireBotan(s){
+  const k=KIKI(),m=s[k];
+  if(!m||m.jumbi)return {h:"",ch:`この端末（${KIKI_NA[k]}）には、まだありません。${["android","iphone","windows"].filter(x=>s[x]&&!s[x].jumbi).map(x=>KIKI_NA[x]).join("・")}で使えます。`};
+  const u=String(m.url||"");
+  if(m.kata==="apk")return {h:`<a class="ire" href="${esc(IRIG+u)}" download>📥 入れる（Android のアプリ）</a>`,ch:"押すと入れる物が届きます。開いて「インストール」を押してください（はじめは「この提供元のアプリを許可」が出ます）。"};
+  if(m.kata==="exe"||m.kata==="zip"||m.kata==="jibun")return {h:`<a class="ire" href="${esc(IRIG+u)}" download>📥 入れる</a>`,ch:""};
+  if(m.kata==="web"&&u&&!/[{}]/.test(u)){const w=/^https:/.test(u)?u:IRIG+u.replace(/^\.\//,"");
+    return {h:`<a class="ire" href="${esc(w)}" target="_blank" rel="noopener">📱 開く</a>`,ch:k==="iphone"?"開いたら、Safari の「共有」→「ホーム画面に追加」でアプリの様に使えます。":""}}
+  return {h:`<a class="ire" href="${esc(IRIG)}" target="_blank" rel="noopener">📱 入口アプリから入れる</a>`,ch:"社長から届いた招待のリンクを一度開いてあれば、入口アプリの中で押すだけで入ります。"};
+}
+async function tesuto(push=1){
+  iku({v:"tesuto"},push);window.scrollTo(0,0);
+  M.innerHTML=`<div class="mae"><button id="modoru">← 部屋の一覧</button></div><div class="mi"><h1>テスト中のアプリ</h1></div>
+  <div class="hk" style="color:var(--sub);margin-bottom:12px">スマホに入れて使ってみて、気づいた事を「感想を書く」から送ってください。良かった所・困った所・こわれた所、なんでも大歓迎です。送った感想は社長と、そのアプリの係に届きます。</div>
+  <div class="ts-l" id="ts-l"><div class="kara">読んでいます…</div></div>`;
+  $("#modoru").onclick=()=>ichiran(1);
+  let xs=[];try{xs=await tesutoYomu()}catch(e){const L=$("#ts-l");if(L)L.innerHTML=`<div class="kara">一覧を読めませんでした。電波を確かめて、もう一度どうぞ。</div>`;return}
+  const L=$("#ts-l");if(!L)return;
+  L.innerHTML=xs.length?xs.map(s=>{const b=ireBotan(s);return `<div class="ts"><h3>${esc(s.namae)}</h3><p class="hk">${esc(s.hitokoto)}</p>
+    <div class="bt2">${b.h}<button class="kan" data-k="${esc(s.id)}">✍ 感想を書く</button></div>${b.ch?`<div class="ch">${esc(b.ch)}</div>`:""}</div>`}).join(""):`<div class="kara">いまテスト中のアプリはありません。</div>`;
+  L.querySelectorAll("button.kan").forEach(b=>b.onclick=()=>kansou(b.dataset.k,1));
+}
+const KANSOU_KAZU=6, KANSOU_OOKISA=20*1024*1024;
+async function kansou(id,push=1){
+  iku({v:"kansou",i:id},push);window.scrollTo(0,0);
+  let xs=[];try{xs=await tesutoYomu()}catch(e){}
+  const s=xs.find(x=>x.id===id);if(!s)return tesuto(0);
+  M.innerHTML=`<div class="mae"><button id="modoru">← テスト中のアプリ</button></div><div class="mi"><h1>「${esc(s.namae)}」の感想</h1></div><div id="kf" class="kf"></div>`;
+  $("#modoru").onclick=()=>tesuto(1);
+  const F=$("#kf");
+  if(!IDMODE){
+    let shin="";try{shin="https://"+new URL(MON().url).hostname+"/kai/"}catch(e){}
+    F.innerHTML=`<div class="ichi">感想は、新しい入口（ID とパスワード）から送れます。送った人の名前が自動で付くためです。${shin?`<br><a href="${esc(shin)}" style="font-weight:bold">${esc(shin)}</a> を開いて、社長から届いた ID とパスワードで入ってください。`:""}</div>`;return}
+  F.innerHTML=`<div class="hk" style="color:var(--sub);margin-bottom:8px">送る人：<b>${esc(ORE?ORE.namae:"")}</b>（名前は ID で自動で付きます）</div>
+  <textarea id="kf-bun" maxlength="2000" placeholder="使ってみてどうでしたか？　良かった所・困った所・こわれた所・こうだったらいいのに、など"></textarea>
+  <div class="fu2"><button type="button" id="kf-fu">📎 写真・ファイルを付ける</button><button type="button" id="kf-kame" hidden>📷 撮って付ける</button></div>
+  <input type="file" id="kf-in" hidden><div class="chips" id="kf-tsuke"></div>
+  <div style="margin-top:12px"><button class="okuru" id="kf-go">送る</button></div><div class="err" id="kf-err"></div><div id="kf-yoi"></div>
+  <h2 class="kou-h" style="margin-top:28px">自分が送った感想</h2><div id="kf-jibun"><div class="kara">読んでいます…</div></div>`;
+  const T=[];
+  if(matchMedia("(pointer:coarse)").matches)$("#kf-kame").hidden=false;
+  const egaku=()=>{const w=$("#kf-tsuke");if(!w)return;w.innerHTML="";T.forEach(x=>{const c=document.createElement("div");c.className="chip"+(x.jou==="dame"?" dame":"");
+    c.innerHTML=`${x.url?`<img src="${esc(x.url)}" alt="">`:"📄"}<div style="min-width:0"><div class="cn">${esc(x.na)}</div><div class="cj">${x.jou==="okuri"?"送っています "+(x.pct||0)+"%":x.jou==="ok"?"付けました":esc(x.naze||"送れませんでした")}</div></div><button class="cx" title="外す" aria-label="外す">✕</button>`;
+    c.querySelector(".cx").onclick=()=>{if(x.url)URL.revokeObjectURL(x.url);T.splice(T.indexOf(x),1);egaku()};w.appendChild(c)})};
+  // 写真は送る前に縮める（長い辺1600まで・協力者の広場と同じやり方）
+  const chijimeru=f=>new Promise(ok=>{const sono=()=>ok({blob:f,name:f.name});
+    if(!/^image\/(jpeg|png|webp|heic|heif|bmp)$/i.test(f.type||"")||!window.createImageBitmap)return sono();
+    createImageBitmap(f,{imageOrientation:"from-image"}).catch(()=>createImageBitmap(f)).then(bm=>{const sc=Math.min(1,1600/Math.max(bm.width,bm.height));
+      const w=Math.max(1,Math.round(bm.width*sc)),h=Math.max(1,Math.round(bm.height*sc)),c=document.createElement("canvas");c.width=w;c.height=h;
+      const g=c.getContext("2d");g.fillStyle="#fff";g.fillRect(0,0,w,h);g.drawImage(bm,0,0,w,h);if(bm.close)bm.close();
+      c.toBlob(b=>{if(!b||(sc===1&&b.size>=f.size&&f.size<=KANSOU_OOKISA&&!/heic|heif/i.test(f.type)))return sono();ok({blob:b,name:(f.name||"shashin").replace(/\.[^.]*$/,"")+".jpg"})},"image/jpeg",.85)}).catch(sono)});
+  const ageru=(b,x)=>{const q=new XMLHttpRequest();q.open("POST","/kai/kansou/api/fairu");q.setRequestHeader("X-KAI","1");q.setRequestHeader("X-Na",encodeURIComponent(x.na));
+    q.setRequestHeader("Content-Type","application/octet-stream");q.upload.onprogress=e=>{if(e.lengthComputable){x.pct=Math.round(e.loaded*100/e.total);egaku()}};
+    q.onload=()=>{let j={};try{j=JSON.parse(q.responseText)}catch(e){}if(q.status===200&&j.ok){x.id=j.id;x.na=j.na;x.jou="ok"}else{x.jou="dame";x.naze=j.naze||"送れませんでした（"+q.status+"）"}egaku()};
+    q.onerror=()=>{x.jou="dame";x.naze="送れませんでした。電波を確かめてください";egaku()};q.send(b)};
+  const inp=$("#kf-in");
+  $("#kf-fu").onclick=()=>{inp.removeAttribute("accept");inp.removeAttribute("capture");inp.multiple=true;inp.value="";inp.click()};
+  $("#kf-kame").onclick=()=>{inp.setAttribute("accept","image/*");inp.setAttribute("capture","environment");inp.multiple=false;inp.value="";inp.click()};
+  inp.onchange=()=>{[...(inp.files||[])].forEach(f=>{if(T.length>=KANSOU_KAZU){alert("写真・ファイルは1回に"+KANSOU_KAZU+"つまでです");return}
+    const x={na:f.name||"fairu",jou:"okuri",pct:0};T.push(x);egaku();
+    chijimeru(f).then(r=>{const b=r.blob;x.na=r.name||x.na;if(/^image\//.test(b.type)){try{x.url=URL.createObjectURL(b)}catch(e){}}
+      if(b.size>KANSOU_OOKISA){x.jou="dame";x.naze="大きすぎます（20MBまで）";egaku();return}egaku();ageru(b,x)})})};
+  const jibun=async()=>{const w=$("#kf-jibun");if(!w)return;try{const j=await (await fetch("/kai/kansou/api/jibun",{cache:"no-store"})).json();
+    const ks=(j.kansou||[]).filter(k=>k.soft===id);
+    w.innerHTML=ks.length?ks.map(k=>`<div class="kj"><span class="hi">${esc(String(k.t).replace("T"," ").slice(0,16))}${k.fairu.length?"・📎 "+k.fairu.length+"つ":""}</span><div>${esc(k.bun)}</div></div>`).join(""):`<div class="kara">まだ送っていません。</div>`}
+    catch(e){w.innerHTML=""}};
+  jibun();
+  $("#kf-go").onclick=async()=>{const bun=$("#kf-bun").value.trim(),e=$("#kf-err");e.textContent="";$("#kf-yoi").innerHTML="";
+    if(T.some(x=>x.jou==="okuri")){e.textContent="写真・ファイルを送っている途中です。少し待ってください。";return}
+    const fl=T.filter(x=>x.jou==="ok").map(x=>x.id);
+    if(!bun&&!fl.length){e.textContent="感想を書いてください。";return}
+    const b=$("#kf-go");b.disabled=true;b.textContent="送っています…";
+    let j={};try{const r=await fetch("/kai/kansou/api/kaku",{method:"POST",headers:{"Content-Type":"application/json","X-KAI":"1"},
+      body:JSON.stringify({soft:id,bun,fairu:fl,kiki:KIKI_NA[KIKI()]+(innerWidth<768?"・スマホの幅":"")})});j=await r.json().catch(()=>({}))}catch(x){j={naze:"送れませんでした。電波を確かめてください。"}}
+    b.disabled=false;b.textContent="送る";
+    if(!j.ok){e.textContent=j.naze||"送れませんでした。";return}
+    $("#kf-bun").value="";T.forEach(x=>{if(x.url)URL.revokeObjectURL(x.url)});T.length=0;egaku();
+    $("#kf-yoi").innerHTML=`<div class="yoi">送りました。ありがとうございます！社長と、このアプリの係に届きます。</div>`;jibun()};
+}
+// パスワードを変える（ID の形だけ）
+function pwKaeru(push=1){
+  if(!IDMODE)return ichiran(0);
+  iku({v:"pw"},push);window.scrollTo(0,0);
+  M.innerHTML=`<div class="mae"><button id="modoru">← 部屋の一覧</button></div><div class="mi"><h1>パスワードを変える</h1></div>
+  <div class="pwf"><div class="hk" style="color:var(--sub)">${esc(ORE?ORE.namae:"")}さんのパスワードを替えます。替えると、ほかの端末で入ったままの所は切れます（この端末はそのまま）。</div>
+  <label for="pw-mae">今のパスワード</label><input id="pw-mae" type="password" autocomplete="current-password">
+  <label for="pw-ato">新しいパスワード（8字以上）</label><input id="pw-ato" type="password" autocomplete="new-password" minlength="8">
+  <label for="pw-ato2">新しいパスワード（もう一度）</label><input id="pw-ato2" type="password" autocomplete="new-password" minlength="8">
+  <button id="pw-go">替える</button><div class="err" id="pw-err" style="color:#d33;font-size:14px;margin-top:8px"></div></div>`;
+  $("#modoru").onclick=()=>ichiran(1);
+  $("#pw-go").onclick=async()=>{const mae=$("#pw-mae").value,ato=$("#pw-ato").value,e=$("#pw-err");e.textContent="";
+    if(ato.length<8){e.textContent="新しいパスワードは8字以上にしてください。";return}
+    if(ato!==$("#pw-ato2").value){e.textContent="新しいパスワードが2回で違います。";return}
+    let j={};try{const r=await fetch("/kai/api/pw",{method:"POST",headers:{"Content-Type":"application/json","X-KAI":"1"},body:JSON.stringify({mae,ato})});j=await r.json().catch(()=>({}))}catch(x){}
+    if(!j.ok){e.textContent=j.naze||"替えられませんでした。";return}
+    if(ORE)ORE.shoki=false;
+    M.querySelector(".pwf").innerHTML=`<div class="ichi">パスワードを替えました。次からは新しいパスワードで入ってください。</div><button id="pw-modoru">部屋の一覧へ</button>`;
+    $("#pw-modoru").onclick=()=>ichiran(1)};
+}
+
+$("#deru").onclick=async()=>{
+  if(IDMODE){try{await fetch("/kai/api/logout",{method:"POST",headers:{"X-KAI":"1"}})}catch(e){}ORE=null;D=null;return mon("ログアウトしました。")}
+  put(LS,null);D=null;mon("出ました。")};
 // ---------- チャット部屋の小窓 ----------
 // 部屋は一人ずつの専用ページの「協力者の広場」（鍵で名前が決まる）。専用ページの「社員ページ」から来た時に #kyo= で受け取り、この機械に覚える
 const KYO="kai_kyo_url", KYOJ="kai_kyo_mado";
@@ -567,7 +727,8 @@ function kyoBasho(){const w=$("#kyo"),j=kyoJ(),W=innerWidth,Hh=innerHeight;
   let x=typeof j.x==="number"?j.x:W-ww-16,y=typeof j.y==="number"?j.y:Hh-hh-16;
   x=Math.max(8,Math.min(x,W-ww-8));y=Math.max(8,Math.min(y,Hh-hh-8));w.style.left=x+"px";w.style.top=y+"px";return {x,y}}
 function kyoMiseru(){const j=kyoJ();$("#kyo").hidden=j.chiisai;$("#kyo-maru").hidden=!j.chiisai;if(!j.chiisai){kyoBasho();$("#kyo-ten").hidden=true}}
-function kyoNaka(){const u=kyoKata(get(KYO)),n=$("#kyo-naka"),oo=$("#kyo-oo");
+const kyoU=()=>IDMODE?location.origin+"/kai/kyouryoku/":kyoKata(get(KYO));
+function kyoNaka(){const u=kyoU(),n=$("#kyo-naka"),oo=$("#kyo-oo");
   if(u){if(n.dataset.u!==u){n.dataset.u=u;n.innerHTML="";const f=document.createElement("iframe");f.title="チャット部屋";f.src=u+"?mado=1";f.allow="camera; local-network-access; local-network";n.appendChild(f);
       // 開けたら広場が知らせてくる。来なければ（電波・端末の守りで断られた等）別の画面で開く道を出す
       clearTimeout(kyoNaka.t);kyoNaka.hiraita=false;kyoNaka.t=setTimeout(()=>{if(kyoNaka.hiraita||n.dataset.u!==u)return;const d=document.createElement("div");d.id="kyo-dame";
@@ -588,7 +749,7 @@ function kyoDasu(){kyoNaka();kyoMiseru();document.body.classList.add("kyo-ari")}
   $("#kyo-maru").onclick=()=>{const j=kyoJ();j.chiisai=false;kyoOku(j);kyoMiseru()};
   addEventListener("resize",()=>{if(!w.hidden)kyoBasho()});
   // 小さくしている間に新しい書き込みが来たら、丸に赤い点（広場が知らせてくる）
-  addEventListener("message",e=>{const u=kyoKata(get(KYO));if(!u||e.origin!==new URL(u).origin)return;
+  addEventListener("message",e=>{const u=kyoU();if(!u||e.origin!==new URL(u).origin)return;
     if(e.data&&e.data.kai_kyo==="hiraita"){kyoNaka.hiraita=true;$("#kyo-dame")?.remove()}
     if(e.data&&e.data.kai_kyo==="atarashii"&&$("#kyo").hidden)$("#kyo-ten").hidden=false});
 })();
@@ -598,7 +759,8 @@ function hashKara(){const m=location.hash.match(/(?:^#|&)k=([^&]+)/);if(!m)retur
   const nokori=location.hash.replace(/^#/,"").split("&").filter(x=>x&&!x.startsWith("k=")).join("&");  // 合言葉だけ消し、開いていた画面（v=・h=）は残す
   history.replaceState(null,"",location.pathname+(nokori?"#"+nokori:""));hairu(k);return true}
 addEventListener("hashchange",hashKara);
-if(!hashKara()){const s=get(LS); s?hairu(s):mon();}
+if(IDMODE)hairu("");
+else if(!hashKara()){const s=get(LS); s?hairu(s):mon();}
 </script>
 </body>
 </html>

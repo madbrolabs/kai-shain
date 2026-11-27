@@ -1,6 +1,6 @@
 {
  "katachi": "madbro.iriguchi.ichiran.v1",
- "setsumei": "入口アプリの一覧表（ここ1か所だけ）。1行＝1ソフト。windows／android／iphone に入れ方を書く。無い機械は書かない（＝その機械では出ない）。jumbi が true の行は「準備中」で押せない（機械の中に jumbi: true を書くと、その機械だけ準備中。jumbi_wake も機械の中に書ける）。{u} などの波かっこは招待の中の値で埋まる（{kaisha}・{namae} は全ソフト共通）。url は一覧表の置き場からの相対でもよい。sha256・size は tsukuru.py が配り物から計って書く。",
+ "setsumei": "入口アプリの一覧表（ここ1か所だけ）。1行＝1ソフト。windows／android／iphone に入れ方を書く。無い機械は書かない（＝その機械では出ない）。jumbi が true の行は「準備中」で押せない（機械の中に jumbi: true を書くと、その機械だけ準備中。jumbi_wake も機械の中に書ける）。{u} などの波かっこは招待の中の値で埋まる（{kaisha}・{namae} は全ソフト共通）。url は一覧表の置き場からの相対でもよい。sha256・size は tsukuru.py が配り物から計って書く。tesuto が true の行は、社員ページの「テスト中のアプリ」に出る（スマホしかない人がテストして感想を送る）。shunin＝感想を届ける主任の部屋（主任名簿の案件名）。",
  "soft": [
   {
    "id": "iriguchi",
@@ -29,7 +29,9 @@
    "iphone": {
     "kata": "web",
     "url": "./"
-   }
+   },
+   "tesuto": true,
+   "shunin": "KAI社員ページ"
   },
   {
    "id": "gijiroku",
@@ -59,7 +61,9 @@
    "iphone": {
     "kata": "web",
     "url": "{u}?p=rokuon&k={k}"
-   }
+   },
+   "tesuto": true,
+   "shunin": "超議事録"
   },
   {
    "id": "tsuuyaku",
@@ -81,7 +85,9 @@
    "iphone": {
     "kata": "web",
     "url": "{url}"
-   }
+   },
+   "tesuto": true,
+   "shunin": "リバベル（同時通訳）"
   },
   {
    "id": "enything",
@@ -109,7 +115,9 @@
    "iphone": {
     "kata": "web",
     "url": "{url}"
-   }
+   },
+   "tesuto": true,
+   "shunin": "縁ything"
   },
   {
    "id": "kai_shain",

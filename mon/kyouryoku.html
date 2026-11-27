@@ -101,6 +101,9 @@ h3{font-size:16px;margin:16px 0 6px}
 .mado header.top,.mado .setsumei,.mado .shirase,.mado .ashi{display:none!important}
 .mado main.wrap{padding-top:8px}
 .mado #chat-log{height:calc(100vh - 185px);height:calc(100dvh - 185px);min-height:120px}
+a.shin{display:block;margin:0 0 12px;padding:12px 16px;border-radius:14px;text-decoration:none;color:#0b2a5b;background:#dbeafe;border:2px solid #2563eb}
+a.shin b{display:block;font-size:18px}a.shin span{display:block;font-size:14.5px;line-height:1.55}a.shin i{font-style:normal;font-weight:bold;word-break:break-all}
+a.shin[hidden]{display:none}
 #ookii button{position:absolute;top:10px;right:12px;border:0;background:rgba(255,255,255,.18);color:#fff;border-radius:999px;padding:4px 14px;font-size:16px}
 </style>
 </head>
@@ -111,6 +114,7 @@ h3{font-size:16px;margin:16px 0 6px}
 </div></header>
 
 <main class="wrap">
+  <a id="shin-iriguchi" class="shin" href="/kai/" hidden><b>🔑 入口が新しくなりました</b><span>これからは、みんな共通の入口 <i>/kai/</i> で、社長から届いた ID とパスワードで入れます。このアドレスも、しばらくはこのまま使えます。</span></a>
   <div class="tabs" role="tablist">
     <button role="tab" id="tab-chat" aria-selected="true">💬 チャット</button>
     <button role="tab" id="tab-ita" aria-selected="false">📋 掲示板</button>
@@ -172,7 +176,14 @@ var TSUKE = {chat:[], sure:[], hen:[]};
 var MEN = "chat", SURE = "";
 var TANMATSU = "";
 var MADO = /[?&]mado=1(&|$)/.test(location.search) && window.parent !== window;
-if(MADO){ document.documentElement.classList.add("mado"); try{ window.parent.postMessage({kai_kyo:"hiraita"}, "https://madbrolabs.github.io"); }catch(e){} }
+// 小窓の親＝ID の入口（/kai/）なら同じ住所、前の形なら公開の置き場の社員ページ
+var OYA = location.pathname.indexOf("/kai/") === 0 ? location.origin : "https://madbrolabs.github.io";
+if(MADO){ document.documentElement.classList.add("mado"); try{ window.parent.postMessage({kai_kyo:"hiraita"}, OYA); }catch(e){} }
+// 前の一人ずつのアドレスで開いた時は、新しい入口を案内する（このアドレスもしばらく使える）
+if(!MADO && location.pathname.indexOf("/kai/") !== 0){
+  fetch("/kai/api/ore", {cache:"no-store"}).then(function(r){ if(r.status === 401 || r.ok){ var a = document.getElementById("shin-iriguchi");
+    a.querySelector("i").textContent = location.origin + "/kai/"; a.hidden = false; } }).catch(function(){});
+}
 var SAIGO = null, MITA = false;  // 小窓の時：最後に見たチャットの番号（新しい物が来たら社員ページの丸に赤い点）
 function yomuLS(k){ try{ return localStorage.getItem(k) || ""; }catch(e){ return ""; } }
 function kakuLS(k, v){ try{ localStorage.setItem(k, v); }catch(e){} }
@@ -220,7 +231,7 @@ function egakuChat(){
   });
   if(shita || egakuChat.hajime !== true){ box.scrollTop = box.scrollHeight; egakuChat.hajime = true; }
   var ato = S.chat[S.chat.length - 1];
-  if(MADO && MITA && ato && ato.id !== SAIGO && !ato.jibun){ try{ window.parent.postMessage({kai_kyo:"atarashii"}, "https://madbrolabs.github.io"); }catch(e){} }
+  if(MADO && MITA && ato && ato.id !== SAIGO && !ato.jibun){ try{ window.parent.postMessage({kai_kyo:"atarashii"}, OYA); }catch(e){} }
   SAIGO = ato ? ato.id : null; MITA = true;
 }
 

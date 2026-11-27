@@ -606,6 +606,11 @@ def main() -> None:
         shanai.tsukeru(app)
     except Exception as e:
         log(f"社内向けの資料を付けられませんでした {e!r}")
+    try:  # アドオン：ID とパスワードの入口（kai.py・/kai/・ID の表＝内緒の場所/kai_id.json・入/切＝内緒の場所/kai_id_settei.json）。亀井ページより先に付ける
+        import kai
+        kai.tsukeru(app)
+    except Exception as e:
+        log(f"ID とパスワードの入口を付けられませんでした {e!r}")
     try:  # アドオン：協力者の広場（kyouryoku.py・チャットと掲示板・書き込み＝内緒の場所/kyouryoku/kaki.jsonl・入/切＝内緒の場所/kyouryoku.json）。亀井ページより先に付ける
         import kyouryoku
         kyouryoku.tsukeru(app)

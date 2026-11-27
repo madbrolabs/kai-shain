@@ -98,6 +98,13 @@ def namae(who: str) -> str:
         return n[who].strip()[:20]
     if who == "shachou":
         return "社長"
+    try:  # ID とパスワードの入口（kai.py）で作った人は、その ID の名前
+        import kai
+        na = kai.dare_namae(who)
+        if na:
+            return na[:20]
+    except Exception:
+        pass
     try:
         import kamei
         if who in kamei.KYAKU:
@@ -401,10 +408,19 @@ def tsukeru(app) -> None:
         """入ってよい人なら who（shachou／kamei／iwata／katsuyama／…）。ダメなら None。"""
         if not iri():
             return None
+        if req.path.startswith("/kai/"):  # ID とパスワードの入口（kai.py）＝入った札で決める
+            try:
+                import kai
+                a = kai.hito(req)
+                return a["dare"] if a else None
+            except Exception:
+                return None
         return senyou_dare(req.match_info.get("k", ""))
 
     async def page(req):
         if not dare(req):
+            if req.path.startswith("/kai/") and iri():  # ID の入口で、まだ入っていない時は入る画面へ
+                raise web.HTTPFound("/kai/shain/")
             return nai()
         if not req.path.endswith("/"):
             raise web.HTTPFound(req.path + "/")
@@ -643,7 +659,7 @@ def tsukeru(app) -> None:
 
     r = app.router
     # 頭の言葉は決まった字で書く（頭を「{m}」の形にすると、門番の振り分けが亀井ページの「その他は404」（/kamei/{k}/{tail}）を先に当ててしまう）
-    for atama in ("/kamei/{k}/kyouryoku", "/kyaku/{k}/kyouryoku"):
+    for atama in ("/kamei/{k}/kyouryoku", "/kyaku/{k}/kyouryoku", "/kai/kyouryoku"):  # /kai/…＝ID とパスワードの入口（kai.py）
         r.add_get(atama, page)
         r.add_get(atama + "/", page)
         r.add_get(atama + "/api/yomu", yomu)

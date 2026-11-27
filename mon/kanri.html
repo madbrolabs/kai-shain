@@ -33,6 +33,17 @@ h2 .kazu.zero{background:var(--mi)}
 .kara{color:var(--sub);font-size:14.5px;padding:8px 2px}
 details{margin-top:6px}summary{cursor:pointer;color:var(--sub);font-size:14.5px;padding:4px 0}
 .yomenai{background:#fdecea;color:#8a1c12;border-radius:10px;padding:10px 14px}
+.idhyou{width:100%;border-collapse:collapse;background:var(--card);border:1px solid var(--line);border-radius:14px;overflow:hidden;font-size:14.5px}
+.idhyou th,.idhyou td{padding:8px 10px;border-bottom:1px solid var(--line);text-align:left;vertical-align:middle}
+.idhyou td .kou{margin:0}.idhyou button{padding:4px 12px;font-size:14px}
+.idform{display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end;margin-top:10px;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px 14px}
+.idform label{display:flex;flex-direction:column;font-size:13px;color:var(--sub)}
+.idform input,.idform select{font:inherit;padding:5px 8px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--ink)}
+.pwmise{margin-top:10px;background:#fff7d6;color:#3a2a00;border:2px solid #e0a100;border-radius:12px;padding:10px 14px}
+.pwmise code{font-size:20px;font-weight:800;letter-spacing:.06em;user-select:all}
+.kbun{white-space:pre-wrap;margin:6px 0}
+.ksha{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}.ksha img{max-width:180px;max-height:180px;border-radius:8px;border:1px solid var(--line)}
+.ksha a{font-size:14px;color:var(--acc)}
 </style></head>
 <body><div class="waku">
 <header><span class="kai" aria-label="KAI">KAI</span><h1>管理画面</h1></header>
@@ -113,6 +124,35 @@ function kaku(){
     html += dan("d-kamei", esc((j.kyaku_na || []).join("・") || "お客") + "からの案（入れるか待ち）", "「入れて」で、その部屋の主任へ知らせが届き、主任が本番に入れます。",
                 kt.filter(function(x){ return (x.joutai || "試し中") === "試し中"; }), kt.filter(function(x){ return (x.joutai || "試し中") !== "試し中"; }), kIchi);
   }
+  if(j.kai_id){
+    var KB = {shachou:"社長の箱", shain:"社員の箱"};
+    html += "<section id='d-kai-id'><h2>社員ページの ID</h2><p class='setsu'>社員ページの入口（門番の住所の <b>/kai/</b>）で使う ID とパスワードです。"
+      + (j.kai_iri ? "" : "<b>（いま入口は切りです）</b>") + "発行・止める・作り直しはここだけ。初めのパスワードは作った時にこの画面に1回だけ出し、内緒の場所の secret/kai_id_shoki.json にも書きます。</p>"
+      + "<table class='idhyou'><tr><th>ID</th><th>名前</th><th>見える箱</th><th>状態</th><th></th></tr>"
+      + j.kai_id.map(function(x){
+          return "<tr data-id='" + esc(x.id) + "'><td><b>" + esc(x.id) + "</b></td><td>" + esc(x.namae) + "</td><td>" + esc(KB[x.kubun] || x.kubun) + "</td><td>"
+            + (x.teishi ? "<span class='fuda miokuri'>止めている</span>" : "<span class='fuda saiyou'>使える</span>") + (x.shoki ? "<span class='fuda kari'>初めのパスワードのまま</span>" : "")
+            + "</td><td><div class='kou'><button class='s' data-kai='saihakkou'>パスワードを作り直す</button>"
+            + (x.teishi ? "<button class='s' data-kai='modosu'>戻す</button>" : "<button class='s' data-kai='teishi'>止める</button>") + "</div></td></tr>";
+        }).join("") + "</table>"
+      + "<div class='idform' id='idform'><label>ID（英小文字・数字・_）<input name='id' maxlength='24' autocomplete='off'></label><label>名前（画面に出る）<input name='namae' maxlength='20'></label>"
+      + "<label>見える箱<select name='kubun'><option value='shain'>社員の箱</option><option value='shachou'>社長の箱（社長だけ）</option></select></label>"
+      + "<button data-kai='hakkou'>ID を発行する</button></div><div class='err' id='kai-err'></div><div id='pw-mise'></div></section>";
+  }
+  if(j.kansou){
+    var HT = {todoita:"主任の部屋へ届いた", machi:"届け待ち（部屋が開くのを待っています）", akirame:"届けられませんでした（3日たった）"};
+    var kIchi2 = function(x){
+      return "<div class='ichi'><span class='hi'>" + esc(String(x.t || "").replace("T", " ").slice(0, 16)) + " ・ " + esc(x.na) + "（ID " + esc(x.kai_id) + (x.kiki ? "・" + esc(x.kiki) : "") + "）</span>"
+        + "<div><span class='fuda " + (x.haitatsu === "todoita" ? "saiyou" : "machi") + "'>" + esc(HT[x.haitatsu] || x.haitatsu) + (x.heya ? "：" + esc(x.heya) : "") + "</span><b class='dai'>" + esc(x.soft_na) + "</b></div>"
+        + (x.bun ? "<div class='kbun'>" + esc(x.bun) + "</div>" : "")
+        + ((x.fairu || []).length ? "<div class='ksha'>" + x.fairu.map(function(f){ var u = "/kansou_fairu/" + encodeURIComponent(f.id);
+            return f.gazou ? "<a href='" + u + "' target='_blank' rel='noopener'><img src='" + u + "' alt='" + esc(f.na) + "'></a>" : "<a href='" + u + "' target='_blank' rel='noopener'>📄 " + esc(f.na) + "</a>"; }).join("") + "</div>" : "")
+        + "</div>";
+    };
+    html += "<section id='d-kansou'><h2>テスト中のアプリの感想 <span class='kazu" + (j.kansou.length ? "" : " zero") + "'>" + j.kansou.length + "件</span></h2>"
+      + "<p class='setsu'>社員ページの「テスト中のアプリ」から、テスト係が送った感想です（新しい順）。そのアプリの主任の部屋へも届けています。</p>"
+      + (j.kansou.length ? j.kansou.map(kIchi2).join("") : "<div class='kara'>まだありません。</div>") + "</section>";
+  }
   $("#naka").innerHTML = html;
   $("#toki").textContent = j.tsukutta ? "GitHub から最後に読んだ時刻：" + String(j.tsukutta).replace("T", " ") : "";
 }
@@ -136,6 +176,23 @@ $("#naka").addEventListener("click", function(e){
   api("kettei", body).then(function(j){
     if(!j.ok){ c.querySelector(".err").textContent = "出来ませんでした：" + (j.err || ""); c.querySelectorAll("button").forEach(function(x){ x.disabled = false; }); return; }
     yomu();
+  });
+});
+var KAI_KAKU = {saihakkou:"この ID のパスワードを作り直しますか？（今のパスワードと、入ったままの端末は使えなくなります）",
+                teishi:"この ID を止めますか？（入ったままの端末も切れます）", modosu:"この ID を戻しますか？", hakkou:"この ID を発行しますか？"};
+$("#naka").addEventListener("click", function(e){
+  var b = e.target.closest("button[data-kai]"); if(!b) return;
+  var k = b.dataset.kai, body = {shu:k};
+  if(k === "hakkou"){ var f = $("#idform"); body.id = f.querySelector("[name=id]").value.trim(); body.namae = f.querySelector("[name=namae]").value.trim(); body.kubun = f.querySelector("[name=kubun]").value;
+    if(!body.id || !body.namae){ $("#kai-err").textContent = "ID と名前を入れてください"; return; } }
+  else body.id = b.closest("tr").dataset.id;
+  if(!confirm(KAI_KAKU[k] + "\n\nID：" + body.id)) return;
+  b.disabled = true;
+  api("kai_id", body).then(function(j){
+    if(!j.ok){ b.disabled = false; $("#kai-err").textContent = "出来ませんでした：" + (j.err || ""); return; }
+    return yomu().then(function(){ if(j.pw){ $("#pw-mise").innerHTML = "<div class='pwmise'>ID <b>" + esc(body.id) + "</b> の初めのパスワード：<code>" + esc(j.pw) + "</code><br>"
+      + "この画面を読み直すと、もう出ません（内緒の場所の secret/kai_id_shoki.json にも書きました）。本人に渡し、入ったら「パスワードを変える」で替えてもらってください。</div>";
+      $("#d-kai-id").scrollIntoView({block:"start"}); } });
   });
 });
 $("#yominaosu").onclick = function(){
