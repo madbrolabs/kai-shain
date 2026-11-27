@@ -606,6 +606,11 @@ def main() -> None:
         shanai.tsukeru(app)
     except Exception as e:
         log(f"社内向けの資料を付けられませんでした {e!r}")
+    try:  # アドオン：協力者の広場（kyouryoku.py・チャットと掲示板・書き込み＝内緒の場所/kyouryoku/kaki.jsonl・入/切＝内緒の場所/kyouryoku.json）。亀井ページより先に付ける
+        import kyouryoku
+        kyouryoku.tsukeru(app)
+    except Exception as e:
+        log(f"協力者の広場を付けられませんでした {e!r}")
     try:  # アドオン：亀井ページ（kamei.py・設定 内緒の場所/kamei/settei.json の iri＝入/切）。無くても門番は動く
         import kamei
         kamei.tsukeru(app)

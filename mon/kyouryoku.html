@@ -1,0 +1,246 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<meta name="referrer" content="no-referrer">
+<title>KAI 協力者の広場</title>
+<style>
+:root{--bg:#f6f4ef;--card:#fff;--ink:#1d1f24;--sub:#6a6f78;--line:#e3dfd6;--acc:#1f6f5c;--acc2:#e8f2ee;--warn:#9a4b16;--warn2:#fbefe5;--me:#e6efff;--pin:#fff6d6;--pin2:#a87400;--aka:#b3261e}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#15171b;--card:#1e2127;--ink:#e9eaec;--sub:#9aa0aa;--line:#30343c;--acc:#5cc3a6;--acc2:#1d322c;--warn:#f0a66c;--warn2:#3a281b;--me:#1f2b42;--pin:#3a3218;--pin2:#f0c75e;--aka:#ff8a80}}
+:root[data-theme="dark"]{--bg:#15171b;--card:#1e2127;--ink:#e9eaec;--sub:#9aa0aa;--line:#30343c;--acc:#5cc3a6;--acc2:#1d322c;--warn:#f0a66c;--warn2:#3a281b;--me:#1f2b42;--pin:#3a3218;--pin2:#f0c75e;--aka:#ff8a80}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.7 system-ui,-apple-system,"Hiragino Sans","Yu Gothic UI",sans-serif;-webkit-text-size-adjust:100%}
+body{overflow-x:hidden;overflow-wrap:anywhere}
+button,input,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+.wrap{max-width:880px;margin:0 auto;padding:0 16px}
+header.top{background:var(--card);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:5}
+header.top .wrap{display:flex;align-items:center;gap:10px;min-height:56px}
+.logo{display:inline-flex;align-items:center;justify-content:center;border:2.5px solid var(--acc);border-radius:50%;width:58px;height:30px;font-weight:800;letter-spacing:.08em;color:var(--acc);font-size:14px;flex:none}
+header.top h1{font-size:18px;margin:0;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tabs{display:flex;gap:8px;margin:14px 0 10px}
+.tabs button{flex:1;border:2px solid var(--line);background:var(--card);border-radius:12px;padding:8px 4px;font-weight:700;font-size:17px}
+.tabs button[aria-selected="true"]{border-color:var(--acc);background:var(--acc2);color:var(--acc)}
+.setsumei{color:var(--sub);font-size:14.5px;margin:0 0 10px}
+.namae{display:flex;align-items:center;gap:8px;margin:0 0 12px;font-size:15px;flex-wrap:wrap}
+.namae input{flex:1;min-width:0;max-width:260px;border:1px solid var(--line);background:var(--card);border-radius:10px;padding:6px 10px}
+.kara{color:var(--sub);text-align:center;padding:24px 8px;font-size:15px}
+/* チャット */
+#chat-log{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:10px 12px;height:calc(100vh - 330px);height:calc(100dvh - 330px);min-height:260px;overflow-y:auto}
+.hatsu{padding:8px 2px;border-top:1px solid var(--line)}
+.hatsu:first-child{border-top:0}
+.hatsu .ue,.hen .ue{display:flex;flex-wrap:wrap;align-items:baseline;gap:2px 8px;font-size:14px;color:var(--sub)}
+.hatsu .ue b,.hen .ue b,.sure .ue b{color:var(--ink);font-size:15.5px}
+.hatsu.jibun{background:var(--me);border-radius:10px;padding:8px 10px;border-top:0;margin:4px 0}
+.hatsu p,.hen p,.sure-naka p{margin:2px 0 0;white-space:pre-wrap}
+.sha{display:inline-block;font-size:12px;color:#fff;background:var(--acc);border-radius:999px;padding:0 8px;line-height:1.6}
+.kesu{border:1px solid var(--line);background:transparent;color:var(--aka);border-radius:999px;padding:0 10px;font-size:13px;margin-left:auto}
+.kaku{display:flex;gap:8px;margin:10px 0 18px;align-items:flex-end}
+.kaku textarea,.form textarea,.form input{width:100%;min-width:0;border:1px solid var(--line);background:var(--card);border-radius:12px;padding:8px 12px;resize:vertical}
+.kaku textarea{flex:1;min-height:48px;max-height:180px}
+.okuru{flex:none;border:0;background:var(--acc);color:#fff;border-radius:12px;padding:10px 18px;font-weight:700}
+.okuru:disabled{opacity:.5}
+.naze{color:var(--aka);font-size:14px;min-height:1.4em;margin:-10px 0 8px}
+/* 掲示板 */
+.atarashii{display:block;width:100%;border:2px dashed var(--acc);background:var(--card);color:var(--acc);border-radius:14px;padding:10px;font-weight:700;margin:0 0 12px}
+.form{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:12px 14px;margin:0 0 14px}
+.form label{display:block;font-size:14px;color:var(--sub);margin:6px 0 2px}
+.form textarea{min-height:110px}
+.form .bt{display:flex;gap:8px;justify-content:flex-end;margin-top:10px}
+.yameru{border:1px solid var(--line);background:transparent;border-radius:12px;padding:8px 16px}
+.sure-ichiran{list-style:none;margin:0;padding:0;display:grid;gap:10px}
+.sure{display:block;width:100%;text-align:left;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:12px 14px;color:var(--ink)}
+.sure:hover,.sure:focus{border-color:var(--acc)}
+.sure.pin{background:var(--pin);border-color:var(--pin2)}
+.sure .dai{font-size:18px;font-weight:800;display:block;line-height:1.45}
+.sure .ue{display:flex;flex-wrap:wrap;gap:2px 10px;font-size:13.5px;color:var(--sub);margin-top:4px}
+.pinfuda{display:inline-block;font-size:12.5px;font-weight:700;color:var(--pin2);margin-right:6px}
+.modoru{border:1px solid var(--line);background:var(--card);border-radius:999px;padding:4px 14px;font-size:15px;margin:0 0 10px}
+.sure-naka{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px 16px;margin:0 0 12px}
+.sure-naka.pin{background:var(--pin);border-color:var(--pin2)}
+.sure-naka h2{font-size:20px;margin:0 0 4px;line-height:1.45}
+.sure-naka .ue{display:flex;flex-wrap:wrap;align-items:center;gap:4px 8px;font-size:14px;color:var(--sub)}
+.pinbt{border:1px solid var(--pin2);background:transparent;color:var(--pin2);border-radius:999px;padding:0 10px;font-size:13px}
+.hen-ichiran{display:grid;gap:8px;margin:0 0 12px}
+.hen{background:var(--card);border:1px solid var(--line);border-left:4px solid var(--acc);border-radius:12px;padding:8px 12px}
+h3{font-size:16px;margin:16px 0 6px}
+.ashi{color:var(--sub);font-size:13px;text-align:center;margin:18px 0 26px}
+</style>
+</head>
+<body>
+<header class="top"><div class="wrap">
+  <span class="logo">KAI</span>
+  <h1>協力者の広場</h1>
+</div></header>
+
+<main class="wrap">
+  <div class="tabs" role="tablist">
+    <button role="tab" id="tab-chat" aria-selected="true">💬 チャット</button>
+    <button role="tab" id="tab-ita" aria-selected="false">📋 掲示板</button>
+  </div>
+  <p class="setsumei">ここは KAI の協力者だけが入れる場所です。このアドレスを知っている人だけが見られます。</p>
+  <div class="namae"><label for="na">書く時の名前</label><input id="na" maxlength="20" placeholder="例：山田" autocomplete="nickname"></div>
+
+  <section id="men-chat">
+    <div id="chat-log" aria-live="polite"><div class="kara">読み込み中…</div></div>
+    <div class="kaku">
+      <textarea id="chat-bun" maxlength="2000" rows="2" placeholder="みんなへひとこと"></textarea>
+      <button class="okuru" id="chat-okuru">送る</button>
+    </div>
+    <div class="naze" id="chat-naze"></div>
+  </section>
+
+  <section id="men-ita" hidden>
+    <div id="ita-ichiran-men">
+      <button class="atarashii" id="sure-hiraku">＋ 新しく投稿する</button>
+      <div class="form" id="sure-form" hidden>
+        <label for="sure-dai">題</label><input id="sure-dai" maxlength="60" placeholder="例：来週の打ち合わせについて">
+        <label for="sure-bun">中身</label><textarea id="sure-bun" maxlength="2000"></textarea>
+        <div class="naze" id="sure-naze" style="margin:6px 0 0"></div>
+        <div class="bt"><button class="yameru" id="sure-yameru">やめる</button><button class="okuru" id="sure-okuru">投稿する</button></div>
+      </div>
+      <ul class="sure-ichiran" id="ita-ichiran"></ul>
+    </div>
+    <div id="sure-men" hidden>
+      <button class="modoru" id="sure-modoru">← 掲示板の一覧</button>
+      <div id="sure-naka"></div>
+      <h3>返信する</h3>
+      <div class="kaku">
+        <textarea id="hen-bun" maxlength="2000" rows="2" placeholder="返信を書く"></textarea>
+        <button class="okuru" id="hen-okuru">返信</button>
+      </div>
+      <div class="naze" id="hen-naze"></div>
+    </div>
+  </section>
+  <p class="ashi">KAI Lab ・ 協力者の広場</p>
+</main>
+
+<script>
+(function(){
+"use strict";
+var $ = function(i){ return document.getElementById(i); };
+var S = {v:-1, chat:[], ita:[], shachou:false, dare:""};
+var MEN = "chat", SURE = "";
+var TANMATSU = "";
+function yomuLS(k){ try{ return localStorage.getItem(k) || ""; }catch(e){ return ""; } }
+function kakuLS(k, v){ try{ localStorage.setItem(k, v); }catch(e){} }
+TANMATSU = yomuLS("kai_kyou_tan");
+if(!TANMATSU){ TANMATSU = Math.random().toString(36).slice(2, 12); kakuLS("kai_kyou_tan", TANMATSU); }
+var JIBUN = {};  // 自分が書いた物の id（色を変えるだけ）
+try{ JIBUN = JSON.parse(yomuLS("kai_kyou_jibun") || "{}") || {}; }catch(e){ JIBUN = {}; }
+$("na").value = yomuLS("kai_kyou_na");
+$("na").addEventListener("input", function(){ kakuLS("kai_kyou_na", $("na").value.trim()); });
+
+function el(tag, cls, txt){ var e = document.createElement(tag); if(cls) e.className = cls; if(txt != null) e.textContent = txt; return e; }
+function hi(t){ var d = new Date(t); if(isNaN(d)) return ""; var n = new Date();
+  var hm = ("0"+d.getHours()).slice(-2) + ":" + ("0"+d.getMinutes()).slice(-2);
+  return (d.toDateString() === n.toDateString()) ? hm : (d.getMonth()+1) + "/" + d.getDate() + " " + hm; }
+function ue(o, kesuMoto){
+  var u = el("div", "ue"); u.appendChild(el("b", "", o.na));
+  if(o.shachou) u.appendChild(el("span", "sha", "社長"));
+  u.appendChild(el("span", "", hi(o.t)));
+  if(S.shachou && kesuMoto){ var k = el("button", "kesu", "消す"); k.onclick = function(ev){ ev.stopPropagation(); kesu(kesuMoto); }; u.appendChild(k); }
+  return u;
+}
+
+function post(shu, o){
+  o.tanmatsu = TANMATSU;
+  return fetch("./api/" + shu, {method:"POST", headers:{"Content-Type":"application/json", "X-KAI":"1"}, body:JSON.stringify(o), cache:"no-store"})
+    .then(function(r){ return r.json().catch(function(){ return {ok:false, naze:"送れませんでした（" + r.status + "）"}; }); })
+    .catch(function(){ return {ok:false, naze:"送れませんでした。電波を確かめてください"}; });
+}
+function namae(nz){ var n = $("na").value.trim(); if(!n){ $(nz).textContent = "上の「書く時の名前」を入れてください"; $("na").focus(); return ""; } return n; }
+function kesu(id){ if(!confirm("この書き込みを消しますか？（みんなの画面から消えます）")) return; post("kesu", {moto:id}).then(function(j){ if(!j.ok) alert(j.naze || "消せませんでした"); }); }
+
+// ---------- 読む（変わるまで待つ読み） ----------
+var yomiChuu = false;
+function yomu(){
+  if(yomiChuu) return; yomiChuu = true;
+  fetch("./api/yomu?v=" + S.v, {cache:"no-store"}).then(function(r){ if(!r.ok) throw r.status; return r.json(); })
+    .then(function(j){ yomiChuu = false; var kawatta = j.v !== S.v; S = j; if(kawatta) egaku(); setTimeout(yomu, 50); })
+    .catch(function(){ yomiChuu = false; setTimeout(yomu, 4000); });
+}
+
+function egaku(){ egakuChat(); egakuIta(); }
+
+function egakuChat(){
+  var box = $("chat-log"), shita = box.scrollHeight - box.scrollTop - box.clientHeight < 80;
+  box.textContent = "";
+  if(!S.chat.length){ box.appendChild(el("div", "kara", "まだ書き込みはありません。最初のひとことをどうぞ")); return; }
+  S.chat.forEach(function(m){
+    var d = el("div", "hatsu" + (JIBUN[m.id] ? " jibun" : ""));
+    d.appendChild(ue(m, m.id)); d.appendChild(el("p", "", m.bun)); box.appendChild(d);
+  });
+  if(shita || egakuChat.hajime !== true){ box.scrollTop = box.scrollHeight; egakuChat.hajime = true; }
+}
+
+function egakuIta(){
+  var ul = $("ita-ichiran"); ul.textContent = "";
+  if(!S.ita.length) ul.appendChild(el("li", "kara", "まだ投稿はありません"));
+  S.ita.forEach(function(s){
+    var li = el("li"), b = el("button", "sure" + (s.pin ? " pin" : ""));
+    var dai = el("span", "dai"); if(s.pin) dai.appendChild(el("span", "pinfuda", "📌 お知らせ")); dai.appendChild(document.createTextNode(s.dai));
+    b.appendChild(dai);
+    var u = el("span", "ue"); u.appendChild(el("span", "", s.na + (s.shachou ? "（社長）" : ""))); u.appendChild(el("span", "", "返信 " + s.hen.length)); u.appendChild(el("span", "", "最新 " + hi(s.ato)));
+    b.appendChild(u); b.onclick = function(){ location.hash = "#ita/" + s.id; };
+    li.appendChild(b); ul.appendChild(li);
+  });
+  if(SURE) egakuSure();
+}
+
+function egakuSure(){
+  var s = null; S.ita.forEach(function(x){ if(x.id === SURE) s = x; });
+  var w = $("sure-naka"); w.textContent = "";
+  if(!s){ w.appendChild(el("div", "kara", "この投稿は見つかりません（消された物かもしれません）")); return; }
+  var n = el("div", "sure-naka" + (s.pin ? " pin" : ""));
+  var h = el("h2"); if(s.pin) h.appendChild(el("span", "pinfuda", "📌 お知らせ")); h.appendChild(document.createTextNode(s.dai)); n.appendChild(h);
+  var u = ue(s, s.id);
+  if(S.shachou){ var p = el("button", "pinbt", s.pin ? "ピン留めを外す" : "📌 お知らせにする"); p.onclick = function(){ post("pin", {moto:s.id, pin:!s.pin}); }; u.insertBefore(p, u.querySelector(".kesu")); }
+  n.appendChild(u); n.appendChild(el("p", "", s.bun)); w.appendChild(n);
+  var hl = el("div", "hen-ichiran");
+  s.hen.forEach(function(r){ var d = el("div", "hen"); d.appendChild(ue(r, r.id)); d.appendChild(el("p", "", r.bun)); hl.appendChild(d); });
+  if(!s.hen.length) hl.appendChild(el("div", "kara", "まだ返信はありません"));
+  w.appendChild(hl);
+}
+
+// ---------- 書く ----------
+function okuru(shu, o, btn, nz, owari){
+  var na = namae(nz); if(!na) return; o.na = na; $(nz).textContent = ""; btn.disabled = true;
+  post(shu, o).then(function(j){ btn.disabled = false;
+    if(!j.ok){ $(nz).textContent = j.naze || "送れませんでした"; return; }
+    JIBUN[j.id] = 1; var ks = Object.keys(JIBUN); if(ks.length > 500) ks.slice(0, ks.length - 500).forEach(function(k){ delete JIBUN[k]; });
+    kakuLS("kai_kyou_jibun", JSON.stringify(JIBUN)); owari(); });
+}
+$("chat-okuru").onclick = function(){ var b = $("chat-bun").value.trim(); if(!b) return;
+  okuru("chat", {bun:b}, $("chat-okuru"), "chat-naze", function(){ $("chat-bun").value = ""; var box = $("chat-log"); egakuChat.hajime = false; }); };
+$("chat-bun").addEventListener("keydown", function(e){ if(e.key === "Enter" && (e.ctrlKey || e.metaKey)){ e.preventDefault(); $("chat-okuru").click(); } });
+$("sure-hiraku").onclick = function(){ $("sure-form").hidden = false; $("sure-hiraku").hidden = true; $("sure-dai").focus(); };
+$("sure-yameru").onclick = function(){ $("sure-form").hidden = true; $("sure-hiraku").hidden = false; };
+$("sure-okuru").onclick = function(){ var d = $("sure-dai").value.trim(), b = $("sure-bun").value.trim();
+  if(!d){ $("sure-naze").textContent = "題を入れてください"; return; } if(!b){ $("sure-naze").textContent = "中身を入れてください"; return; }
+  okuru("sure", {dai:d, bun:b}, $("sure-okuru"), "sure-naze", function(){ $("sure-dai").value = ""; $("sure-bun").value = ""; $("sure-yameru").click(); }); };
+$("hen-okuru").onclick = function(){ var b = $("hen-bun").value.trim(); if(!b) return;
+  okuru("hen", {oya:SURE, bun:b}, $("hen-okuru"), "hen-naze", function(){ $("hen-bun").value = ""; }); };
+
+// ---------- 画面の切り替え（#chat・#ita・#ita/<id>） ----------
+function michi(){
+  var h = location.hash.replace(/^#/, "").split("/");
+  MEN = h[0] === "ita" ? "ita" : "chat"; SURE = (MEN === "ita" && h[1]) ? h[1] : "";
+  $("tab-chat").setAttribute("aria-selected", MEN === "chat"); $("tab-ita").setAttribute("aria-selected", MEN === "ita");
+  $("men-chat").hidden = MEN !== "chat"; $("men-ita").hidden = MEN !== "ita";
+  $("ita-ichiran-men").hidden = !!SURE; $("sure-men").hidden = !SURE;
+  if(SURE) egakuSure();
+  if(MEN === "chat"){ var box = $("chat-log"); box.scrollTop = box.scrollHeight; }
+  window.scrollTo(0, 0);
+}
+$("tab-chat").onclick = function(){ location.hash = "#chat"; };
+$("tab-ita").onclick = function(){ location.hash = "#ita"; };
+$("sure-modoru").onclick = function(){ location.hash = "#ita"; };
+window.addEventListener("hashchange", michi);
+michi(); yomu();
+})();
+</script>
+</body>
+</html>

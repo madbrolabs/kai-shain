@@ -166,6 +166,7 @@ details.shirase div{white-space:pre-wrap;overflow-wrap:anywhere;margin-top:6px}
     <a href="https://madbrolabs.github.io/kai-shain/shain/" target="_blank" rel="noopener">社員ページ<span>を開く</span></a>
     <a class="kou" href="https://madbrolabs.github.io/kai-shain/" target="_blank" rel="noopener">公式ページ<span>を開く</span></a>
   </nav>
+  <a class="mazu" id="kyouryoku" href="./kyouryoku/" target="_blank" rel="noopener" hidden><b>💬 協力者の広場</b><span>協力者だけのチャットと掲示板。みんなで話す・お知らせを見る</span></a>
   <a class="mazu" id="mazu" href="./hajimete/" hidden><b>👉 まずここを見てください</b><span>はじめての人の入口：AI を入れて、会社の部屋に参加するまでの5つの段</span></a>
   <section class="soft-ireru" aria-label="会社のソフトを入れる">
     <h2>🔧 会社のソフトを入れる</h2>
@@ -769,6 +770,8 @@ document.addEventListener("visibilitychange", function(){ if(!document.hidden){ 
 // 入口に戻った時の札を最新に
 setInterval(function(){ if(!HEYA && !document.hidden) iriguchi(); }, 30000);
 // 「まずここを見てください」は、はじめての人の入口が開ける時だけ出す（アドオンを外せば札も消える）
+// 「協力者の広場」は、広場のアドオンが入っている時だけ出す
+fetch(BASE + "kyouryoku/", {cache:"no-store"}).then(function(r){ if(r.ok){ $("kyouryoku").href = BASE + "kyouryoku/"; $("kyouryoku").hidden = false; } }).catch(function(){});
 fetch(BASE + "hajimete/md", {cache:"no-store"}).then(function(r){ if(r.ok){ $("mazu").href = BASE + "hajimete/"; $("mazu").hidden = false; } }).catch(function(){});
 api("ichiran").then(function(j){ (j.heya||[]).forEach(function(h){ NAMAE[h.id] = h.dai; }); if(j.dare) DARE = j.dare; micMieru(!!j.koe); michi(); });
 })();
