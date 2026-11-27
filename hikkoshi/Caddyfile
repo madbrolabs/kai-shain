@@ -1,0 +1,23 @@
+# 社員ページの入口（https は Caddy が自動で取る）。<ドメイン> は kailab.co.jp を入れる所（setup.sh に渡すと入れ替わる）。
+# setup.sh が /etc/caddy/sites/kai_shain.caddy に写し、/etc/caddy/Caddyfile に「import sites/*.caddy」を1行足す
+# （縁ything・バグ係など、ほかのソフトの塊を消さないため）。
+#
+# shain.<ドメイン> ＝ 門番の全部。今このPCで出している2つの口を1つにまとめた物：
+#   443番の /kai・/kamei・/kyaku（入口・専用ページ・広場・感想）と、8443番の /（門番の住所 mon.url＝試す・届いた更新・参加したい など）。
+# 管理画面（8807）はここに載せない。サーバーの 127.0.0.1 だけで聞き、社長の PC から tailscale の中の ssh でだけ届く（手順.md 6）。
+shain.<ドメイン> {
+	reverse_proxy 127.0.0.1:8802 {
+		# 届いた順にすぐ流す（広場・試すの中継が待たされないように）
+		flush_interval -1
+	}
+	header {
+		Strict-Transport-Security "max-age=31536000"
+		-Server
+	}
+}
+
+# 短いアドレスでも入れるように、<ドメイン> の塊（ほかのソフトと共有）に次の4行を足す（setup.sh は足さない＝共有の塊は手で）：
+#	@kai_shain path /kai /kai/* /kamei/* /kyaku/*
+#	handle @kai_shain {
+#		redir https://shain.<ドメイン>{uri} 308
+#	}

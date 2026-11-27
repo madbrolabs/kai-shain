@@ -1055,7 +1055,18 @@ def koe_uketsukeru(hid: str, data: bytes, gamen: str, who: str, mae: str = "") -
 
 # ---------- 門番へつなぐ ----------
 MICHI = ("kamei", "kyaku")  # 専用URLの頭。hajimete.py・kaisha.py も同じ2つを付ける
-URL_MOTO = "https://galleria.tail26f071.ts.net"  # 門番の外の入口（tailscale funnel 443番の /kamei・/kyaku。:8443 も残してある）
+
+
+def url_moto() -> str:
+    """門番の外の入口（専用URLの頭）。KAI_URL_MOTO が無ければ、内緒の場所/settei.json の mon.url の名前（番号抜き）。
+    借りたサーバーへ移したら mon.url と KAI_URL_MOTO（hikkoshi/kai_mon.service）が新しい住所になる。"""
+    u = os.environ.get("KAI_URL_MOTO", "")
+    if not u:
+        from urllib.parse import urlsplit
+        u = "https://" + (urlsplit(str((rj(NAISHO / "settei.json", {}).get("mon") or {}).get("url", ""))).hostname or "")
+    return u.rstrip("/")  # 今（このPC）＝tailscale funnel 443番の /kamei・/kyaku の入口
+
+
 def tsukeru(app) -> None:
     from aiohttp import web
 
@@ -1293,7 +1304,7 @@ def kagi_tsukuru(g: str = "") -> None:
     else:
         print(f"{g} の鍵はもうあります（作り直しません）")
     u = NAISHO / "secret" / f"{g}_url.txt"
-    u.write_text(f'{URL_MOTO}/kyaku/{K[g]}/\n', encoding="utf-8")
+    u.write_text(f'{url_moto()}/kyaku/{K[g]}/\n', encoding="utf-8")
     print("専用URLを書いた場所：", u)
 
 

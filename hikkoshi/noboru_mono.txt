@@ -1,0 +1,12 @@
+settei.json
+kamei_jirei.json
+out/data.json
+out/data_shain.json
+tebiki
+shikumi
+seikabutsu
+eigyou
+rokuon_annai
+shanai
+kaisha_shoukai
+todoita

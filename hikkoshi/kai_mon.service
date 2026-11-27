@@ -1,0 +1,41 @@
+# 借りたサーバー（Ubuntu）で、社員ページの門番（mon）を常に動かす。止まっても5秒で起こし直す。
+# setup.sh が /etc/systemd/system/kai_mon.service に写し、<ドメイン> を入れ替える。
+# 聞くのは 127.0.0.1 だけ（外から届くのは Caddy の https 経由だけ）。管理画面の口 8807 も 127.0.0.1 だけ＝外にも Caddy にも載せない。
+[Unit]
+Description=KAI shain page gatekeeper (mon)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+User=kai
+Group=kai
+WorkingDirectory=/srv/kai_shain/mon
+# 内緒の場所（データ・鍵・ID の表）。HOME もこの中（GitHub の鍵＝.git-credentials・gh の設定）
+Environment=HOME=/srv/kai_shain_private/home
+Environment=KAI_NAISHO=/srv/kai_shain_private
+Environment=KAI_MON_PORT=8802
+Environment=KAI_KANRI_PORT=8807
+Environment=KAI_GH=/usr/bin/gh
+# 専用URLの頭（kamei.py の url_moto）
+Environment=KAI_URL_MOTO=https://shain.<ドメイン>
+# 主任名簿の写し（PC から上り＝noboru で届く。届け先の部屋を探すのに使う。名前は英字＝字化けしないように）
+Environment=KAI_MEIBO=/srv/kai_shain_private/meibo/shunin.json
+Environment=KAI_KAMEBEYA=/srv/kai_shain_private/meibo/kamebeya.json
+Environment=KAI_IWABEYA=/srv/kai_shain_private/meibo/iwabeya.json
+Environment=KAI_KATSUBEYA=/srv/kai_shain_private/meibo/katsubeya.json
+# PC にしか無い物（Claude の部屋の受け口・声を字にする係・報告帳）。サーバーには無いので、無い場所を指して静かに止める。
+# PC の裏口（手順.md「後回し 1」）が出来たら、そこへ回す。
+Environment=KAI_CC_SESSIONS=/srv/kai_shain_private/nai/sessions
+Environment=KAI_KOE_PY=/srv/kai_shain_private/nai/koe_python
+Environment=KAI_TSUUTATSU=/srv/kai_shain_private/nai/tsuutatsu.py
+ExecStart=/srv/kai_shain_venv/bin/python -I -X utf8 /srv/kai_shain/mon/mon.py /srv/kai_shain_private
+Restart=always
+RestartSec=5
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/srv/kai_shain_private
+
+[Install]
+WantedBy=multi-user.target

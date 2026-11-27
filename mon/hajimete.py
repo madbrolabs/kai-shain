@@ -46,6 +46,8 @@ def md_yomu() -> str | None:
     if not tb:
         return None
     p = Path(tb) / FAIRU
+    if not p.exists():  # 借りたサーバー（hikkoshi/）では settei.json の tebiki_dir が PC の道のまま。同じ物を写した 内緒の場所/tebiki を読む
+        p = naisho() / "tebiki" / FAIRU
     if not p.exists():
         return None
     t = p.read_text(encoding="utf-8")
