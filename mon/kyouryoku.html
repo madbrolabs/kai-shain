@@ -6,6 +6,10 @@
 <meta name="robots" content="noindex,nofollow">
 <meta name="referrer" content="no-referrer">
 <title>KAI 協力者の広場</title>
+<link rel="manifest" href="./kyouryoku.webmanifest">
+<link rel="apple-touch-icon" href="./apple-touch-icon.png">
+<meta name="apple-mobile-web-app-title" content="KAI広場">
+<meta name="theme-color" content="#1f6f5c">
 <style>
 :root{--bg:#f6f4ef;--card:#fff;--ink:#1d1f24;--sub:#6a6f78;--line:#e3dfd6;--acc:#1f6f5c;--acc2:#e8f2ee;--warn:#9a4b16;--warn2:#fbefe5;--me:#e6efff;--pin:#fff6d6;--pin2:#a87400;--aka:#b3261e}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#15171b;--card:#1e2127;--ink:#e9eaec;--sub:#9aa0aa;--line:#30343c;--acc:#5cc3a6;--acc2:#1d322c;--warn:#f0a66c;--warn2:#3a281b;--me:#1f2b42;--pin:#3a3218;--pin2:#f0c75e;--aka:#ff8a80}}
@@ -66,6 +70,34 @@ header.top h1{font-size:18px;margin:0;flex:1;min-width:0;white-space:nowrap;over
 .hen{background:var(--card);border:1px solid var(--line);border-left:4px solid var(--acc);border-radius:12px;padding:8px 12px}
 h3{font-size:16px;margin:16px 0 6px}
 .ashi{color:var(--sub);font-size:13px;text-align:center;margin:18px 0 26px}
+/* 知らせ */
+.shirase{display:flex;flex-wrap:wrap;align-items:center;gap:4px 10px;margin:0 0 12px}
+.tsbt{border:1.5px solid var(--acc);background:var(--card);color:var(--acc);border-radius:999px;padding:4px 14px;font-weight:700;font-size:15px}
+.tsbt.on{background:var(--acc2)}
+.tsbt:disabled{opacity:.5}
+#tsuuchi-jou{font-size:13.5px;color:var(--sub)}
+.iphone{flex-basis:100%;margin:0;font-size:13.5px;color:var(--sub);background:var(--card);border:1px dashed var(--line);border-radius:12px;padding:6px 10px}
+/* 写真・ファイル */
+.fu{flex:none;border:1px solid var(--line);background:var(--card);border-radius:12px;width:44px;height:48px;padding:0;font-size:20px;line-height:1}
+.fu[hidden]{display:none}
+.tsuke{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0 -2px}
+.tsuke:empty{display:none}
+.chip{position:relative;display:flex;align-items:center;gap:6px;max-width:100%;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:4px 30px 4px 4px;font-size:13.5px}
+.chip img{width:52px;height:52px;object-fit:cover;border-radius:8px;flex:none}
+.chip .cn{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:170px}
+.chip .cj{color:var(--sub);font-size:12px}
+.chip.dame{border-color:var(--aka)}
+.chip.dame .cj{color:var(--aka)}
+.chip .cx{position:absolute;right:4px;top:50%;transform:translateY(-50%);border:0;background:transparent;color:var(--sub);font-size:18px;width:24px;height:28px;padding:0}
+.tf{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0 2px}
+.tf .gazou{display:block;max-width:min(100%,260px);max-height:200px;border-radius:10px;border:1px solid var(--line);cursor:zoom-in;background:var(--bg)}
+.tf .fl{display:inline-flex;align-items:center;gap:6px;max-width:100%;border:1px solid var(--line);border-radius:10px;padding:6px 10px;background:var(--bg);color:var(--acc);text-decoration:none;font-size:14.5px}
+.tf .fl span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tf .fl small{color:var(--sub);flex:none}
+#ookii{position:fixed;inset:0;z-index:50;background:rgba(0,0,0,.88);display:flex;align-items:center;justify-content:center;padding:12px;cursor:zoom-out}
+#ookii[hidden]{display:none}
+#ookii img{max-width:100%;max-height:100%;object-fit:contain;border-radius:6px}
+#ookii button{position:absolute;top:10px;right:12px;border:0;background:rgba(255,255,255,.18);color:#fff;border-radius:999px;padding:4px 14px;font-size:16px}
 </style>
 </head>
 <body>
@@ -80,10 +112,16 @@ h3{font-size:16px;margin:16px 0 6px}
     <button role="tab" id="tab-ita" aria-selected="false">📋 掲示板</button>
   </div>
   <p class="setsumei">ここは KAI の協力者だけが入れる場所です。書き込みには、あなたの名前が自動で付きます（<b id="watashi">…</b>）。</p>
+  <div class="shirase" id="shirase" hidden>
+    <button class="tsbt" id="tsuuchi-bt" hidden>🔔 知らせを受け取る</button><span id="tsuuchi-jou"></span>
+    <p class="iphone" id="iphone" hidden>🔔 iPhone で知らせを受け取るには：Safari でこのページを開き、「共有」→「ホーム画面に追加」→「ウェブアプリとして開く」をオン→「追加」。ホーム画面にできた「KAI広場」から開いて、ここに出る「知らせを受け取る」を押してください。</p>
+  </div>
 
   <section id="men-chat">
     <div id="chat-log" aria-live="polite"><div class="kara">読み込み中…</div></div>
+    <div class="tsuke" id="tsuke-chat"></div>
     <div class="kaku">
+      <button class="fu" data-to="chat" title="写真・ファイルを付ける" aria-label="写真・ファイルを付ける">📎</button><button class="fu kamera" data-to="chat" data-kamera="1" title="カメラで撮って付ける" aria-label="カメラで撮って付ける" hidden>📷</button>
       <textarea id="chat-bun" maxlength="2000" rows="2" placeholder="みんなへひとこと"></textarea>
       <button class="okuru" id="chat-okuru">送る</button>
     </div>
@@ -96,8 +134,9 @@ h3{font-size:16px;margin:16px 0 6px}
       <div class="form" id="sure-form" hidden>
         <label for="sure-dai">題</label><input id="sure-dai" maxlength="60" placeholder="例：来週の打ち合わせについて">
         <label for="sure-bun">中身</label><textarea id="sure-bun" maxlength="2000"></textarea>
+        <div class="tsuke" id="tsuke-sure"></div>
         <div class="naze" id="sure-naze" style="margin:6px 0 0"></div>
-        <div class="bt"><button class="yameru" id="sure-yameru">やめる</button><button class="okuru" id="sure-okuru">投稿する</button></div>
+        <div class="bt"><button class="fu" data-to="sure" title="写真・ファイルを付ける" aria-label="写真・ファイルを付ける">📎</button><button class="fu kamera" data-to="sure" data-kamera="1" title="カメラで撮って付ける" aria-label="カメラで撮って付ける" hidden>📷</button><span style="flex:1"></span><button class="yameru" id="sure-yameru">やめる</button><button class="okuru" id="sure-okuru">投稿する</button></div>
       </div>
       <ul class="sure-ichiran" id="ita-ichiran"></ul>
     </div>
@@ -105,7 +144,9 @@ h3{font-size:16px;margin:16px 0 6px}
       <button class="modoru" id="sure-modoru">← 掲示板の一覧</button>
       <div id="sure-naka"></div>
       <h3>返信する</h3>
+      <div class="tsuke" id="tsuke-hen"></div>
       <div class="kaku">
+        <button class="fu" data-to="hen" title="写真・ファイルを付ける" aria-label="写真・ファイルを付ける">📎</button><button class="fu kamera" data-to="hen" data-kamera="1" title="カメラで撮って付ける" aria-label="カメラで撮って付ける" hidden>📷</button>
         <textarea id="hen-bun" maxlength="2000" rows="2" placeholder="返信を書く"></textarea>
         <button class="okuru" id="hen-okuru">返信</button>
       </div>
@@ -114,12 +155,16 @@ h3{font-size:16px;margin:16px 0 6px}
   </section>
   <p class="ashi">KAI Lab ・ 協力者の広場</p>
 </main>
+<input type="file" id="erabu" multiple hidden>
+<div id="ookii" hidden><img alt=""><button type="button">✕ 閉じる</button></div>
 
 <script>
 (function(){
 "use strict";
 var $ = function(i){ return document.getElementById(i); };
-var S = {v:-1, chat:[], ita:[], shachou:false, dare:""};
+var S = {v:-1, chat:[], ita:[], shachou:false, dare:"", kinou:{}};
+var KAZU = 6, OOKISA = 20 * 1024 * 1024;
+var TSUKE = {chat:[], sure:[], hen:[]};
 var MEN = "chat", SURE = "";
 var TANMATSU = "";
 function yomuLS(k){ try{ return localStorage.getItem(k) || ""; }catch(e){ return ""; } }
@@ -156,7 +201,7 @@ function yomu(){
     .catch(function(){ yomiChuu = false; setTimeout(yomu, 4000); });
 }
 
-function egaku(){ $("watashi").textContent = S.na || ""; egakuChat(); egakuIta(); }
+function egaku(){ $("watashi").textContent = S.na || ""; kinouMiseru(); egakuChat(); egakuIta(); }
 
 function egakuChat(){
   var box = $("chat-log"), shita = box.scrollHeight - box.scrollTop - box.clientHeight < 80;
@@ -164,7 +209,7 @@ function egakuChat(){
   if(!S.chat.length){ box.appendChild(el("div", "kara", "まだ書き込みはありません。最初のひとことをどうぞ")); return; }
   S.chat.forEach(function(m){
     var d = el("div", "hatsu" + (m.jibun ? " jibun" : ""));
-    d.appendChild(ue(m, m.id)); d.appendChild(el("p", "", m.bun)); box.appendChild(d);
+    d.appendChild(ue(m, m.id)); if(m.bun) d.appendChild(el("p", "", m.bun)); tf(d, m); box.appendChild(d);
   });
   if(shita || egakuChat.hajime !== true){ box.scrollTop = box.scrollHeight; egakuChat.hajime = true; }
 }
@@ -176,7 +221,7 @@ function egakuIta(){
     var li = el("li"), b = el("button", "sure" + (s.pin ? " pin" : ""));
     var dai = el("span", "dai"); if(s.pin) dai.appendChild(el("span", "pinfuda", "📌 お知らせ")); dai.appendChild(document.createTextNode(s.dai));
     b.appendChild(dai);
-    var u = el("span", "ue"); u.appendChild(el("span", "", s.na + (s.shachou ? "（社長）" : ""))); u.appendChild(el("span", "", "返信 " + s.hen.length)); u.appendChild(el("span", "", "最新 " + hi(s.ato)));
+    var u = el("span", "ue"); u.appendChild(el("span", "", s.na + (s.shachou ? "（社長）" : ""))); u.appendChild(el("span", "", "返信 " + s.hen.length)); if(s.fairu) u.appendChild(el("span", "", "📎 " + s.fairu.length)); u.appendChild(el("span", "", "最新 " + hi(s.ato)));
     b.appendChild(u); b.onclick = function(){ location.hash = "#ita/" + s.id; };
     li.appendChild(b); ul.appendChild(li);
   });
@@ -191,30 +236,182 @@ function egakuSure(){
   var h = el("h2"); if(s.pin) h.appendChild(el("span", "pinfuda", "📌 お知らせ")); h.appendChild(document.createTextNode(s.dai)); n.appendChild(h);
   var u = ue(s, s.id);
   if(S.shachou){ var p = el("button", "pinbt", s.pin ? "ピン留めを外す" : "📌 お知らせにする"); p.onclick = function(){ post("pin", {moto:s.id, pin:!s.pin}); }; u.insertBefore(p, u.querySelector(".kesu")); }
-  n.appendChild(u); n.appendChild(el("p", "", s.bun)); w.appendChild(n);
+  n.appendChild(u); if(s.bun) n.appendChild(el("p", "", s.bun)); tf(n, s); w.appendChild(n);
   var hl = el("div", "hen-ichiran");
-  s.hen.forEach(function(r){ var d = el("div", "hen"); d.appendChild(ue(r, r.id)); d.appendChild(el("p", "", r.bun)); hl.appendChild(d); });
+  s.hen.forEach(function(r){ var d = el("div", "hen"); d.appendChild(ue(r, r.id)); if(r.bun) d.appendChild(el("p", "", r.bun)); tf(d, r); hl.appendChild(d); });
   if(!s.hen.length) hl.appendChild(el("div", "kara", "まだ返信はありません"));
   w.appendChild(hl);
 }
 
 // ---------- 書く ----------
 function okuru(shu, o, btn, nz, owari){
-  $(nz).textContent = ""; btn.disabled = true;
+  $(nz).textContent = "";
+  var t = TSUKE[shu];
+  if(t.some(function(x){ return x.jou === "okuri"; })){ $(nz).textContent = "写真・ファイルを送っている途中です。少し待ってください"; return; }
+  var ids = t.filter(function(x){ return x.jou === "ok"; }).map(function(x){ return x.id; });
+  if(ids.length) o.fairu = ids;
+  if(!o.bun && !ids.length) return;
+  btn.disabled = true;
   post(shu, o).then(function(j){ btn.disabled = false;
     if(!j.ok){ $(nz).textContent = j.naze || "送れませんでした"; return; }
-    owari(); });
+    tsukeKesu(shu); owari(); });
 }
-$("chat-okuru").onclick = function(){ var b = $("chat-bun").value.trim(); if(!b) return;
+$("chat-okuru").onclick = function(){ var b = $("chat-bun").value.trim();
   okuru("chat", {bun:b}, $("chat-okuru"), "chat-naze", function(){ $("chat-bun").value = ""; egakuChat.hajime = false; }); };
 $("chat-bun").addEventListener("keydown", function(e){ if(e.key === "Enter" && (e.ctrlKey || e.metaKey)){ e.preventDefault(); $("chat-okuru").click(); } });
 $("sure-hiraku").onclick = function(){ $("sure-form").hidden = false; $("sure-hiraku").hidden = true; $("sure-dai").focus(); };
 $("sure-yameru").onclick = function(){ $("sure-form").hidden = true; $("sure-hiraku").hidden = false; };
 $("sure-okuru").onclick = function(){ var d = $("sure-dai").value.trim(), b = $("sure-bun").value.trim();
-  if(!d){ $("sure-naze").textContent = "題を入れてください"; return; } if(!b){ $("sure-naze").textContent = "中身を入れてください"; return; }
+  if(!d){ $("sure-naze").textContent = "題を入れてください"; return; } if(!b && !TSUKE.sure.length){ $("sure-naze").textContent = "中身を入れてください"; return; }
   okuru("sure", {dai:d, bun:b}, $("sure-okuru"), "sure-naze", function(){ $("sure-dai").value = ""; $("sure-bun").value = ""; $("sure-yameru").click(); }); };
-$("hen-okuru").onclick = function(){ var b = $("hen-bun").value.trim(); if(!b) return;
+$("hen-okuru").onclick = function(){ var b = $("hen-bun").value.trim();
   okuru("hen", {oya:SURE, bun:b}, $("hen-okuru"), "hen-naze", function(){ $("hen-bun").value = ""; }); };
+
+// ---------- 写真・ファイル ----------
+function ookisaMoji(n){ return n >= 1048576 ? (n / 1048576).toFixed(1) + "MB" : Math.max(1, Math.round(n / 1024)) + "KB"; }
+function fairuUrl(f){ return "./fairu/" + f.id + "/" + encodeURIComponent(f.na); }
+function tf(box, m){
+  if(!m.fairu || !m.fairu.length) return;
+  var w = el("div", "tf");
+  m.fairu.forEach(function(f){
+    if(f.gazou){
+      var i = el("img", "gazou"); i.loading = "lazy"; i.alt = f.na; i.src = fairuUrl(f);
+      i.onclick = function(){ ookii(i.src); }; w.appendChild(i);
+    }else{
+      var a = el("a", "fl"); a.href = fairuUrl(f); a.target = "_blank"; a.rel = "noopener";
+      a.appendChild(document.createTextNode("📄")); a.appendChild(el("span", "", f.na)); a.appendChild(el("small", "", ookisaMoji(f.ookisa)));
+      w.appendChild(a);
+    }
+  });
+  box.appendChild(w);
+}
+function ookii(src){ var o = $("ookii"); o.querySelector("img").src = src; o.hidden = false; }
+$("ookii").onclick = function(){ $("ookii").hidden = true; $("ookii").querySelector("img").removeAttribute("src"); };
+document.addEventListener("keydown", function(e){ if(e.key === "Escape" && !$("ookii").hidden) $("ookii").click(); });
+
+var ATESAKI = "chat";
+Array.prototype.forEach.call(document.querySelectorAll(".fu"), function(b){
+  b.onclick = function(){
+    ATESAKI = b.getAttribute("data-to");
+    var inp = $("erabu");
+    if(b.getAttribute("data-kamera")){ inp.setAttribute("accept", "image/*"); inp.setAttribute("capture", "environment"); inp.multiple = false; }
+    else{ inp.removeAttribute("accept"); inp.removeAttribute("capture"); inp.multiple = true; }
+    inp.value = ""; inp.click();
+  };
+});
+if(window.matchMedia && matchMedia("(pointer:coarse)").matches){
+  Array.prototype.forEach.call(document.querySelectorAll(".fu.kamera"), function(b){ b.hidden = false; });
+}
+$("erabu").onchange = function(){
+  var to = ATESAKI, fl = Array.prototype.slice.call(this.files || []);
+  fl.forEach(function(f){
+    if(TSUKE[to].length >= KAZU){ alert("写真・ファイルは1回に" + KAZU + "つまでです"); return; }
+    var x = {na:f.name || "fairu", jou:"okuri", pct:0};
+    TSUKE[to].push(x); tsukeEgaku(to);
+    chijimeru(f).then(function(r){ var b = r.blob; x.na = r.name || x.na;
+      if(/^image\//.test(b.type)){ try{ x.url = URL.createObjectURL(b); }catch(e){} }
+      if(b.size > OOKISA){ x.jou = "dame"; x.naze = "大きすぎます（20MBまで）"; tsukeEgaku(to); return; }
+      tsukeEgaku(to); ageru(b, x, to);
+    });
+  });
+};
+function chijimeru(f){
+  // 写真は送る前に縮める（長い辺1600まで）。縮められない物はそのまま送る。
+  return new Promise(function(ok){
+    function sono(){ ok({blob:f, name:f.name}); }
+    if(!/^image\/(jpeg|png|webp|heic|heif|bmp)$/i.test(f.type || "") || !window.createImageBitmap){ sono(); return; }
+    createImageBitmap(f, {imageOrientation:"from-image"}).catch(function(){ return createImageBitmap(f); }).then(function(bm){
+      var M = 1600, sc = Math.min(1, M / Math.max(bm.width, bm.height));
+      var w = Math.max(1, Math.round(bm.width * sc)), h = Math.max(1, Math.round(bm.height * sc));
+      var c = document.createElement("canvas"); c.width = w; c.height = h;
+      var g = c.getContext("2d"); g.fillStyle = "#fff"; g.fillRect(0, 0, w, h); g.drawImage(bm, 0, 0, w, h);
+      if(bm.close) bm.close();
+      c.toBlob(function(b){
+        if(!b || (sc === 1 && b.size >= f.size && f.size <= OOKISA && !/heic|heif/i.test(f.type))){ sono(); return; }
+        ok({blob:b, name:(f.name || "shashin").replace(/\.[^.]*$/, "") + ".jpg"});
+      }, "image/jpeg", 0.85);
+    }).catch(function(){ sono(); });
+  });
+}
+function ageru(b, x, to){
+  var q = new XMLHttpRequest();
+  q.open("POST", "./api/fairu");
+  q.setRequestHeader("X-KAI", "1"); q.setRequestHeader("X-Na", encodeURIComponent(x.na)); q.setRequestHeader("X-Tan", TANMATSU);
+  q.setRequestHeader("Content-Type", "application/octet-stream");
+  q.upload.onprogress = function(e){ if(e.lengthComputable){ x.pct = Math.round(e.loaded * 100 / e.total); tsukeJou(x); } };
+  q.onload = function(){ var j = {}; try{ j = JSON.parse(q.responseText); }catch(e){}
+    if(q.status === 200 && j.ok){ x.id = j.id; x.na = j.na; x.jou = "ok"; x.ookisa = j.ookisa; }
+    else{ x.jou = "dame"; x.naze = j.naze || ("送れませんでした（" + q.status + "）"); }
+    tsukeEgaku(to); };
+  q.onerror = function(){ x.jou = "dame"; x.naze = "送れませんでした。電波を確かめてください"; tsukeEgaku(to); };
+  q.send(b);
+}
+function tsukeJou(x){ if(!x.cj) return;
+  x.cj.textContent = x.jou === "okuri" ? "送っています " + (x.pct || 0) + "%" : x.jou === "ok" ? ookisaMoji(x.ookisa || 0) : (x.naze || "送れませんでした"); }
+function tsukeEgaku(to){
+  var w = $("tsuke-" + to); w.textContent = "";
+  TSUKE[to].forEach(function(x, i){
+    var c = el("div", "chip" + (x.jou === "dame" ? " dame" : ""));
+    if(x.url){ var im = el("img"); im.src = x.url; im.alt = ""; c.appendChild(im); } else c.appendChild(document.createTextNode("📄"));
+    var t = el("div"); t.style.minWidth = "0"; t.appendChild(el("div", "cn", x.na)); x.cj = el("div", "cj"); t.appendChild(x.cj); c.appendChild(t); tsukeJou(x);
+    var k = el("button", "cx", "✕"); k.title = "外す"; k.setAttribute("aria-label", "外す");
+    k.onclick = function(){ if(x.url) URL.revokeObjectURL(x.url); TSUKE[to].splice(TSUKE[to].indexOf(x), 1); tsukeEgaku(to); };
+    c.appendChild(k); w.appendChild(c);
+  });
+}
+function tsukeKesu(to){ TSUKE[to].forEach(function(x){ if(x.url) URL.revokeObjectURL(x.url); }); TSUKE[to] = []; tsukeEgaku(to); }
+
+// ---------- 知らせ（Web Push） ----------
+var IOS = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+var HOME = (navigator.standalone === true) || (window.matchMedia && matchMedia("(display-mode: standalone)").matches);
+var PUSH_OK = ("serviceWorker" in navigator) && ("PushManager" in window) && ("Notification" in window);
+var REG = null, TS_HAJIME = false;
+function kinouMiseru(){
+  var k = S.kinou || {};
+  Array.prototype.forEach.call(document.querySelectorAll(".fu"), function(b){
+    if(!k.fairu) b.hidden = true; else if(!b.classList.contains("kamera")) b.hidden = false; });
+  if(k.fairu && window.matchMedia && matchMedia("(pointer:coarse)").matches)
+    Array.prototype.forEach.call(document.querySelectorAll(".fu.kamera"), function(b){ b.hidden = false; });
+  $("shirase").hidden = !k.tsuuchi;
+  if(k.tsuuchi && !TS_HAJIME){ TS_HAJIME = true; tsuuchiHajime(); }
+}
+function tsJou(on, moji){
+  var b = $("tsuuchi-bt"); b.hidden = false; b.disabled = false;
+  b.textContent = on ? "🔕 知らせを止める" : "🔔 知らせを受け取る"; b.classList.toggle("on", !!on); b.dataset.on = on ? "1" : "";
+  $("tsuuchi-jou").textContent = moji || (on ? "この端末に、新しい書き込みの知らせが届きます" : "");
+}
+function u8(s){ s = s.replace(/-/g, "+").replace(/_/g, "/"); while(s.length % 4) s += "="; var b = atob(s), a = new Uint8Array(b.length); for(var i = 0; i < b.length; i++) a[i] = b.charCodeAt(i); return a; }
+function tsuuchiHajime(){
+  if(!PUSH_OK){
+    if(IOS && !HOME){ $("iphone").hidden = false; return; }
+    $("tsuuchi-jou").textContent = "この端末のブラウザは、知らせに対応していません"; return;
+  }
+  navigator.serviceWorker.register("./sw.js", {scope:"./"}).then(function(r){ REG = r; return r.pushManager.getSubscription(); })
+    .then(function(sub){
+      if(sub && Notification.permission === "granted"){ tsJou(true); post("tsuuchi_ire", {sub:sub.toJSON()}); }
+      else if(Notification.permission === "denied") tsJou(false, "このブラウザの設定で、このページの知らせが止められています");
+      else tsJou(false);
+    }).catch(function(){ $("tsuuchi-jou").textContent = "知らせの準備ができませんでした"; });
+  navigator.serviceWorker.addEventListener("message", function(e){ if(e.data && e.data.michi) location.hash = e.data.michi; });
+}
+$("tsuuchi-bt").onclick = function(){
+  var b = this; if(!REG) return; b.disabled = true;
+  if(b.dataset.on){
+    REG.pushManager.getSubscription().then(function(sub){
+      if(!sub) return; var ep = sub.endpoint;
+      return sub.unsubscribe().then(function(){ return post("tsuuchi_tomeru", {endpoint:ep}); });
+    }).then(function(){ tsJou(false, "知らせを止めました"); }).catch(function(){ tsJou(true, "止められませんでした。もう一度押してください"); });
+    return;
+  }
+  Notification.requestPermission().then(function(p){
+    if(p !== "granted"){ tsJou(false, p === "denied" ? "このブラウザの設定で、このページの知らせが止められています" : "知らせの許可が出ませんでした"); return; }
+    return fetch("./api/tsuuchi_kagi", {cache:"no-store"}).then(function(r){ return r.json(); }).then(function(j){
+      return REG.pushManager.subscribe({userVisibleOnly:true, applicationServerKey:u8(j.kagi)});
+    }).then(function(sub){ return post("tsuuchi_ire", {sub:sub.toJSON()}); }).then(function(j){
+      if(j && j.ok) tsJou(true); else tsJou(false, (j && j.naze) || "登録できませんでした");
+    });
+  }).catch(function(){ tsJou(false, "登録できませんでした。もう一度押してください"); });
+};
 
 // ---------- 画面の切り替え（#chat・#ita・#ita/<id>） ----------
 function michi(){
