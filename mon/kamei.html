@@ -163,7 +163,7 @@ details.shirase div{white-space:pre-wrap;overflow-wrap:anywhere;margin-top:6px}
   <a class="mazu" id="rokuon-annai" href="./rokuon_annai/" target="_blank" rel="noopener"><b>👉 まずはここから：録音君を入れよう</b><span>打ち合わせの声をスマホで録って、会社へ自動で送るアプリです。入れ方と使い方を、本物の画面で順番に</span></a>
   <a class="mazu kakari-e" id="kakari-e" href="#heya-ichiran" hidden><b>👉 まず最初に、課長の部屋で『亀井です、よろしく』と書き込んでください</b><span>押すと課長の部屋のチャットが開きます</span></a>
   <nav class="dekai" aria-label="大きな入口">
-    <a href="https://madbrolabs.github.io/kai-shain/shain/" target="_blank" rel="noopener">社員ページ<span>を開く</span></a>
+    <a id="shain-link" href="https://madbrolabs.github.io/kai-shain/shain/" target="_blank" rel="noopener">社員ページ<span>を開く</span></a>
     <a class="kou" href="https://madbrolabs.github.io/kai-shain/" target="_blank" rel="noopener">公式ページ<span>を開く</span></a>
   </nav>
   <a class="mazu" id="kyouryoku" href="./kyouryoku/" target="_blank" rel="noopener" hidden><b>💬 協力者の広場</b><span>協力者だけのチャットと掲示板。みんなで話す・お知らせを見る</span></a>
@@ -771,7 +771,9 @@ document.addEventListener("visibilitychange", function(){ if(!document.hidden){ 
 setInterval(function(){ if(!HEYA && !document.hidden) iriguchi(); }, 30000);
 // 「まずここを見てください」は、はじめての人の入口が開ける時だけ出す（アドオンを外せば札も消える）
 // 「協力者の広場」は、広場のアドオンが入っている時だけ出す
-fetch(BASE + "kyouryoku/", {cache:"no-store"}).then(function(r){ if(r.ok){ $("kyouryoku").href = BASE + "kyouryoku/"; $("kyouryoku").hidden = false; } }).catch(function(){});
+fetch(BASE + "kyouryoku/", {cache:"no-store"}).then(function(r){ if(r.ok){ $("kyouryoku").href = BASE + "kyouryoku/"; $("kyouryoku").hidden = false;
+  // 社員ページの端の「💬 チャット部屋」に、この人の広場を出すため、アドレスを渡す（# の後ろなのでサーバーへは送られない）
+  $("shain-link").href = "https://madbrolabs.github.io/kai-shain/shain/#kyo=" + encodeURIComponent(location.origin + BASE + "kyouryoku/"); } }).catch(function(){});
 fetch(BASE + "hajimete/md", {cache:"no-store"}).then(function(r){ if(r.ok){ $("mazu").href = BASE + "hajimete/"; $("mazu").hidden = false; } }).catch(function(){});
 api("ichiran").then(function(j){ (j.heya||[]).forEach(function(h){ NAMAE[h.id] = h.dai; }); if(j.dare) DARE = j.dare; micMieru(!!j.koe); michi(); });
 })();

@@ -35,8 +35,8 @@ header b{flex:1;min-width:0;font-size:18px;white-space:nowrap;overflow:hidden;te
 .md code{background:rgba(127,127,127,.15);border-radius:4px;padding:0 4px}
 .kopi-blk{position:relative;margin:10px 0}
 .kopi-blk pre{white-space:pre-wrap;word-break:break-word;background:rgba(127,127,127,.12);border:1px solid rgba(127,127,127,.3);border-radius:10px;padding:52px 12px 12px;font-size:15px;line-height:1.7;margin:0;font-family:inherit}
-.kopi-b{position:absolute;top:8px;left:8px;padding:8px 18px;border-radius:8px;border:0;background:#2563eb;color:#fff;font-weight:bold;font-size:16px;cursor:pointer}
-.kopi-k{position:absolute;top:14px;left:110px;font-size:14px;color:var(--sub)}
+.kopi-b{position:absolute;top:8px;right:8px;padding:8px 18px;border-radius:8px;border:0;background:#2563eb;color:#fff;font-weight:bold;font-size:16px;cursor:pointer}
+.kopi-k{position:absolute;top:10px;left:12px;right:110px;font-size:14px;line-height:1.35;color:var(--sub)}
 .shirase{color:var(--sub);padding:30px 0}
 </style>
 </head>
@@ -53,7 +53,8 @@ function md(t){
   var L=t.replace(/\r/g,"").split("\n"),o=[],i=0;
   while(i<L.length){
     var l=L[i],b,n;
-    if(/^```/.test(l)){b=[];i++;while(i<L.length&&!/^```/.test(L[i]))b.push(L[i++]);i++;
+    if(/^```/.test(l)){var sk=l.slice(3).trim()==="sanka";b=[];i++;while(i<L.length&&!/^```/.test(L[i]))b.push(L[i++]);i++;
+      if(sk)b=b.filter(function(x){return x.indexOf("「会社のしくみ」が付いています")<0});  // ここでは会社のしくみは付けない（社員ページで押すと付く）
       o.push('<div class="kopi-blk"><button class="kopi-b">コピー</button><span class="kopi-k"></span><pre>'+esc(b.join("\n"))+'</pre></div>');continue}
     if(/^#{1,4} /.test(l)){n=l.match(/^#+/)[0].length;o.push("<h"+n+">"+il(l.slice(n+1))+"</h"+n+">");i++;continue}
     if(/^\|/.test(l)){var rs=[];while(i<L.length&&/^\|/.test(L[i]))rs.push(L[i++]);

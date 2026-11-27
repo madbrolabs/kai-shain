@@ -97,6 +97,10 @@ h3{font-size:16px;margin:16px 0 6px}
 #ookii{position:fixed;inset:0;z-index:50;background:rgba(0,0,0,.88);display:flex;align-items:center;justify-content:center;padding:12px;cursor:zoom-out}
 #ookii[hidden]{display:none}
 #ookii img{max-width:100%;max-height:100%;object-fit:contain;border-radius:6px}
+/* 社員ページの端の小窓（?mado=1）：看板・説明・知らせ・足は出さない */
+.mado header.top,.mado .setsumei,.mado .shirase,.mado .ashi{display:none!important}
+.mado main.wrap{padding-top:8px}
+.mado #chat-log{height:calc(100vh - 150px);height:calc(100dvh - 150px);min-height:120px}
 #ookii button{position:absolute;top:10px;right:12px;border:0;background:rgba(255,255,255,.18);color:#fff;border-radius:999px;padding:4px 14px;font-size:16px}
 </style>
 </head>
@@ -167,6 +171,9 @@ var KAZU = 6, OOKISA = 20 * 1024 * 1024;
 var TSUKE = {chat:[], sure:[], hen:[]};
 var MEN = "chat", SURE = "";
 var TANMATSU = "";
+var MADO = /[?&]mado=1(&|$)/.test(location.search) && window.parent !== window;
+if(MADO) document.documentElement.classList.add("mado");
+var SAIGO = null;  // 小窓の時：最後に見たチャットの番号（新しい物が来たら社員ページの丸に赤い点）
 function yomuLS(k){ try{ return localStorage.getItem(k) || ""; }catch(e){ return ""; } }
 function kakuLS(k, v){ try{ localStorage.setItem(k, v); }catch(e){} }
 TANMATSU = yomuLS("kai_kyou_tan");
@@ -212,6 +219,9 @@ function egakuChat(){
     d.appendChild(ue(m, m.id)); if(m.bun) d.appendChild(el("p", "", m.bun)); tf(d, m); box.appendChild(d);
   });
   if(shita || egakuChat.hajime !== true){ box.scrollTop = box.scrollHeight; egakuChat.hajime = true; }
+  var ato = S.chat[S.chat.length - 1];
+  if(MADO && ato && SAIGO !== null && ato.id !== SAIGO && !ato.jibun){ try{ window.parent.postMessage({kai_kyo:"atarashii"}, "https://madbrolabs.github.io"); }catch(e){} }
+  if(ato) SAIGO = ato.id;
 }
 
 function egakuIta(){

@@ -181,9 +181,20 @@ def memo_kara(d: Path, nozoku: list[str]) -> list[dict]:
 FUSE = [re.compile(r"〒?\d{3}-\d{4}"), re.compile(r"\d{2,4}-\d{2,4}-\d{3,4}"), re.compile(r"\d{7,}")]
 
 
+# 公式のダウンロード・料金のページへのリンクは、長い道や数字が鍵・番号に見えて消されないよう、確かめる間だけ外して後で戻す
+# （2026-11-27 入口の作り直し。決まったサイトだけ）
+KOUSHIKI = re.compile(r"\]\((https://(?:claude\.ai|claude\.com|chatgpt\.com|apps\.apple\.com|play\.google\.com|get\.microsoft\.com)/[^)\s]*)\)")
+
+
 def fuseji(t: str, kakusu: list[str]) -> str:
     out = []
     for ln in t.splitlines():
+        mamoru: list[str] = []
+
+        def kae(m, mamoru=mamoru):
+            mamoru.append(m.group(1))
+            return f"](\x00{len(mamoru) - 1}\x00)"
+        ln = KOUSHIKI.sub(kae, ln)
         if KAGI.search(ln):
             continue
         ln = YOBINA.sub("社長", ln)
@@ -192,6 +203,8 @@ def fuseji(t: str, kakusu: list[str]) -> str:
                 ln = ln.replace(w, "【社長記入】")
         for r in FUSE:
             ln = r.sub("【社長記入】", ln)
+        for i, u in enumerate(mamoru):
+            ln = ln.replace(f"](\x00{i}\x00)", f"]({u})")
         out.append(ln)
     return "\n".join(out)
 

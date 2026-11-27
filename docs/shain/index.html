@@ -124,7 +124,20 @@ a.bt.s,button.bt.s{background:var(--card);color:var(--acc)}
 .shorui-tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
 @media (prefers-color-scheme:dark){header .lg{filter:invert(1) hue-rotate(180deg) brightness(1.6)}}
 .tsutsumi-b{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:14px}.tsutsumi-b button{padding:10px 14px;border-radius:8px;border:1px solid var(--line,#ccc);background:transparent;color:inherit;font-size:15px}.tsutsumi-b .shu{background:#2563eb;color:#fff;border-color:#2563eb;font-weight:bold}#kopi-k{color:var(--sub);font-size:14px}
-.kopi-blk{position:relative;margin:10px 0}.kopi-blk pre{white-space:pre-wrap;word-break:break-word;background:rgba(127,127,127,.12);border:1px solid rgba(127,127,127,.3);border-radius:8px;padding:44px 12px 12px;font-size:14px;line-height:1.7;margin:0}.kopi-b{position:absolute;top:8px;left:8px;padding:6px 14px;border-radius:6px;border:0;background:#2563eb;color:#fff;font-weight:bold;font-size:14px}.kopi-k{position:absolute;top:12px;left:90px;font-size:13px;color:var(--sub)}
+.kopi-blk{position:relative;margin:10px 0}.kopi-blk pre{white-space:pre-wrap;word-break:break-word;background:rgba(127,127,127,.12);border:1px solid rgba(127,127,127,.3);border-radius:8px;padding:44px 12px 12px;font-size:14px;line-height:1.7;margin:0}.kopi-b{position:absolute;top:8px;right:8px;padding:6px 14px;border-radius:6px;border:0;background:#2563eb;color:#fff;font-weight:bold;font-size:14px;cursor:pointer}.kopi-k{position:absolute;top:8px;left:12px;right:96px;font-size:13px;line-height:1.35;color:var(--sub)}
+.kopi-blk.sanka .kopi-b{font-size:16px;padding:8px 18px}.kopi-blk.sanka pre{padding-top:60px}.kopi-blk.sanka .kopi-k{top:14px;right:110px}
+body.kyo-ari #m{padding-bottom:96px}.sanka-n{font-size:13px;color:var(--sub);margin:4px 2px 0}
+/* チャット部屋の小窓（2026-11-27 社長「社員ページの端っこのほうに常に出しておいて。ドラッグで動かせる感じで、最小化ボタンつき」） */
+#kyo{position:fixed;z-index:900;display:flex;flex-direction:column;background:var(--card);border:1px solid var(--line);border-radius:14px;box-shadow:0 8px 30px rgba(0,0,0,.28);overflow:hidden}
+#kyo[hidden],#kyo-maru[hidden]{display:none}
+#kyo-bar{display:flex;align-items:center;gap:6px;padding:6px 6px 6px 12px;background:var(--acc);color:#fff;cursor:move;touch-action:none;user-select:none;-webkit-user-select:none;flex:none}
+#kyo-bar b{font-size:15px}#kyo-bar .sp{flex:1}
+#kyo-bar a,#kyo-bar button{color:#fff;background:rgba(255,255,255,.18);border:0;border-radius:8px;width:34px;height:30px;display:inline-flex;align-items:center;justify-content:center;font-size:16px;text-decoration:none;cursor:pointer;padding:0}
+#kyo-naka{flex:1;min-height:0;display:flex}#kyo-naka iframe{flex:1;border:0;width:100%;height:100%;background:var(--bg)}
+#kyo.ugoku iframe{pointer-events:none}
+.kyo-ire{padding:16px;font-size:15px;line-height:1.6;width:100%}.kyo-ire input{width:100%;font:inherit;font-size:16px;padding:10px 12px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--ink);margin:8px 0}.kyo-ire button{padding:10px 22px;border-radius:10px;border:0;background:var(--acc);color:#fff;font-weight:bold;font-size:16px;cursor:pointer}.kyo-ire .err{color:#d33;font-size:14px;margin-top:6px;min-height:1.2em}
+#kyo-maru{position:fixed;z-index:900;right:16px;bottom:16px;width:60px;height:60px;border-radius:50%;border:0;background:var(--acc);color:#fff;font-size:28px;box-shadow:0 6px 20px rgba(0,0,0,.3);cursor:pointer;padding:0}
+#kyo-ten{position:absolute;top:4px;right:4px;width:14px;height:14px;border-radius:50%;background:#ff3b30;border:2px solid #fff}
 .tsutsumi-n{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:0 0 10px}.tsutsumi-n label{font-weight:bold}.tsutsumi-n input{flex:1;min-width:0;max-width:260px;padding:10px 12px;font-size:16px;border-radius:8px;border:1px solid rgba(127,127,127,.5);background:transparent;color:inherit}
 .yaritai{margin:26px 0 0}.yaritai h2.ym{font-size:19px;margin:0 0 2px}.yaritai .ys{color:var(--sub);font-size:14px;margin:0 0 10px}
 .yfuda{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px}
@@ -139,6 +152,8 @@ a.bt.s,button.bt.s{background:var(--card);color:var(--acc)}
 <body>
 <header><a href="../" style="display:flex"><img src="../img/kai_logo_s.png" alt="KAI" style="height:30px;width:auto" class="lg"></a><b>社員ページ</b><span class="sp"></span><span id="who" style="font-size:13px;color:var(--sub)"></span><button id="deru" hidden>出る</button></header>
 <main id="m"><div class="kara">ひらいています…</div></main>
+<div id="kyo" hidden role="dialog" aria-label="チャット部屋"><div id="kyo-bar"><b>💬 チャット部屋</b><span class="sp"></span><a id="kyo-oo" href="#" target="_blank" rel="noopener" title="大きく開く" aria-label="大きく開く" hidden>↗</a><button id="kyo-min" type="button" title="小さくする" aria-label="小さくする">＿</button></div><div id="kyo-naka"></div></div>
+<button id="kyo-maru" type="button" hidden aria-label="チャット部屋を開く" title="チャット部屋">💬<i id="kyo-ten" hidden></i></button>
 <!-- 起動の一瞬（全社の型＝起動ロゴ 1.2.1。正本 C:\cl\gijiroku\kidou_logo\web\kidou_logo.js から写した物・中は書き換えない。名前は部品が自分で1行に収める。雰囲気を選ぶ口＝部屋の一覧の下の「起動の画面」） -->
 <script src="kidou_logo.js"></script>
 <script>try{KidouLogo.dasu({namae:"社員ページ",yomi:"KAI STAFF",seishiki:"",nanori:"社員ページ、起動。",fuun:"kinmirai"})}catch(e){}</script>
@@ -170,7 +185,7 @@ async function hiraku(aik){
 }
 
 function mon(msg){
-  $("#deru").hidden=true;
+  $("#deru").hidden=true;kyoKesu();
   M.innerHTML=`<div class="mon"><h1>社員の入口</h1><p>KAI Lab の社員だけが読めるページです。配られた合言葉を入れてください。この機械では次から入れなくて済みます。</p>
   <input id="aik" autocomplete="current-password" type="password" placeholder="合言葉"><button id="go">入る</button><div class="err">${esc(msg||"")}</div></div>`;
   const go=async()=>{const v=$("#aik").value;if(!v)return;$("#go").textContent="ひらいています…";await hairu(v)};
@@ -181,7 +196,7 @@ async function hairu(aik){
   let d=null;
   try{d=await hiraku(aik)}catch(e){return mon("ページを読めませんでした。電波を確かめて、もう一度どうぞ。")}
   if(!d){put(LS,null);return mon("合言葉が違うようです。")}
-  put(LS,aik);D=d;$("#deru").hidden=false;
+  put(LS,aik);D=d;$("#deru").hidden=false;kyoDasu();
   const m=location.hash.match(/h=([^&]+)&t=([^&]*)/), v=location.hash.match(/v=([^&]+)(?:&i=([^&]*))?/);
   m?heya(decodeURIComponent(m[1]),m[2],0):v?miseru({v:v[1],i:decodeURIComponent(v[2]||"")}):ichiran(0);
 }
@@ -226,12 +241,12 @@ function ichiran(push=1){
   const H=D.hoka||{}, tb=H.tebiki||[];
   const HJ="0_はじめての人の入口", hj=tb.find(x=>x.id===HJ);
   const yaru=[...tb.filter(x=>x.id!==HJ).map(x=>[`yomu:${x.id}`,x.md.match(/^# (.+)/m)?.[1].split("：")[0]||x.id,(x.md.match(/^# .+：(.+)/m)||[])[1]||""]),
+    H.mon?["rokuon","録音君を入れる","打ち合わせの声をスマホで録って、会社へ送るアプリ",H.mon.url+"/kai_mon/rokuon_annai/"+encodeURIComponent(H.mon.kagi)+"/"]:null,
     H.tsutsumi?["tsutsumi","AI に渡す包み",`自分の AI に読ませる1枚（版 ${H.tsutsumi.ban}）`]:null,
     H.mon?["kousin","届いた更新","みんなが出した仮の更新の一覧"]:null,
     ["eigyou","営業用資料","お客様に見せる紹介・プレゼン（開く・保存）"],
     (H.shorui||[]).length?["shorui",H.shorui_midashi||"会社設立へ向けて","いまの準備の書類"]:null].filter(Boolean);
-  const ra=H.mon?`<a class="mazu" href="${esc(H.mon.url+"/kai_mon/rokuon_annai/"+encodeURIComponent(H.mon.kagi)+"/")}" target="_blank" rel="noopener"><b>👉 まずはここから：録音君を入れよう</b><span>打ち合わせの声をスマホで録って、会社へ自動で送るアプリです。入れ方と使い方を、本物の画面で順番に</span></a>`:"";
-  M.innerHTML=`${ra}${hj?`<a class="mazu" href="#" data-y="yomu:${esc(HJ)}"><b>👉 まずここを見てください</b><span>はじめての人の入口：AI を入れて、会社の部屋に参加するまでの5つの段</span></a>`:""}<div class="yaru">${yaru.map(([k,n,t])=>`<a href="#" data-y="${esc(k)}"><b>${esc(n)}</b><span>${esc(t)}</span></a>`).join("")}</div>
+  M.innerHTML=`${hj?`<a class="mazu" href="#" data-y="yomu:${esc(HJ)}"><b>👉 はじめての人は、ここを上から順に</b><span>① アドレスを開く　② あいさつ　③ 課金　④ アプリを入れる　⑤ 会社に参加</span></a>`:""}<div class="yaru">${yaru.map(([k,n,t,u])=>u?`<a href="${esc(u)}" target="_blank" rel="noopener"><b>${esc(n)}</b><span>${esc(t)}</span></a>`:`<a href="#" data-y="${esc(k)}"><b>${esc(n)}</b><span>${esc(t)}</span></a>`).join("")}</div>
   <p style="color:var(--sub);margin-top:0">ソフトごとの開発部屋です。進み・出来た事・工事日誌が、毎日の仕事から自動でたまっていきます。どの部屋からも「試す」「開発に参加したい」ができます。</p>
   <div class="heya">${rooms}${D.lab_dameshi.length?`<div class="card" data-i="lab"><h2>ラボ全体の心得</h2><p class="hk">どのソフトにも通じる、ダメ出しから学んだ決まり</p><div class="kazu"><span>心得 ${D.lab_dameshi.length}</span></div></div>`:""}</div>
   ${yaritaiDan(H.yaritai)}
@@ -419,7 +434,10 @@ async function kopii(s,k){const ok="コピーしました。AI に貼り付け�
   catch(e){const ta=document.createElement("textarea");ta.value=s;ta.style.cssText="position:fixed;top:0;left:0;opacity:0";document.body.appendChild(ta);ta.select();
     try{document.execCommand("copy");k.textContent=ok}catch(e2){k.textContent="コピー出来ませんでした。文を長押しで選んでコピーしてください。"}ta.remove()}}
 function kopiBotan(){M.querySelectorAll(".kopi-b").forEach(b=>b.onclick=()=>{const k=document.createElement("span");k.className="kopi-k";
-  b.parentNode.querySelector(".kopi-k")?.remove();b.after(k);kopii(b.parentNode.querySelector("pre").textContent,k)})}
+  const blk=b.parentNode;blk.querySelector(".kopi-k")?.remove();b.after(k);let s=blk.querySelector("pre").textContent;
+  // ⑤ 会社に参加：1回のコピーで、頼みの文＋会社のしくみ（AI に渡す包み）まで写す（2026-11-27 社長）
+  if(blk.classList.contains("sanka")&&D&&D.hoka&&D.hoka.tsutsumi)s+="\n\n---\n\n（ここから下が「会社のしくみ」です）\n\n"+tsutsumiYomikae(D.hoka.tsutsumi.md,get("kai_namae")||"");
+  kopii(s,k)})}
 // スマホのブラウザはファイルの保存が出来ない事がある（2026-11-25 社長）→ 画面で開いて「全部コピー」を主にする
 // 包みの原本は社長と AI の約束のまま。社員が使う時は「全体の決まり」の中の「社長」を使い手の名前に読み替える
 // （日付つきのいきさつ＝（2026-…社長「…」）は社長の言葉なので残す）。原本（ai_norikae）は書き換えない。
@@ -468,8 +486,8 @@ function md(t){
   const L=t.replace(/\r/g,"").split("\n"), o=[];let i=0;
   while(i<L.length){
     const l=L[i];
-    if(/^```/.test(l)){const b=[];i++;while(i<L.length&&!/^```/.test(L[i]))b.push(L[i++]);i++;
-      o.push(`<div class="kopi-blk"><button class="kopi-b">コピー</button><pre>${esc(b.join("\n"))}</pre></div>`);continue}
+    if(/^```/.test(l)){const sk=l.slice(3).trim()==="sanka"&&!!(D&&D.hoka&&D.hoka.tsutsumi),b=[];i++;while(i<L.length&&!/^```/.test(L[i]))b.push(L[i++]);i++;
+      o.push(`<div class="kopi-blk${sk?" sanka":""}"><button class="kopi-b">コピー</button><pre>${esc(b.join("\n"))}</pre>${sk?`<div class="sanka-n">押すと、この文と「会社のしくみ」がいっしょにコピーされます</div>`:""}</div>`);continue}
     if(/^#{1,4} /.test(l)){const n=l.match(/^#+/)[0].length;o.push(`<h${n}>${il(l.slice(n+1))}</h${n}>`);i++;continue}
     if(/^\|/.test(l)){const rs=[];while(i<L.length&&/^\|/.test(L[i]))rs.push(L[i++]);
       const c=r=>r.replace(/^\||\|$/g,"").split("|").map(x=>x.trim());
@@ -526,7 +544,52 @@ async function eigyou(push=1){
 }
 
 $("#deru").onclick=()=>{put(LS,null);D=null;mon("出ました。")};
-function hashKara(){const m=location.hash.match(/k=([^&]+)/);if(!m)return false;const k=decodeURIComponent(m[1]);
+// ---------- チャット部屋の小窓 ----------
+// 部屋は一人ずつの専用ページの「協力者の広場」（鍵で名前が決まる）。専用ページの「社員ページ」から来た時に #kyo= で受け取り、この機械に覚える
+const KYO="kai_kyo_url", KYOJ="kai_kyo_mado";
+function kyoKata(s){  // 広場か専用ページのアドレス → 広場のアドレス（違う形なら ""）
+  try{const u=new URL(String(s||"").trim()), m=u.pathname.match(/^\/(kamei|kyaku)\/([A-Za-z0-9_-]{32,})(\/|$)/);
+    if(u.protocol!=="https:"||!m)return "";
+    const mu=D&&D.hoka&&D.hoka.mon&&D.hoka.mon.url;if(mu&&new URL(mu).hostname!==u.hostname)return "";
+    return u.origin+"/"+m[1]+"/"+m[2]+"/kyouryoku/"}catch(e){return ""}}
+function kyoUketoru(){const m=location.hash.match(/(?:^#|&)kyo=([^&]+)/);if(!m)return;
+  let s="";try{s=decodeURIComponent(m[1])}catch(e){}
+  const nokori=location.hash.replace(/^#/,"").split("&").filter(x=>x&&!x.startsWith("kyo=")).join("&");
+  history.replaceState(history.state,"",location.pathname+(nokori?"#"+nokori:""));
+  if(/^https:\/\/[^/]+\/(kamei|kyaku)\/[A-Za-z0-9_-]{32,}\/kyouryoku\/$/.test(s)){put(KYO,s);if(D)kyoDasu()}}
+function kyoJ(){let j={};try{j=JSON.parse(get(KYOJ)||"{}")||{}}catch(e){}if(typeof j.chiisai!=="boolean")j.chiisai=innerWidth<768;return j}
+function kyoOku(j){put(KYOJ,JSON.stringify(j))}
+function kyoKesu(){$("#kyo").hidden=true;$("#kyo-maru").hidden=true;document.body.classList.remove("kyo-ari")}
+function kyoBasho(){const w=$("#kyo"),j=kyoJ(),W=innerWidth,Hh=innerHeight;
+  const ww=Math.min(360,W-16),hh=Math.min(W<768?Math.round(Hh*.72):520,Hh-16);
+  w.style.width=ww+"px";w.style.height=hh+"px";
+  let x=typeof j.x==="number"?j.x:W-ww-16,y=typeof j.y==="number"?j.y:Hh-hh-16;
+  x=Math.max(8,Math.min(x,W-ww-8));y=Math.max(8,Math.min(y,Hh-hh-8));w.style.left=x+"px";w.style.top=y+"px";return {x,y}}
+function kyoMiseru(){const j=kyoJ();$("#kyo").hidden=j.chiisai;$("#kyo-maru").hidden=!j.chiisai;if(!j.chiisai){kyoBasho();$("#kyo-ten").hidden=true}}
+function kyoNaka(){const u=kyoKata(get(KYO)),n=$("#kyo-naka"),oo=$("#kyo-oo");
+  if(u){if(n.dataset.u!==u){n.dataset.u=u;n.innerHTML="";const f=document.createElement("iframe");f.title="チャット部屋";f.src=u+"?mado=1";f.allow="camera";n.appendChild(f)}
+    oo.href=u;oo.hidden=false;return}
+  n.dataset.u="";oo.hidden=true;
+  n.innerHTML=`<div class="kyo-ire"><label for="kyo-in">社長から届いた、あなた専用のアドレスを貼る</label><input id="kyo-in" type="url" inputmode="url" autocomplete="off" placeholder="https://…"><button id="kyo-go" type="button">入る</button><div class="err" id="kyo-err"></div></div>`;
+  $("#kyo-go").onclick=()=>{const v=kyoKata($("#kyo-in").value);if(!v){$("#kyo-err").textContent="アドレスの形が違うようです。";return}put(KYO,v);kyoNaka()};
+  $("#kyo-in").onkeydown=e=>{if(e.key==="Enter")$("#kyo-go").click()}}
+function kyoDasu(){kyoNaka();kyoMiseru();document.body.classList.add("kyo-ari")}
+(function kyoUgokasu(){const w=$("#kyo"),bar=$("#kyo-bar");let s=null;
+  bar.addEventListener("pointerdown",e=>{if(e.target.closest("a,button"))return;const r=w.getBoundingClientRect();s={dx:e.clientX-r.left,dy:e.clientY-r.top};w.classList.add("ugoku");bar.setPointerCapture(e.pointerId);e.preventDefault()});
+  bar.addEventListener("pointermove",e=>{if(!s)return;const r=w.getBoundingClientRect();
+    w.style.left=Math.max(8,Math.min(e.clientX-s.dx,innerWidth-r.width-8))+"px";w.style.top=Math.max(8,Math.min(e.clientY-s.dy,innerHeight-r.height-8))+"px"});
+  const owari=()=>{if(!s)return;s=null;w.classList.remove("ugoku");const j=kyoJ();j.x=parseFloat(w.style.left);j.y=parseFloat(w.style.top);kyoOku(j)};
+  bar.addEventListener("pointerup",owari);bar.addEventListener("pointercancel",owari);
+  $("#kyo-min").onclick=()=>{const j=kyoJ();j.chiisai=true;kyoOku(j);kyoMiseru()};
+  $("#kyo-maru").onclick=()=>{const j=kyoJ();j.chiisai=false;kyoOku(j);kyoMiseru()};
+  addEventListener("resize",()=>{if(!w.hidden)kyoBasho()});
+  // 小さくしている間に新しい書き込みが来たら、丸に赤い点（広場が知らせてくる）
+  addEventListener("message",e=>{const u=kyoKata(get(KYO));if(!u||e.origin!==new URL(u).origin)return;
+    if(e.data&&e.data.kai_kyo==="atarashii"&&$("#kyo").hidden)$("#kyo-ten").hidden=false});
+})();
+kyoUketoru();addEventListener("hashchange",kyoUketoru);
+
+function hashKara(){const m=location.hash.match(/(?:^#|&)k=([^&]+)/);if(!m)return false;const k=decodeURIComponent(m[1]);
   const nokori=location.hash.replace(/^#/,"").split("&").filter(x=>x&&!x.startsWith("k=")).join("&");  // 合言葉だけ消し、開いていた画面（v=・h=）は残す
   history.replaceState(null,"",location.pathname+(nokori?"#"+nokori:""));hairu(k);return true}
 addEventListener("hashchange",hashKara);

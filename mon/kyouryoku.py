@@ -411,8 +411,10 @@ def tsukeru(app) -> None:
         r = web.Response(text=(HERE / "kyouryoku.html").read_text(encoding="utf-8"), content_type="text/html")
         r.headers["Content-Security-Policy"] = ("default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; "
                                                 "connect-src 'self'; img-src 'self' data: blob:; manifest-src 'self'; worker-src 'self'; "
-                                                "base-uri 'none'; form-action 'none'; frame-ancestors 'none'")
-        return kabuse(r)
+                                                "base-uri 'none'; form-action 'none'; frame-ancestors 'self' https://madbrolabs.github.io")
+        kabuse(r)
+        del r.headers["X-Frame-Options"]  # 社員ページ（madbrolabs.github.io）の端の小窓に出す（2026-11-27 社長）。他のサイトは上の frame-ancestors で断る
+        return r
 
     async def yomu(req):
         who = dare(req)
