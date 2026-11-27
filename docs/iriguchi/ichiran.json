@@ -122,23 +122,20 @@
   {
    "id": "kai_shain",
    "namae": "社員ページ",
-   "hitokoto": "会社のお知らせと、届いた更新",
+   "hitokoto": "会社のお知らせと、届いた更新（ID とパスワードで入る）",
    "fuda": "社",
    "iro": "#7f8c8d",
-   "settei": [
-    "k"
-   ],
    "windows": {
     "kata": "web",
-    "url": "https://madbrolabs.github.io/kai-shain/shain/#k={k}"
+    "url": "https://shain.kailab.co.jp/kai/"
    },
    "android": {
     "kata": "web",
-    "url": "https://madbrolabs.github.io/kai-shain/shain/#k={k}"
+    "url": "https://shain.kailab.co.jp/kai/"
    },
    "iphone": {
     "kata": "web",
-    "url": "https://madbrolabs.github.io/kai-shain/shain/#k={k}"
+    "url": "https://shain.kailab.co.jp/kai/"
    }
   },
   {
