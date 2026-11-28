@@ -124,7 +124,8 @@ a.bt.s,button.bt.s{background:var(--card);color:var(--acc)}
 /* 一覧の頭の2つの課（大きな切り替え） */
 .bu-tabs{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin:6px 0 0}
 .bu-tabs button{font:inherit;text-align:left;cursor:pointer;min-width:0;border:2px solid var(--line);background:var(--card);color:var(--ink);border-radius:16px;padding:14px 14px 12px;overflow-wrap:anywhere}
-.bu-tabs button b{display:block;font-size:clamp(17px,4.6vw,23px);line-height:1.3}
+.bu-tabs button b{display:block;font-size:clamp(17px,4.6vw,23px);line-height:1.3;word-break:keep-all;overflow-wrap:anywhere}
+.bu-tabs button b i{display:block;font-style:normal;font-size:1.3em;line-height:1.2;margin-bottom:2px}
 .bu-tabs button span{display:block;font-size:12.5px;color:var(--sub);margin-top:4px}
 .bu-tabs button.on{border-color:var(--acc);background:var(--acc);color:#fff}
 .bu-tabs button.on span{color:rgba(255,255,255,.85)}
@@ -380,7 +381,7 @@ function ichiran(push=1){
   M.innerHTML=`${IDMODE&&ORE&&ORE.shoki?`<a class="mazu" href="#" data-y="pw"><b>🔑 初めのパスワードのままです</b><span>押して、自分だけのパスワードに変えてください</span></a>`:""}
   ${shin?`<a class="mazu shin" href="${esc(shin)}"><b>🔑 入口が新しくなりました</b><span>これからは、みんな共通の入口 <i>${esc(shin)}</i> で、社長から届いた ID とパスワードで入れます。</span></a>`:""}
   ${hj?`<a class="mazu" href="#" data-y="yomu:${esc(HJ)}"><b>👉 はじめての人は、ここを上から順に</b><span>① 入口に入る　② あいさつ　③ 課金　④ アプリを入れる　⑤ 会社に参加</span></a>`:""}
-  <div class="bu-tabs" role="tablist">${BU.map(b=>`<button role="tab" data-bu="${esc(b.id)}" class="${b.id===BU_IMA?"on":""}" aria-selected="${b.id===BU_IMA}"><b>${b.e} ${esc(b.namae)}</b><span>${esc(b.s)}</span></button>`).join("")}</div>
+  <div class="bu-tabs" role="tablist">${BU.map(b=>`<button role="tab" data-bu="${esc(b.id)}" class="${b.id===BU_IMA?"on":""}" aria-selected="${b.id===BU_IMA}"><b><i>${b.e}</i>${esc(b.namae).replace("ソフトウェア","ソフトウェア<wbr>")}</b><span>${esc(b.s)}</span></button>`).join("")}</div>
   ${BU.map(b=>`<section class="bu" data-bu="${esc(b.id)}"${b.id===BU_IMA?"":" hidden"}>${naka(b)}</section>`).join("")}
   ${yaru.length?`<h3 class="bu-h">そのほか</h3>${fudaL(yaru)}`:""}
   <div class="shita">最後に集めた時刻：${esc(D.tsukutta.replace("T"," "))}</div>
