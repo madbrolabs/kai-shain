@@ -94,6 +94,7 @@ def kaki_p() -> Path:
 # AI の書き手（2026-11-28 社長「俺の名前で書くなよ。お前は社長か？」→ AI は社長の鍵を使わず、自分の名前で書く）
 # 鍵＝内緒の場所/secret/kyouryoku_ai.json（{"kachou": "<鍵>"}）。できるのは読む・書く・返事を書くだけ（消す・ピン留めは無し）。
 # 口＝POST /kai/kyouryoku/api/ai/{chat|sure|hen}・GET /kai/kyouryoku/api/ai/yomu（ヘッダー Authorization: Bearer <鍵>）
+# 名乗り（User-Agent）を必ず付ける（例 "kai-kachou/1"）。Python の urllib の名乗りのままだと、入口の守り（Cloudflare）で 403 になる
 AI_KAKITE = {"kachou": "課長"}
 
 
