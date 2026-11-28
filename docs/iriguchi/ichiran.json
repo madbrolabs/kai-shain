@@ -14,19 +14,19 @@
    "windows": {
     "kata": "jibun",
     "url": "iriguchi.exe",
-    "sha256": "e1ebc0ca92c947851fa20fab5bce797bbe8647e2614da50fc0467d3cdd8a7e0c",
+    "sha256": "2227f1742890225dc1495faa889832b1b3a719502ea92bb2d04f8bd03734a9dc",
     "size": 29696,
-    "tsuuban": 5,
-    "ban": "0.1.4"
+    "tsuuban": 6,
+    "ban": "0.1.5"
    },
    "android": {
     "kata": "apk",
     "package": "jp.madbrolab.iriguchi",
     "url": "iriguchi.apk",
-    "sha256": "d7dd0b1248bcf0b4c3a27f481db63c9b2ee54f77bf0dbd107a08e2e320f26b41",
-    "size": 107069,
-    "tsuuban": 5,
-    "ban": "0.1.4"
+    "sha256": "e05f4110ee9364d9a73464b1a39bf40c4850048218fc7c366825b6b68620b705",
+    "size": 111165,
+    "tsuuban": 6,
+    "ban": "0.1.5"
    },
    "iphone": {
     "kata": "web",
@@ -51,14 +51,11 @@
     "url": "{u}?p=rokuon&k={k}"
    },
    "android": {
-    "kata": "apk",
+    "kata": "play",
     "package": "jp.madbro.rokuon",
-    "url": "soft/rokuon.apk",
-    "settei_link": "rokuon://setup?u={u}&k={k}&d={d}",
-    "sha256": "4fa292015eeb2b432af6198a5049423d5a72dc61fbf1722ecaaac7598d1fa599",
-    "size": 1001570,
-    "tsuuban": 23,
-    "ban": "0.19.0"
+    "sanka": "https://play.google.com/apps/internaltest/4699793368375773401",
+    "onaji_kagi": true,
+    "settei_link": "rokuon://setup?u={u}&k={k}&d={d}"
    },
    "iphone": {
     "kata": "web",
@@ -116,14 +113,11 @@
     "url": "{url}"
    },
    "android": {
-    "kata": "apk",
+    "kata": "play",
     "package": "jp.madbrolab.enything",
-    "url": "soft/enything.apk",
-    "settei_link": "enything://setup?url={url}",
-    "sha256": "f8de3bdf22efdd1d1499aefa4a95769c922227c02148c87b627594a7a4dc9523",
-    "size": 4927548,
-    "tsuuban": 4,
-    "ban": "1.0.3"
+    "sanka": "https://play.google.com/apps/internaltest/4701548255826722459",
+    "onaji_kagi": false,
+    "settei_link": "enything://setup?url={url}"
    },
    "iphone": {
     "kata": "web",
