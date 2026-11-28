@@ -215,8 +215,6 @@ def D() -> Path:
 def settei() -> dict:
     s = {"iri": "入", "nozoku": ["権利まもり", r"C:\cl\kenri_private"], "renda_kazu": 3, "renda_byou": 60,
          "nagasa": 1000, "machi_saidai": 5,
-         # マイクのボタン（声を PC の Whisper で字にして届ける）。koe＝入/切、koe_byou 秒に koe_kazu 回まで、声は koe_mb まで
-         "koe": "入", "koe_kazu": 4, "koe_byou": 60, "koe_mb": 15,
          # 成果物の欄に出さない物（出来た物だけ並べる）。settei.json に同じ名前で書くと既定と入れ替わる。
          # seika_dasanai＝題に当たれば出さない（正規表現）。seika_dasanai_tasu＝既定に足すだけの時。
          "seika_dasanai_shurui": ["報告書", "日報"],
@@ -953,104 +951,8 @@ def kettei(i: int, k: str) -> tuple[bool, str]:
     return True, ""
 
 
-# ---------- マイクのボタン（声 → PC の Whisper の字 → 部屋へ）----------
-# 声を字にする係＝koe_moji.py（Whisper large-v3 を起こしっぱなし・127.0.0.1:8849）。ここは声を中継するだけで、声をファイルにしない。
-KOE_PORT = int(os.environ.get("KAI_KOE_PORT", "8849"))
-KOE_JOU = __import__("threading").Lock()
-KOE_OKOSHITA = [0.0]
-KOE_KAI: dict[str, list[float]] = {}  # 人 → 送った時刻（1分に数回まで）
-KOE_RIYUU = {"yomenai": "声を読めませんでした", "mijikai": "声が短すぎました", "nagai": "声が長すぎました",
-             "koe_nashi": "声が入っていませんでした", "kara": "声から字が出ませんでした", "shippai": "PCで字にできませんでした",
-             "junbichuu": "PCの文字起こしが準備中でした", "tsunagaranai": "PCの文字起こしにつながりませんでした",
-             "nashi": "声が届きませんでした", "ookisa": "声が大きすぎました"}
-
-
-def koe_iri() -> bool:
-    return iri() and settei().get("koe") == "入"
-
-
-def koe_py() -> Path:
-    return Path(os.environ.get("KAI_KOE_PY", str(NAISHO / "venv_koe" / "Scripts" / "pythonw.exe")))
-
-
-def _koe(path: str, data: bytes | None = None, timeout: float = 3) -> dict:
-    import urllib.error
-    import urllib.request
-    rq = urllib.request.Request(f"http://127.0.0.1:{KOE_PORT}{path}", data=data, method="POST" if data is not None else "GET",
-                                headers={"Content-Type": "application/octet-stream"} if data is not None else {})
-    try:
-        with urllib.request.urlopen(rq, timeout=timeout) as r:
-            return json.loads(r.read().decode("utf-8"))
-    except urllib.error.HTTPError as e:
-        try:
-            return json.loads(e.read().decode("utf-8"))
-        except Exception:
-            return {"ok": False, "riyuu": "shippai"}
-
-
-def koe_okosu() -> bool:
-    """声を字にする係が起きていなければ、窓なしで起こす（多重起動は係の側でも止める）。戻り＝もう答えられるか。"""
-    try:
-        return bool(_koe("/genki", timeout=1).get("dekiru"))
-    except Exception:
-        pass
-    with KOE_JOU:
-        if time.time() - KOE_OKOSHITA[0] < 120:  # 起こしたばかり（読み込み中）
-            return False
-        py = koe_py()
-        if not py.exists():
-            log(f"声を字にする係の Python がありません {py}")
-            return False
-        import subprocess
-        subprocess.Popen([str(py), "-I", "-X", "utf8", str(HERE / "koe_moji.py"), str(NAISHO)],
-                         creationflags=NO_WINDOW | 0x00000008 | 0x00000200,  # 窓なし・門番と切り離す
-                         stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, close_fds=True)
-        KOE_OKOSHITA[0] = time.time()
-        log("声を字にする係を起こしました")
-    return False
-
-
-def koe_mojini(data: bytes) -> dict:
-    """声を PC の Whisper で字にする。係が寝ていれば起こして、読み込み（十数秒）を待つ。"""
-    t_owari = time.time() + 90
-    while not koe_okosu():
-        if time.time() > t_owari:
-            return {"ok": False, "riyuu": "junbichuu"}
-        time.sleep(1)
-    try:
-        return _koe("/moji", data, timeout=180)
-    except Exception as e:
-        log(f"声を字にする係につながりませんでした {e!r}")
-        return {"ok": False, "riyuu": "tsunagaranai"}
-
-
-def koe_uketsukeru(hid: str, data: bytes, gamen: str, who: str, mae: str = "") -> dict:
-    """声を字にして、その字を本文として受け付ける。声がうまく取れなかった時だけ、画面の字のまま。
-    mae＝話し始める前に欄に打ってあった字（PC の字の前にそのまま付ける）。"""
-    S = settei()
-    now = time.time()
-    kai = [t for t in KOE_KAI.get(who, []) if now - t < int(S["koe_byou"])]
-    if len(kai) >= int(S["koe_kazu"]):
-        return {"ok": False, "err": f'少し間をあけてください（声は{S["koe_byou"]}秒に{S["koe_kazu"]}回まで）'}
-    KOE_KAI[who] = kai + [now]
-    gamen = str(gamen or "").strip()
-    t0 = time.time()
-    r = koe_mojini(data) if data else {"ok": False, "riyuu": "nashi"}
-    del data
-    moji_byou = round(time.time() - t0, 2)
-    pc = (r.get("text") or "").strip() if r.get("ok") else ""
-    mae = str(mae or "").strip()
-    text, moji = ((mae + "\n" + pc if mae else pc), "pc") if pc else (gamen, "gamen")
-    log(f'声 → {"PCの字" if pc else "画面の字"}（{r.get("riyuu", "")}・声{r.get("onsei_byou", "?")}秒・{moji_byou}秒）')
-    if not text:
-        return {"ok": False, "err": "声が取れませんでした（" + KOE_RIYUU.get(r.get("riyuu", ""), "") + "）。もう一度どうぞ"}
-    if len(text) > int(S["nagasa"]):
-        text = text[:int(S["nagasa"]) - 1] + "…"
-    ok, v = uketsukeru(hid, text, who)
-    if not ok:
-        return {"ok": False, "err": v}
-    return {"ok": True, "id": v, "text": text, "moji": moji, "gamen": gamen, "moji_byou": moji_byou,
-            "riyuu": "" if pc else KOE_RIYUU.get(r.get("riyuu", ""), "")}
+# 声の入力は、スマホのキーボードのマイクで欄に入った字をそのまま受け付ける（PC で声を字にする係は外した。
+# 2026-11-29 社長「こちら側の音声入力でね、なんかよくわかんない AI を使って文字起こしをするってことは一切ないです」）
 
 
 # ---------- 門番へつなぐ ----------
@@ -1112,7 +1014,7 @@ def tsukeru(app) -> None:
                            "ugoki": st.get("ugoki", ""), "saigo": hitokoto(st)})
                 zentai += seika(h, 8, who)
             fuda = daichou(who)
-            o = {"dare": who, "koe": koe_iri(), "heya": hs, "seika": zentai_matome(zentai, fuda, hs)[:40], "atarashii": fuda[:30], "ima": ima()}
+            o = {"dare": who, "heya": hs, "seika": zentai_matome(zentai, fuda, hs)[:40], "atarashii": fuda[:30], "ima": ima()}
             if who == "shachou":
                 o["kyaku_na"] = [k["san"] for k in KYAKU.values()]  # 「〇〇さん・〇〇さんからの案」
             return kakusu(o, who)
@@ -1198,50 +1100,6 @@ def tsukeru(app) -> None:
         x = rj(ukebako() / f"{v}.json", {})
         return jr({"ok": True, "id": v, "at": x.get("at"), "joutai": x.get("joutai"), "byou": x.get("byou"), "nemuri": x.get("nemuri", False)})
 
-    async def koe_api(req):
-        """マイクのボタン：声（koe）と画面の字（text）を受け、PC の字で届ける。鍵が違えば 404。声はメモリの中だけ。"""
-        who = mon(req)
-        h = heya(req.match_info["hid"], who)
-        if not who or not h or not iri() or not koe_iri():
-            return web.Response(status=404, text="404 Not Found")
-        saidai = int(settei()["koe_mb"]) * 1024 * 1024
-        data, gamen, mae = b"", "", ""
-        try:
-            rd = await req.multipart()
-            while True:
-                part = await rd.next()
-                if part is None:
-                    break
-                if part.name == "text":
-                    gamen = (await part.text())[:5000]
-                elif part.name == "mae":
-                    mae = (await part.text())[:5000]
-                elif part.name == "koe":
-                    buf = bytearray()
-                    while True:
-                        c = await part.read_chunk(65536)
-                        if not c:
-                            break
-                        buf += c
-                        if len(buf) > saidai:
-                            return jr({"ok": False, "err": f'声が長すぎます（{settei()["koe_mb"]}MBまで）'}, 413)
-                    data = bytes(buf)
-        except Exception:
-            return jr({"ok": False, "err": "形が違います"}, 400)
-        r = await asyncio.to_thread(koe_uketsukeru, h["id"], data, gamen, who, mae)
-        del data
-        if not r.get("ok"):
-            return jr(r, 400)
-        if os.environ.get("KAI_KAMEI_HAITATSU", "1") == "1":
-            await asyncio.to_thread(haitatsu_mawari)
-        x = rj(ukebako() / f'{r["id"]}.json', {})
-        r.update(at=x.get("at"), joutai=x.get("joutai"), byou=x.get("byou"), nemuri=x.get("nemuri", False))
-        return jr(r)
-
-    async def koe_okoshi(a):
-        if koe_iri():  # 門番と一緒に起こしておく（最初の1回も待たせない）
-            await asyncio.to_thread(koe_okosu)
-
     async def shikumi_api(req):  # §28 社長ページだけ
         if mon(req) != "shachou" or not iri():
             return web.Response(status=404, text="404 Not Found")
@@ -1273,14 +1131,12 @@ def tsukeru(app) -> None:
         r.add_get(f"/{m}/{{k}}/api/heya/{{hid}}/f", fairu)
         r.add_get(f"/{m}/{{k}}/api/e/{{fid}}", e_api)
         r.add_post(f"/{m}/{{k}}/api/heya/{{hid}}/kaku", kaku)
-        r.add_post(f"/{m}/{{k}}/api/heya/{{hid}}/koe", koe_api)
         r.add_get(f"/{m}/{{k}}/api/shikumi", shikumi_api)
         # 入れるか待ちの一覧（tsukutta）と決め（kettei）は、このPCだけの管理画面（kanri.py・127.0.0.1）にだけある。外の道には出さない（通達 T1795712323）
         r.add_route("*", f"/{m}/{{k}}/{{tail:.*}}", nai)
         r.add_route("*", f"/{m}", nai)
     if os.environ.get("KAI_KAMEI_HAITATSU", "1") == "1":
         app.on_startup.append(mawari)
-    app.on_startup.append(koe_okoshi)
 
 
 def kagi_tsukuru(g: str = "") -> None:
