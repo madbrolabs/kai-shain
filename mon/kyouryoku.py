@@ -91,8 +91,32 @@ def kaki_p() -> Path:
     return naisho() / "kyouryoku" / "kaki.jsonl"
 
 
+# AI の書き手（2026-11-28 社長「俺の名前で書くなよ。お前は社長か？」→ AI は社長の鍵を使わず、自分の名前で書く）
+# 鍵＝内緒の場所/secret/kyouryoku_ai.json（{"kachou": "<鍵>"}）。できるのは読む・書く・返事を書くだけ（消す・ピン留めは無し）。
+# 口＝POST /kai/kyouryoku/api/ai/{chat|sure|hen}・GET /kai/kyouryoku/api/ai/yomu（ヘッダー Authorization: Bearer <鍵>）
+AI_KAKITE = {"kachou": "課長"}
+
+
+def ai_dare(req) -> str | None:
+    """AI の鍵の持ち主（ai_kachou など）。違えば None。"""
+    if not iri():
+        return None
+    h = req.headers.get("Authorization", "")
+    k = h[7:].strip() if h[:7].lower() == "bearer " else ""
+    if not KAGI_KATACHI.fullmatch(k):
+        return None
+    K = _rj(naisho() / "secret" / "kyouryoku_ai.json")
+    for na in AI_KAKITE:
+        v = K.get(na)
+        if isinstance(v, str) and KAGI_KATACHI.fullmatch(v) and hmac.compare_digest(k.encode(), v.encode()):
+            return "ai_" + na
+    return None
+
+
 def namae(who: str) -> str:
     """書き込みに付ける名前（入ったアドレスの鍵で決まる）。"""
+    if who.startswith("ai_"):  # AI の名前は表のまま（呼び方の付け替えで社長などにはならない）
+        return AI_KAKITE.get(who[3:], "AI")
     n = _rj(naisho() / "kyouryoku.json").get("namae") or {}
     if isinstance(n.get(who), str) and n[who].strip():
         return n[who].strip()[:20]
@@ -191,6 +215,8 @@ class Chou:
                 o["fairu"] = [{"id": f["id"], "na": f.get("na", ""), "ookisa": f.get("ookisa", 0), "gazou": bool(f.get("gazou"))} for f in g["fairu"]]
             if g.get("dare") == "shachou":
                 o["shachou"] = True
+            if str(g.get("dare", "")).startswith("ai_"):
+                o["ai"] = True
             if g.get("dare") == who:
                 o["jibun"] = True
             return o
@@ -493,6 +519,36 @@ def tsukeru(app) -> None:
             return jres({"ok": True, "v": c.v})
         if shu not in ("chat", "sure", "hen"):
             return nai()
+        return kakikomu(c, who, shu, x, hito)
+
+    async def ai_yomu(req):
+        """AI の書き手が広場を読む（返事を書く投稿の番号を知るため）。"""
+        who = ai_dare(req)
+        if not who:
+            return nai()
+        return jres(chou().katachi(who))
+
+    async def ai_kaku(req):
+        """AI の書き手が書く・投稿する・返事を書く。消す・ピン留めは断る。"""
+        who = ai_dare(req)
+        if not who:
+            return nai()
+        shu = req.match_info["shu"]
+        if shu in ("kesu", "pin"):
+            return jres({"ok": False, "naze": "AI の鍵では、消す・ピン留めはできません"}, 403)
+        if shu not in ("chat", "sure", "hen"):
+            return nai()
+        try:
+            x = await req.json()
+        except Exception:
+            return jres({"ok": False, "naze": "形が違います"}, 400)
+        if not isinstance(x, dict):
+            return jres({"ok": False, "naze": "形が違います"}, 400)
+        if x.get("fairu"):
+            return jres({"ok": False, "naze": "AI の鍵では、写真・ファイルは付けられません"}, 400)
+        return kakikomu(chou(), who, shu, x, hito_no(req, who, "ai"))
+
+    def kakikomu(c, who, shu, x, hito):
         na = namae(who)  # 名前は入ったアドレスの鍵で決まる（送られて来た名前は使わない）
         bun = kirei(x.get("bun"), NAGASA["bun"])
         tsuke = []
@@ -665,6 +721,8 @@ def tsukeru(app) -> None:
         return r
 
     r = app.router
+    r.add_get("/kai/kyouryoku/api/ai/yomu", ai_yomu)  # AI の書き手（鍵はヘッダー。下の {shu} の道より先に置く）
+    r.add_post("/kai/kyouryoku/api/ai/{shu}", ai_kaku)
     # 頭の言葉は決まった字で書く（頭を「{m}」の形にすると、門番の振り分けが亀井ページの「その他は404」（/kamei/{k}/{tail}）を先に当ててしまう）
     for atama in ("/kamei/{k}/kyouryoku", "/kyaku/{k}/kyouryoku", "/kai/kyouryoku"):  # /kai/…＝ID とパスワードの入口（kai.py）
         r.add_get(atama, page)

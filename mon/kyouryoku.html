@@ -38,6 +38,7 @@ header.top h1{font-size:18px;margin:0;flex:1;min-width:0;white-space:nowrap;over
 .hatsu .ue b,.hen .ue b,.sure .ue b{color:var(--ink);font-size:15.5px}
 .hatsu.jibun{background:var(--me);border-radius:10px;padding:8px 10px;border-top:0;margin:4px 0}
 .hatsu p,.hen p,.sure-naka p{margin:2px 0 0;white-space:pre-wrap}
+.aif{display:inline-block;font-size:12px;font-weight:700;color:#5b4b8a;background:#ece8f6;border:1px solid #b9acd9;border-radius:999px;padding:0 8px;line-height:1.5}
 .sha{display:inline-block;font-size:12px;color:#fff;background:var(--acc);border-radius:999px;padding:0 8px;line-height:1.6}
 .kesu{border:1px solid var(--line);background:transparent;color:var(--aka);border-radius:999px;padding:0 10px;font-size:13px;margin-left:auto}
 .kaku{display:flex;gap:8px;margin:10px 0 18px;align-items:flex-end}
@@ -201,6 +202,7 @@ function hi(t){ var d = new Date(t); if(isNaN(d)) return ""; var n = new Date();
 function ue(o, kesuMoto){
   var u = el("div", "ue"); u.appendChild(el("b", "", o.na));
   if(o.shachou) u.appendChild(el("span", "sha", "社長"));
+  if(o.ai) u.appendChild(el("span", "aif", "AI"));
   u.appendChild(el("span", "", hi(o.t)));
   if(S.shachou && kesuMoto){ var k = el("button", "kesu", "消す"); k.onclick = function(ev){ ev.stopPropagation(); kesu(kesuMoto); }; u.appendChild(k); }
   return u;
@@ -246,7 +248,7 @@ function egakuIta(){
     var li = el("li"), b = el("button", "sure" + (s.pin ? " pin" : ""));
     var dai = el("span", "dai"); if(s.pin) dai.appendChild(el("span", "pinfuda", "📌 お知らせ")); dai.appendChild(document.createTextNode(s.dai));
     b.appendChild(dai);
-    var u = el("span", "ue"); u.appendChild(el("span", "", s.na + (s.shachou ? "（社長）" : ""))); u.appendChild(el("span", "", "返信 " + s.hen.length)); if(s.fairu) u.appendChild(el("span", "", "📎 " + s.fairu.length)); u.appendChild(el("span", "", "最新 " + hi(s.ato)));
+    var u = el("span", "ue"); u.appendChild(el("span", "", s.na + (s.shachou ? "（社長）" : s.ai ? "（AI）" : ""))); u.appendChild(el("span", "", "返信 " + s.hen.length)); if(s.fairu) u.appendChild(el("span", "", "📎 " + s.fairu.length)); u.appendChild(el("span", "", "最新 " + hi(s.ato)));
     b.appendChild(u); b.onclick = function(){ location.hash = "#ita/" + s.id; };
     li.appendChild(b); ul.appendChild(li);
   });
