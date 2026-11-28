@@ -48,7 +48,7 @@ header b{flex:1;min-width:0;font-size:18px;white-space:nowrap;overflow:hidden;te
 function esc(s){return String(s).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]})}
 // 社員ページ（docs/shain/index.html の md()）と同じ書き方を読む。絵は ./img/ の物だけ
 function il(s){return esc(s).replace(/!\[([^\]]*)\]\(([^)\s]+)\)/g,function(m,a,u){return /^(\.\/img\/[a-z0-9_]+\.(jpg|png)|https:)/.test(u)?'<img src="'+u+'" alt="'+a+'" loading="lazy">':""})
-  .replace(/\[([^\]]+)\]\((https:[^)\s]+)\)/g,'<a href="$2" target="_blank" rel="noopener">$1</a>').replace(/\[([^\]]+)\]\(#v=([a-z]+)\)/g,'<a href="/kai/shain/#v=$2" target="_blank" rel="noopener">$1</a>').replace(/\*\*(.+?)\*\*/g,"<b>$1</b>").replace(/`([^`]+)`/g,"<code>$1</code>")}
+  .replace(/\[([^\]]+)\]\((https:[^)\s]+)\)/g,'<a href="$2" target="_blank" rel="noopener">$1</a>').replace(/\[([^\]]+)\]\(#v=([a-z]+)(?:&amp;i=([^)\s"]+))?\)/g,function(m,a,v,i){return '<a href="/kai/shain/#v='+v+(i?'&amp;i='+i:'')+'" target="_blank" rel="noopener">'+a+'</a>'}).replace(/\*\*(.+?)\*\*/g,"<b>$1</b>").replace(/`([^`]+)`/g,"<code>$1</code>")}
 function md(t){
   var L=t.replace(/\r/g,"").split("\n"),o=[],i=0;
   while(i<L.length){
