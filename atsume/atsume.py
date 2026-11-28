@@ -245,6 +245,25 @@ def csv_hyou(t: str) -> str:
     return "\n".join(out)
 
 
+def shoukai_yomu(p: Path, settei: dict) -> dict:
+    """shoukai.json の soft を、{galleria} などの波かっこを juusho（と mon.url から作る {kai}）で埋めて返す。"""
+    t = json.loads(p.read_text(encoding="utf-8"))
+    ju = dict(t.get("juusho") or {})
+    mu = str((settei.get("mon") or {}).get("url", "")).rstrip("/")
+    if mu:
+        ju.setdefault("kai", mu + "/kai")
+
+    def ume(x):
+        if isinstance(x, str):
+            return re.sub(r"\{([a-z_]+)\}", lambda m: ju.get(m.group(1), m.group(0)), x)
+        if isinstance(x, list):
+            return [ume(v) for v in x]
+        if isinstance(x, dict):
+            return {k: ume(v) for k, v in x.items()}
+        return x
+    return ume(t.get("soft") or {})
+
+
 def hoka_no_mono(settei: dict) -> dict:
     """門番の行き先・開発の表・会社設立の書類・手引き・AIの包み（社長と社員の両方の箱へ）。鍵は箱ごとに別で入れる。"""
     o: dict = {"kaihatsu": [], "shorui": [], "tebiki": [], "tsutsumi": None}
@@ -284,6 +303,12 @@ def hoka_no_mono(settei: dict) -> dict:
             if t.get("fuda"):
                 o["yaritai"] = {"midashi": t.get("midashi", "やりたい人がいたら進めてね"), "hitokoto": t.get("hitokoto", ""),
                                 "fuda": [f for f in t["fuda"] if f.get("daimei")]}
+        except Exception:
+            pass
+    sk = settei.get("shoukai")  # ソフトの説明（プレゼンの形）。住所は表の juusho の1か所で替える
+    if sk:
+        try:
+            o["shoukai"] = shoukai_yomu(Path(sk), settei)
         except Exception:
             pass
     mon = settei.get("mon")

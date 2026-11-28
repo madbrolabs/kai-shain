@@ -121,6 +121,19 @@ a.bt.s,button.bt.s{background:var(--card);color:var(--acc)}
 .md blockquote{margin:8px 0;padding:4px 12px;border-left:4px solid var(--acc);color:var(--sub)}
 .md blockquote.mejirushi{color:inherit;background:rgba(31,140,90,.10);border-left-color:#1f8c5a;border-radius:0 10px 10px 0;padding:8px 14px;font-size:1.02em}
 .md h1{font-size:22px}.md h2{font-size:18px;margin-top:22px}.md h3{font-size:16px}
+/* 部署のページ：広い時は表、狭い時は1行ずつの札。形が崩れた表は元の字のまま */
+.busho{overflow-wrap:anywhere}
+.busho table.fuda-t{display:table;table-layout:fixed}
+.busho .fuda-t th{background:var(--bg)}
+.busho pre.nama{white-space:pre-wrap;word-break:break-word;font-size:13px;background:var(--bg);border-radius:8px;padding:8px 10px}
+@media (max-width:640px){
+.md.busho{padding:4px 12px 12px}
+.busho table.fuda-t,.busho .fuda-t tbody,.busho .fuda-t tr,.busho .fuda-t td{display:block;width:100%}
+.busho .fuda-t thead{display:none}
+.busho .fuda-t tr{border:1px solid var(--line);border-radius:10px;margin:10px 0;padding:6px 10px;background:var(--card)}
+.busho .fuda-t td{border:0;padding:3px 0}
+.busho .fuda-t td::before{content:attr(data-h);display:block;font-size:12px;font-weight:700;color:var(--sub)}
+}
 .shorui-tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
 @media (prefers-color-scheme:dark){header .lg{filter:invert(1) hue-rotate(180deg) brightness(1.6)}}
 .tsutsumi-b{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:14px}.tsutsumi-b button{padding:10px 14px;border-radius:8px;border:1px solid var(--line,#ccc);background:transparent;color:inherit;font-size:15px}.tsutsumi-b .shu{background:#2563eb;color:#fff;border-color:#2563eb;font-weight:bold}#kopi-k{color:var(--sub);font-size:14px}
@@ -165,6 +178,37 @@ a.mazu.shin{background:#dbeafe;border-color:#2563eb;color:#0b2a5b;box-shadow:non
 .pwf{max-width:420px}.pwf label{display:block;font-size:14px;margin:12px 0 4px}.pwf input{width:100%;font:inherit;font-size:16px;padding:10px 12px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--ink)}
 .pwf button{margin-top:14px;font:inherit;font-weight:bold;padding:10px 24px;border-radius:10px;border:0;background:var(--acc);color:#fff;cursor:pointer}
 .kidou-kuchi{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;align-items:center;margin:-12px 0 24px;font-size:12px;color:var(--sub)}.kidou-kuchi button.bt{padding:4px 10px;font-size:12.5px;border-radius:99px}
+/* ソフトの説明（プレゼンの形・2026-11-28 社長「使用方法と、このソフトの説明を、わかりやすく」）。スマホ375幅で読む */
+.sk{margin:6px 0 18px}
+.sk-dan{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px 18px;margin:12px 0}
+.sk-dan>h2{font-size:15px;color:var(--acc);letter-spacing:.08em;margin:0 0 8px;display:flex;align-items:center;gap:8px}
+.sk-dan>h2 i{font-style:normal;background:var(--acc);color:#fff;border-radius:99px;width:22px;height:22px;display:inline-flex;align-items:center;justify-content:center;font-size:13px}
+.sk-ichi{font-size:21px;font-weight:800;line-height:1.5;margin:0 0 8px}
+.sk-gen{border-left:4px solid var(--acc);padding:4px 0 4px 12px;margin:10px 0 0;color:var(--ink);font-size:15px}
+.sk-gen small{display:block;color:var(--sub);font-size:12px;margin-top:2px}
+.sk-kumi{display:flex;flex-direction:column;gap:8px;margin:0}
+.sk-kumi div{background:var(--acc2);border-radius:12px;padding:10px 12px}
+.sk-kumi b{display:block;color:var(--acc)}
+.sk-kumi span{font-size:14px}
+.sk-kumi .tasu{background:none;text-align:center;padding:0;color:var(--sub);font-weight:700}
+.sk-kiki{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0 10px}
+.sk-kiki button{font-size:14px;padding:6px 12px}
+.sk-mono{margin:14px 0 6px;font-size:17px}
+.sk-mono small{color:var(--sub);font-weight:400;font-size:13px;margin-left:6px}
+ol.sk-te{margin:6px 0 0;padding-left:1.5em}
+ol.sk-te li{margin:6px 0;line-height:1.65;overflow-wrap:anywhere}
+.sk-te a,.sk-p a{color:var(--acc);overflow-wrap:anywhere}
+.sk-p{margin:6px 0;font-size:15px;overflow-wrap:anywhere}
+.sk-nai{color:var(--sub);font-size:14px;margin:6px 0}
+.sk-bamen{margin:12px 0 0}
+.sk-bamen h3{font-size:16px;margin:0 0 2px}
+.sk-kubari{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0 2px}
+.sk-kubari a{display:inline-block;text-decoration:none;background:var(--acc);color:#fff;border-radius:99px;padding:7px 16px;font-weight:700;font-size:14px}
+.sk-jou{display:inline-block;border-radius:99px;padding:2px 12px;font-weight:700;font-size:14px;background:var(--warn2);color:var(--warn)}
+.sk-jou.honban{background:var(--acc2);color:var(--acc)}
+.card .sk-jou{font-size:12px;padding:0 9px;margin-top:2px}
+.sk-chuui{margin:8px 0 0;padding-left:1.2em;color:var(--sub);font-size:14px}
+@media (prefers-color-scheme:dark){.sk-dan>h2 i,.sk-kubari a{color:#0b1520}}
 </style>
 </head>
 <body>
@@ -233,6 +277,7 @@ async function hairu(aik){
   try{d=await hiraku(aik)}catch(e){return mon("ページを読めませんでした。電波を確かめて、もう一度どうぞ。")}
   if(!d){if(IDMODE)return mon("");put(LS,null);return mon("合言葉が違うようです。")}
   if(IDMODE){if(!ORE){try{const j=await (await fetch("/kai/api/ore",{cache:"no-store"})).json();if(j.ok)ORE=j}catch(e){}}
+    await bushoYomu();
     $("#who").textContent=ORE?"👤 "+ORE.namae:"";$("#deru").textContent="ログアウト"}
   else put(LS,aik);
   D=d;$("#deru").hidden=false;kyoDasu();
@@ -242,12 +287,15 @@ async function hairu(aik){
 
 // 進みはまとめがあれば「日の数」で数える
 const KZ=(h,k)=>k==="susumi"&&(h.susumi_matome||[]).length?h.susumi_matome.length:(h[k]||[]).length;
+// 記録の欄（進み・出来た事・ダメ出し・小話・決まった事・採らなかった案・工事日誌）を画面に出すか。集める係（atsume）は止めない＝true に戻せばまた出る
+// （2026-11-28 社長「この進みとかダメ出しとか、なんかこの意味のわからない、この変なやつ、表示するのやめましょう」）
+const KIROKU_MISERU=false;
 const KIND=[["susumi","進み"],["houkoku","出来た事"],["dameshi","ダメ出しと学び"],["kobanashi","開発の小話"],["kimatta","決まった事"],["fusaiyou","採らなかった案"],["omoi","創始者の思い"],["commit","工事日誌"]];
 
 // 画面の移り変わりを履歴に積む＝マウスやブラウザの「戻る」で前の画面へ
 function iku(st,push){const u=location.pathname+(st.v==="heya"?`#h=${st.i}&t=${st.t||""}`:st.v!=="ichiran"?`#v=${st.v}${st.i?"&i="+encodeURIComponent(st.i):""}`:"");push?history.pushState(st,"",u):history.replaceState(st,"",u)}
 function miseru(st){if(!D)return;const v=st&&st.v;v==="heya"?heya(st.i,st.t,0):v==="kousin"?kousin(0):v==="yomu"?yomu(st.i,0):v==="tsutsumi"?tsutsumi(0):v==="shorui"?shorui(st.i,0):v==="eigyou"?eigyou(0)
-  :v==="tesuto"?tesuto(0):v==="kansou"?kansou(st.i,0):v==="pw"?pwKaeru(0):ichiran(0)}
+  :v==="busho"?busho(st.i,0):v==="tesuto"?tesuto(0):v==="kansou"?kansou(st.i,0):v==="pw"?pwKaeru(0):ichiran(0)}
 // アドレスの # から画面を読む（文の中の「#v=tesuto」のリンクを押した時など、履歴に画面が無い時）
 function hashSt(){const h=location.hash.match(/h=([^&]+)&t=([^&]*)/),v=location.hash.match(/v=([a-z]+)(?:&i=([^&]*))?/);
   return h?{v:"heya",i:decodeURIComponent(h[1]),t:h[2]}:v?{v:v[1],i:decodeURIComponent(v[2]||"")}:null}
@@ -278,15 +326,17 @@ function ichiran(push=1){
   window.scrollTo(0,0);
   const rooms=D.soft.map((h,i)=>{
     const mt=(h.susumi_matome||[])[0], ima=mt?{hi:mt.hi,text:mt.midashi}:(h.susumi[0]||h.houkoku[0]||{});
-    return `<div class="card" data-i="${i}"><h2>${esc(h.namae)}</h2><p class="hk">${esc(h.hitokoto)}</p>
-    <div class="kazu">${KIND.filter(([k])=>h[k].length).map(([k,n])=>`<span>${n} ${KZ(h,k)}</span>`).join("")}</div>
-    ${ima.text||ima.daimei?`<div class="ima">いま：${(()=>{const t=Y(ima,"text")||Y(ima,"daimei");return esc((t.startsWith(ima.hi)?t:ima.hi+" "+t).slice(0,80))})()}…</div>`:""}</div>`}).join("");
+    const sk=SK(h.id);
+    return `<div class="card" data-i="${i}"><h2>${esc(h.namae)}</h2><p class="hk">${esc(h.hitokoto)}</p>${sk&&sk.joutai?`<span class="sk-jou${sk.joutai==="本番"?" honban":""}">${esc(sk.joutai)}</span>`:""}
+    ${!KIROKU_MISERU?"":`<div class="kazu">${KIND.filter(([k])=>h[k].length).map(([k,n])=>`<span>${n} ${KZ(h,k)}</span>`).join("")}</div>
+    ${ima.text||ima.daimei?`<div class="ima">いま：${(()=>{const t=Y(ima,"text")||Y(ima,"daimei");return esc((t.startsWith(ima.hi)?t:ima.hi+" "+t).slice(0,80))})()}…</div>`:""}`}</div>`}).join("");
   const H=D.hoka||{}, tb=H.tebiki||[];
   const HJ="0_はじめての人の入口", hj=tb.find(x=>x.id===HJ);
   const yaru=[...tb.filter(x=>x.id!==HJ).map(x=>[`yomu:${x.id}`,x.md.match(/^# (.+)/m)?.[1].split("：")[0]||x.id,(x.md.match(/^# .+：(.+)/m)||[])[1]||""]),
+    ...BUSHO.map(b=>[`busho:${b.id}`,b.namae,"やる事一覧"]),
     ["tesuto","テスト中のアプリ","スマホで試して、感想を送る"],
     IDMODE?["pw","パスワードを変える","自分だけのパスワードに替える"]:null,
-    H.mon?["rokuon","録音君を入れる","打ち合わせの声をスマホで録って、会社へ送るアプリ",H.mon.url+"/kai_mon/rokuon_annai/"+encodeURIComponent(H.mon.kagi)+"/"]:null,
+    // 録音君の札は外した（2026-11-28：言霊エンジンの入れ方は超議事録の部屋の「入れ方」に載せた）
     H.tsutsumi?["tsutsumi","AI に渡す包み",`自分の AI に読ませる1枚（版 ${H.tsutsumi.ban}）`]:null,
     H.mon?["kousin","届いた更新","みんなが出した仮の更新の一覧"]:null,
     ["eigyou","営業用資料","お客様に見せる紹介・プレゼン（開く・保存）"],
@@ -296,15 +346,15 @@ function ichiran(push=1){
   M.innerHTML=`${IDMODE&&ORE&&ORE.shoki?`<a class="mazu" href="#" data-y="pw"><b>🔑 初めのパスワードのままです</b><span>押して、自分だけのパスワードに変えてください</span></a>`:""}
   ${shin?`<a class="mazu shin" href="${esc(shin)}"><b>🔑 入口が新しくなりました</b><span>これからは、みんな共通の入口 <i>${esc(shin)}</i> で、社長から届いた ID とパスワードで入れます。</span></a>`:""}
   ${hj?`<a class="mazu" href="#" data-y="yomu:${esc(HJ)}"><b>👉 はじめての人は、ここを上から順に</b><span>① 入口に入る　② あいさつ　③ 課金　④ アプリを入れる　⑤ 会社に参加</span></a>`:""}<div class="yaru">${yaru.map(([k,n,t,u])=>u?`<a href="${esc(u)}" target="_blank" rel="noopener"><b>${esc(n)}</b><span>${esc(t)}</span></a>`:`<a href="#" data-y="${esc(k)}"><b>${esc(n)}</b><span>${esc(t)}</span></a>`).join("")}</div>
-  <p style="color:var(--sub);margin-top:0">ソフトごとの開発部屋です。進み・出来た事・工事日誌が、毎日の仕事から自動でたまっていきます。どの部屋からも「試す」「開発に参加したい」ができます。</p>
-  <div class="heya">${rooms}${D.lab_dameshi.length?`<div class="card" data-i="lab"><h2>ラボ全体の心得</h2><p class="hk">どのソフトにも通じる、ダメ出しから学んだ決まり</p><div class="kazu"><span>心得 ${D.lab_dameshi.length}</span></div></div>`:""}</div>
+  <p style="color:var(--sub);margin-top:0">ソフトごとの部屋です。開くと、そのソフトが何か・何と何の組み合わせか・入れ方・使い方が見られます。どの部屋からも「試す」「開発に参加したい」ができます。</p>
+  <div class="heya">${rooms}${KIROKU_MISERU&&D.lab_dameshi.length?`<div class="card" data-i="lab"><h2>ラボ全体の心得</h2><p class="hk">どのソフトにも通じる、ダメ出しから学んだ決まり</p><div class="kazu"><span>心得 ${D.lab_dameshi.length}</span></div></div>`:""}</div>
   ${yaritaiDan(H.yaritai)}
   <div class="shita">最後に集めた時刻：${esc(D.tsukutta.replace("T"," "))}</div>
   <div class="kidou-kuchi" id="kidou-kuchi"></div>`;
   kidouKuchi();
   M.querySelectorAll(".card").forEach(c=>c.onclick=()=>heya(c.dataset.i,null,1));
   M.querySelectorAll("[data-y]").forEach(a=>a.onclick=e=>{e.preventDefault();const y=a.dataset.y;
-    y==="tsutsumi"?tsutsumi(1):y==="kousin"?kousin(1):y==="shorui"?shorui("",1):y==="eigyou"?eigyou(1):y==="tesuto"?tesuto(1):y==="pw"?pwKaeru(1):yomu(y.slice(5),1)});
+    y.startsWith("busho:")?busho(y.slice(6),1):y==="tsutsumi"?tsutsumi(1):y==="kousin"?kousin(1):y==="shorui"?shorui("",1):y==="eigyou"?eigyou(1):y==="tesuto"?tesuto(1):y==="pw"?pwKaeru(1):yomu(y.slice(5),1)});
 }
 
 // 読みやすく直した文（yasashi）を先に出す。原文は「原文」ボタンで同じ札の中に開く（行を増やさない）
@@ -333,10 +383,12 @@ M.addEventListener("click",e=>{const b=e.target.closest(".gb");if(!b)return;cons
 
 function heya(i,t0,push){
   const lab=i==="lab";
+  if(lab&&!KIROKU_MISERU)return ichiran(0);
+  if(!lab&&!/^\d+$/.test(String(i))){const ix=D.soft.findIndex(s=>s.id===i);if(ix<0)return ichiran(0);i=String(ix)}
   const h=lab?{namae:"ラボ全体の心得",hitokoto:"どのソフトにも通じる、ダメ出しから学んだ決まり",dameshi:D.lab_dameshi}:D.soft[+i];
   if(!h)return ichiran(0);
   // 創始者の思いはタブに入れず、名前の右に大きく出す（2026-11-25 社長「進みと同じ所はどうか」）
-  const kinds=lab?[["dameshi","心得"]]:KIND.filter(([k])=>k!=="omoi"&&h[k].length);
+  const kinds=!KIROKU_MISERU?[]:lab?[["dameshi","心得"]]:KIND.filter(([k])=>k!=="omoi"&&h[k].length);
   let tab=kinds.some(([k])=>k===t0)?t0:kinds[0]?.[0], q="";
   const sankaHe=/&sanka=1/.test(location.hash);  // 門番の住所で開き直した印（下の iku で消える）
   iku({v:"heya",i,t:tab},push);
@@ -349,8 +401,10 @@ function heya(i,t0,push){
   <div class="atama"><div class="atama-l"><div class="mi"><h1>${esc(h.namae)}</h1></div><div class="hk" style="color:var(--sub);margin-bottom:8px">${esc(h.hitokoto)}</div></div>
   ${om.length?`<div class="omoi"><div class="omoi-h">創始者の思い</div>${om.map(t=>`<p>${esc(t)}</p>`).join("")}<div class="omoi-s">── 社長</div></div>`:""}</div>
   ${lab?"":dekiru(h.id)}
-  <div class="tabs">${kinds.map(([k,n])=>`<button data-k="${k}">${n} ${KZ(h,k)}</button>`).join("")}</div>
-  <input class="sagasu" placeholder="この部屋の中をさがす"><div id="list"></div>`;
+  ${lab?"":shoukai(h)}
+  ${!kinds.length?"":`<div class="tabs">${kinds.map(([k,n])=>`<button data-k="${k}">${n} ${KZ(h,k)}</button>`).join("")}</div>
+  <input class="sagasu" placeholder="この部屋の中をさがす"><div id="list"></div>`}`;
+  shoukaiUgoku();
   $("#modoru").onclick=()=>ichiran(1);
   const sb=$("#sanka");if(sb)sb.onclick=async()=>{const m=MON();if(m&&await uchiKa(m))return monHe(m,location.hash+"&sanka=1");sanka(h)};  // 書く前に開き直す（書いた字を失わせない）
   if(sb&&sankaHe)sanka(h);  // 開き直した後は、書く枠をそのまま出す
@@ -367,10 +421,47 @@ function heya(i,t0,push){
     }
     $("#list").innerHTML=xs.length?hibi(tab,xs):`<div class="kara">まだありません</div>`;
   };
+  if(!kinds.length)return;
   M.querySelectorAll(".tabs button").forEach(b=>b.onclick=()=>{if(tab===b.dataset.k)return;tab=b.dataset.k;iku({v:"heya",i,t:tab},1);draw()});
   let t;$(".sagasu").oninput=e=>{clearTimeout(t);t=setTimeout(()=>{q=e.target.value.trim().toLowerCase();draw()},200)};
   draw();
 }
+
+// ---------- ソフトの説明（プレゼンの形）：中身は内緒の場所の shoukai.json（集める係が箱へ入れる）。無いソフトは出さない ----------
+const SK=id=>(((D&&D.hoka)||{}).shoukai||{})[id];
+const SK_KIKI=[["windows","Windows（パソコン）"],["android","Android"],["iphone","iPhone"]];
+let SK_IMA="";  // 入れ方で見せる機械（初めは端末の見分け KIKI() から）
+// 文の中の [字](https://…) と https://… だけを押せる字にする（ほかは全部 esc）
+const skA=(u,s)=>`<a href="${u}" target="_blank" rel="noopener">${s}</a>`;
+const skBun=s=>esc(s).split(/(\[[^\]]+\]\(https?:\/\/[^)\s]+\))/).map((x,j)=>{if(j%2){const m=x.match(/^\[([^\]]+)\]\((.+)\)$/);return skA(m[2],m[1])}
+  return x.replace(/https?:\/\/[^\s<>"'　、。）」]+/g,u=>skA(u,u))}).join("");
+function skTe(xs){if(!xs)return "";if(typeof xs==="string")return `<p class="sk-p">${skBun(xs)}</p>`;return `<ol class="sk-te">${xs.map(x=>`<li>${skBun(x)}</li>`).join("")}</ol>`}
+function shoukai(h){
+  const s=SK(h.id);if(!s)return "";
+  let n=0;const ban=()=>`<i>${++n}</i>`;
+  const kumi=(s.kumiawase||[]).map((k,j)=>`${j?`<div class="tasu">＋</div>`:""}<div><b>${esc(k.namae)}</b><span>${skBun(k.yaku||"")}</span></div>`).join("");
+  if(!SK_IMA)SK_IMA=KIKI();
+  const mono=(s.ireru||[]).map(m=>{const te=(m.kiki||{})[SK_IMA];
+    return `<h3 class="sk-mono">${esc(m.namae)}${m.ban?`<small>${esc(m.ban)}</small>`:""}</h3>${m.setsumei?`<p class="sk-p">${skBun(m.setsumei)}</p>`:""}
+    ${te?skTe(te):`<p class="sk-nai">この機械では入れられません。</p>`}
+    ${(m.kubari||[]).length&&Array.isArray(te)?`<div class="sk-kubari">${m.kubari.map(k=>`<a href="${esc(k.url)}" ${k.dl?`download="${esc(k.dl)}"`:`target="_blank" rel="noopener"`}>${esc(k.na)}</a>`).join("")}</div>`:""}
+    ${(m.komattara||[]).length?`<p class="sk-p" style="margin-top:10px"><b>うまくいかない時</b></p><ul class="sk-chuui">${m.komattara.map(x=>`<li>${skBun(x)}</li>`).join("")}</ul>`:""}`}).join("");
+  return `<div class="sk">
+  <section class="sk-dan">${s.joutai?`<div style="float:right"><span class="sk-jou${s.joutai==="本番"?" honban":""}">${esc(s.joutai)}</span></div>`:""}<h2>${ban()}どんなソフト？</h2>
+    <p class="sk-ichi">${esc(s.ichigen||h.hitokoto)}</p>${s.seishiki?`<p class="sk-p" style="color:var(--sub)">${esc(s.seishiki)}</p>`:""}
+    ${s.genten?`<p class="sk-gen">「${esc(s.genten)}」<small>── 社長</small></p>`:""}</section>
+  ${kumi?`<section class="sk-dan"><h2>${ban()}何と何の組み合わせ？</h2><div class="sk-kumi">${kumi}</div>${s.kumiawase_s?`<p class="sk-p" style="margin-top:10px">${skBun(s.kumiawase_s)}</p>`:""}</section>`:""}
+  ${mono?`<section class="sk-dan" id="sk-ireru"><h2>${ban()}入れ方</h2><div class="sk-kiki">${SK_KIKI.map(([k,na])=>`<button data-kiki="${k}" class="${k===SK_IMA?"on":""}" aria-pressed="${k===SK_IMA}">${na}</button>`).join("")}</div>${mono}</section>`:""}
+  ${(s.tsukau||[]).length?`<section class="sk-dan"><h2>${ban()}使い方</h2>${s.tsukau.map(b=>`<div class="sk-bamen"><h3>${esc(b.bamen)}</h3>${skTe(b.tejun)}</div>`).join("")}</section>`:""}
+  <section class="sk-dan"><h2>${ban()}今の状態</h2><p class="sk-p"><span class="sk-jou${s.joutai==="本番"?" honban":""}">${esc(s.joutai||"準備中")}</span>　${skBun(s.joutai_s||"")}</p>
+    ${(s.chuui||[]).length?`<ul class="sk-chuui">${s.chuui.map(x=>`<li>${skBun(x)}</li>`).join("")}</ul>`:""}</section>
+  </div>`;
+}
+// 入れ方の機械を選ぶ（選んだ機械は端末が覚える）
+try{const k=localStorage.getItem("kai_kiki");if(SK_KIKI.some(([x])=>x===k))SK_IMA=k}catch(e){}
+function shoukaiUgoku(){M.querySelectorAll("[data-kiki]").forEach(b=>b.onclick=()=>{SK_IMA=b.dataset.kiki;try{localStorage.setItem("kai_kiki",SK_IMA)}catch(e){}
+  const h=D.soft[+((history.state||{}).i)];const sec=$("#sk-ireru");if(!h||!sec)return;const w=document.createElement("div");w.innerHTML=shoukai(h);
+  const nu=w.querySelector("#sk-ireru");if(nu){sec.replaceWith(nu);shoukaiUgoku()}})}
 
 // ---------- 試す・参加する・届いた更新（門番＝このPCの入口へ問い合わせる） ----------
 const KH=id=>((D.hoka||{}).kaihatsu||[]).find(x=>x.id===id);
@@ -531,7 +622,8 @@ function tsutsumi(push=1){
     setTimeout(()=>URL.revokeObjectURL(a.href),4000)};
 }
 // ---------- 読み物（手引き・紹介・会社設立の書類） ----------
-function md(t){
+// kata=1（部署のページ）：表の形が崩れていたら（区切りの行が無い・列の数がそろわない）、その表は元の字のまま出す。表の升に見出しの名前を付ける（狭い時に1行ずつの札にする）
+function md(t,kata){
   const il=s=>esc(s).replace(/!\[([^\]]*)\]\(([^)\s]+)\)/g,(m,a,u)=>/^(\.\.\/|https:)/.test(u)?`<img src="${u}" alt="${a}" loading="lazy">`:"")
     .replace(/\[([^\]]+)\]\((https:[^)\s]+)\)/g,'<a href="$2" target="_blank" rel="noopener">$1</a>').replace(/\[([^\]]+)\]\(#v=([a-z]+)\)/g,'<a href="#v=$2" data-v="$2">$1</a>')
     .replace(/\*\*(.+?)\*\*/g,"<b>$1</b>").replace(/`([^`]+)`/g,"<code>$1</code>");
@@ -543,6 +635,10 @@ function md(t){
     if(/^#{1,4} /.test(l)){const n=l.match(/^#+/)[0].length;o.push(`<h${n}>${il(l.slice(n+1))}</h${n}>`);i++;continue}
     if(/^\|/.test(l)){const rs=[];while(i<L.length&&/^\|/.test(L[i]))rs.push(L[i++]);
       const c=r=>r.replace(/^\||\|$/g,"").split("|").map(x=>x.trim());
+      if(kata){const kugiri=/^\|[\s:|-]+\|$/, n=c(rs[0]).length, hon=rs.filter(r=>!kugiri.test(r.trim()));
+        if(rs.length<2||!kugiri.test(rs[1].trim())||rs.slice(1).some(r=>kugiri.test(r.trim())&&r!==rs[1])||hon.some(r=>!/\|\s*$/.test(r)||c(r.trim()).length!==n)){o.push(`<pre class="nama">${esc(rs.join("\n"))}</pre>`);continue}
+        const hd=c(hon[0].trim());
+        o.push(`<table class="fuda-t"><thead><tr>${hd.map(x=>`<th>${il(x)}</th>`).join("")}</tr></thead><tbody>${hon.slice(1).map(r=>"<tr>"+c(r.trim()).map((x,k)=>`<td data-h="${esc(hd[k].replace(/\*\*/g,""))}">${il(x)}</td>`).join("")+"</tr>").join("")}</tbody></table>`);continue}
       o.push("<table>"+rs.filter(r=>!/^\|[\s:|-]+\|$/.test(r)).map((r,k)=>"<tr>"+c(r).map(x=>k?`<td>${il(x)}</td>`:`<th>${il(x)}</th>`).join("")+"</tr>").join("")+"</table>");continue}
     if(/^\s*([-*]|\d+\.) /.test(l)){const ol=/^\s*\d+\./.test(l), it=[];while(i<L.length&&/^\s*([-*]|\d+\.) /.test(L[i]))it.push(L[i++].replace(/^\s*([-*]|\d+\.) /,""));
       o.push(`<${ol?"ol":"ul"}>${it.map(x=>`<li>${il(x)}</li>`).join("")}</${ol?"ol":"ul"}>`);continue}
@@ -553,6 +649,19 @@ function md(t){
     o.push(`<p>${p.map(il).join("<br>")}</p>`);
   }
   return o.join("");
+}
+// ---------- 部署のページ（営業部・ソフトウェア開発課など。門番の表 busho.json の部署を、開くたびに元の紙から読む。ログインの内側だけ） ----------
+let BUSHO=[];
+async function bushoYomu(){if(!IDMODE)return;try{const j=await (await fetch("/kai/api/busho",{cache:"no-store"})).json();BUSHO=j.ok?j.busho||[]:[]}catch(e){BUSHO=[]}}
+async function busho(id,push=1){
+  const b=BUSHO.find(x=>x.id===id);if(!b)return ichiran(0);
+  iku({v:"busho",i:id},push);window.scrollTo(0,0);
+  M.innerHTML=`<div class="mae"><button id="modoru">← 部屋の一覧</button></div><div class="md busho"><p>読んでいます…</p></div>`;
+  $("#modoru").onclick=()=>ichiran(1);
+  let j=null;try{const r=await fetch("/kai/api/busho/"+encodeURIComponent(id),{cache:"no-store"});j=await r.json()}catch(e){}
+  const el=M.querySelector(".busho");if(!el||!history.state||history.state.v!=="busho"||history.state.i!==id)return;  // 読む間に別の画面へ移った
+  if(!j||!j.ok){el.innerHTML=`<p>読めませんでした。少し待って、開き直してください。</p>`;return}
+  el.innerHTML=md(j.md,1)+`<div class="shita">最後に書き直した時：${esc(j.toki)}</div>`;
 }
 function yomu(id,push=1){
   const x=(D.hoka.tebiki||[]).find(t=>t.id===id);if(!x)return ichiran(0);

@@ -7,6 +7,8 @@
    "namae": "入口アプリ",
    "hitokoto": "会社のソフトを、押すだけで入れます",
    "fuda": "入",
+   "tesuto": true,
+   "shunin": "総務部",
    "iro": "#3b6ea5",
    "jibun": true,
    "windows": {
@@ -29,15 +31,15 @@
    "iphone": {
     "kata": "web",
     "url": "./"
-   },
-   "tesuto": true,
-   "shunin": "総務部"
+   }
   },
   {
    "id": "gijiroku",
    "namae": "超議事録",
-   "hitokoto": "話すだけで、会議の記録が残ります",
+   "hitokoto": "言霊エンジン＋弁天。話すだけで、会議の記録が残ります（ここで入れるのは言霊エンジン）",
    "fuda": "議",
+   "tesuto": true,
+   "shunin": "超議事録",
    "iro": "#c0392b",
    "settei": [
     "u",
@@ -61,15 +63,26 @@
    "iphone": {
     "kata": "web",
     "url": "{u}?p=rokuon&k={k}"
-   },
-   "tesuto": true,
-   "shunin": "超議事録"
+   }
+  },
+  {
+   "id": "benten",
+   "namae": "弁天（超議事録）",
+   "hitokoto": "アプリではなく Gemini のアドオン。パソコンで最初の1回だけ足します（入れ方は社員ページ）",
+   "fuda": "弁",
+   "iro": "#b03a6e",
+   "windows": {
+    "kata": "web",
+    "url": "https://shain.kailab.co.jp/kai/shain/#h=gijiroku&t="
+   }
   },
   {
    "id": "tsuuyaku",
-   "namae": "リバベル",
-   "hitokoto": "外国のお客様と、その場で話せます",
+   "namae": "バベル",
+   "hitokoto": "話した言葉が、相手の言葉で同時に出ます",
    "fuda": "訳",
+   "tesuto": true,
+   "shunin": "リバベル（同時通訳）",
    "iro": "#16a085",
    "settei": [
     "url"
@@ -85,15 +98,15 @@
    "iphone": {
     "kata": "web",
     "url": "{url}"
-   },
-   "tesuto": true,
-   "shunin": "リバベル（同時通訳）"
+   }
   },
   {
    "id": "enything",
    "namae": "縁ything",
-   "hitokoto": "お客様との連絡を、言葉の壁なく",
+   "hitokoto": "翻訳つきの LINE みたいな連絡アプリ",
    "fuda": "縁",
+   "tesuto": true,
+   "shunin": "縁ything",
    "iro": "#d35400",
    "settei": [
     "url"
@@ -107,17 +120,52 @@
     "package": "jp.madbrolab.enything",
     "url": "soft/enything.apk",
     "settei_link": "enything://setup?url={url}",
-    "sha256": "408687d30d1ed0704d251453298b7e6ff3322e4e1da0ee83863f6a597d9794f1",
-    "size": 3178705,
-    "tsuuban": 1,
-    "ban": "1.0.0"
+    "sha256": "f8de3bdf22efdd1d1499aefa4a95769c922227c02148c87b627594a7a4dc9523",
+    "size": 4927548,
+    "tsuuban": 4,
+    "ban": "1.0.3"
    },
    "iphone": {
     "kata": "web",
     "url": "{url}"
-   },
+   }
+  },
+  {
+   "id": "dokudan",
+   "namae": "独壇場",
+   "hitokoto": "ウケた一言が、金になる。",
+   "fuda": "独",
    "tesuto": true,
-   "shunin": "縁ything"
+   "shunin": "独壇場",
+   "iro": "#b7950b",
+   "settei": [
+    "url"
+   ],
+   "windows": {
+    "kata": "web",
+    "url": "{url}"
+   },
+   "android": {
+    "kata": "web",
+    "url": "{url}"
+   },
+   "iphone": {
+    "kata": "web",
+    "url": "{url}"
+   }
+  },
+  {
+   "id": "mitsumori",
+   "namae": "見積もりソフト（仮）",
+   "hitokoto": "図面の数から、見積の下書きを自動で作ります",
+   "fuda": "見",
+   "iro": "#566573",
+   "jumbi": true,
+   "jumbi_wake": "配る置き場を決めています",
+   "windows": {
+    "kata": "exe",
+    "url": ""
+   }
   },
   {
    "id": "kai_shain",

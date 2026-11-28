@@ -332,6 +332,22 @@ def dare_namae(dare: str) -> str | None:
     return None
 
 
+# 配り物（社員ページに入った人だけが取れる・置き場＝内緒の場所/kubari/）：置く名前 → 渡す時の名前
+KUBARI = {"benten_skill.zip": "弁天スキル一式.zip"}
+
+
+# 部署のページ（社員ページに入った人だけ）：表＝内緒の場所/busho.json（id・名前・元の紙）。部署を増やす時はその表に1行足すだけ
+BUSHO_ID = re.compile(r"[a-z0-9_]{1,32}")
+
+
+def busho_hyou() -> list[dict]:
+    try:
+        xs = _rj(naisho() / "busho.json", {}).get("busho") or []
+    except Exception:
+        return []
+    return [x for x in xs if isinstance(x, dict) and BUSHO_ID.fullmatch(str(x.get("id", ""))) and x.get("namae") and x.get("moto")]
+
+
 # ---------- 間違いが続いた時に止める ----------
 SIPPAI: dict[str, list[float]] = {}
 
@@ -631,6 +647,44 @@ def tsukeru(app) -> None:
         r.enable_compression()
         return r
 
+    async def kubari(req):
+        """配り物（入っている人だけ）。置き場＝内緒の場所/kubari/。名前は KUBARI の表にある物だけ（ほかは 404）。"""
+        a = hito(req)
+        if not a:
+            return web.HTTPFound("/kai/shain/") if iri() else nai()
+        na = req.match_info["na"]
+        dl = KUBARI.get(na)
+        p = naisho() / "kubari" / na
+        if not dl or not p.is_file():
+            return nai()
+        from urllib.parse import quote
+        log(f"配り物を渡した {na}（{a['id']}）")
+        r = web.FileResponse(p, headers={"Content-Disposition": "attachment; filename*=UTF-8''" + quote(dl),
+                                         "Content-Type": "application/zip", "X-Content-Type-Options": "nosniff"})
+        kabuse(r)
+        return r
+
+    async def busho_ichiran(req):
+        """メニューに出す部署の名前だけ（入っている人だけ）。"""
+        if not hito(req):
+            return jres({"ok": False}, 401)
+        return jres({"ok": True, "busho": [{"id": x["id"], "namae": x["namae"]} for x in busho_hyou()]})
+
+    async def busho(req):
+        """部署のページの中身＝元の紙をそのまま（開くたびに読む＝書き直せばすぐ出る）。"""
+        if not hito(req):
+            return jres({"ok": False}, 401)
+        x = next((b for b in busho_hyou() if b["id"] == req.match_info["id"]), None)
+        if not x:
+            return nai()
+        p = Path(x["moto"])
+        try:
+            t = await asyncio.to_thread(p.read_text, encoding="utf-8-sig")
+            toki = dt.datetime.fromtimestamp(p.stat().st_mtime, JST).strftime("%Y-%m-%d %H:%M")
+        except (OSError, UnicodeDecodeError):
+            return jres({"ok": False, "naze": "元の紙が読めません"}, 503)
+        return jres({"ok": True, "namae": x["namae"], "md": t[:200000], "toki": toki})
+
     async def pw(req):
         a = hito(req)
         if not a:
@@ -779,6 +833,9 @@ def tsukeru(app) -> None:
     r.add_get("/kai/api/ore", ore)
     r.add_get("/kai/api/hako", hako)
     r.add_post("/kai/api/pw", pw)
+    r.add_get("/kai/kubari/{na}", kubari)
+    r.add_get("/kai/api/busho", busho_ichiran)
+    r.add_get("/kai/api/busho/{id}", busho)
     r.add_post("/kai/kansou/api/fairu", k_fairu)
     r.add_post("/kai/kansou/api/kaku", k_kaku)
     r.add_get("/kai/kansou/api/jibun", k_jibun)
